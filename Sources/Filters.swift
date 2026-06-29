@@ -10,10 +10,10 @@ enum TaskScope: Hashable {
 
     var title: String {
         switch self {
-        case .all:            return "全部"
+        case .all:            return L("scope.all")
         case .quadrant(let q): return q.title
-        case .scheduled:      return "有日程"
-        case .completed:      return "已完成"
+        case .scheduled:      return L("scope.scheduled")
+        case .completed:      return L("scope.completed")
         case .tag(let name):  return "#\(name)"
         }
     }
@@ -31,6 +31,11 @@ enum TaskScope: Hashable {
 
 /// 基于内存数组的过滤辅助 —— 对个人规模的数据足够，且避免 SwiftData 关系谓词的边角问题。
 extension Array where Element == TaskItem {
+    /// 仅属于指定周的任务。
+    func inWeek(_ weekStart: Date) -> [TaskItem] {
+        filter { Week.same($0.weekStart, weekStart) }
+    }
+
     /// 仅顶层任务（非子任务）。
     var topLevel: [TaskItem] { filter { $0.parent == nil } }
     var active: [TaskItem] { filter { !$0.isCompleted } }

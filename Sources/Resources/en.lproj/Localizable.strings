@@ -1,0 +1,128 @@
+/* App */
+"app.title" = "Four Quadrants";
+
+/* Common actions */
+"action.add" = "Add";
+"action.cancel" = "Cancel";
+"action.done" = "Done";
+"action.edit" = "Edit";
+"action.delete" = "Delete";
+"action.create" = "New";
+"action.complete" = "Complete";
+"action.incomplete" = "Mark Incomplete";
+"action.urgent" = "Urgent";
+"action.thisWeek" = "This Week";
+
+/* Quadrants */
+"quadrant.urgentImportant.title" = "Urgent & Important";
+"quadrant.important.title" = "Important, Not Urgent";
+"quadrant.urgent.title" = "Urgent, Not Important";
+"quadrant.neither.title" = "Neither";
+"quadrant.urgentImportant.hint" = "Do now";
+"quadrant.important.hint" = "Schedule";
+"quadrant.urgent.hint" = "Delegate / quick";
+"quadrant.neither.hint" = "Consider dropping";
+
+/* Scopes / lists */
+"scope.all" = "All";
+"scope.scheduled" = "Scheduled";
+"scope.completed" = "Completed";
+
+/* Sidebar */
+"sidebar.overview" = "Overview";
+"sidebar.section.quadrants" = "Quadrants";
+"sidebar.section.lists" = "Lists";
+"sidebar.section.tags" = "Tags";
+
+/* Overview / grid */
+"overview.title" = "Overview";
+"grid.empty" = "No tasks";
+"grid.more" = "%lld more…";
+
+/* List */
+"list.search.prompt" = "Search title / ticket / tag";
+"list.empty" = "No tasks";
+"list.noMatch" = "No matches";
+
+/* Detail */
+"detail.section.schedule" = "Schedule";
+"detail.field.due" = "Due date";
+"detail.field.due.short" = "Due";
+"detail.field.remind" = "Remind";
+"detail.section.completion" = "Completion";
+"detail.field.completed" = "Completed";
+"detail.field.status" = "Status";
+"detail.status.inProgress" = "In progress";
+"detail.schedule.none" = "No schedule";
+"detail.section.tags" = "Tags";
+"detail.section.links" = "Links";
+"detail.section.subtasks" = "Subtasks";
+"detail.field.title" = "Title";
+"detail.field.issueKey" = "Ticket";
+"detail.field.issueKey.placeholder" = "Ticket (e.g. ONES2-2296709)";
+"detail.section.quadrant" = "Quadrant";
+"detail.flag.urgent" = "Urgent";
+"detail.flag.important" = "Important";
+"detail.title.untitled" = "Untitled";
+"detail.tag.new" = "New tag";
+"detail.link.new" = "Add link URL";
+"detail.subtask.new" = "New subtask";
+"detail.unavailable" = "Select a task to view details";
+"detail.nav.task" = "Task";
+"detail.segment.basic" = "Info";
+"detail.segment.content" = "Content";
+"detail.content.title" = "Content";
+"detail.content.hint" = "Type text, paste images";
+
+/* New task */
+"add.title" = "New Task";
+"add.input.section" = "Input (paste ticket text)";
+"add.preview.section" = "Parsed preview";
+"add.preview.issueKey" = "Ticket";
+"add.preview.title" = "Title";
+"add.section.quadrant" = "Quadrant";
+
+/* Default task title */
+"task.default.title" = "New task";
+
+/* Clipboard */
+"clipboard.prompt.title" = "Clipboard detected — add to which quadrant?";
+"clipboard.issuePrefix" = "Ticket";
+
+/* Components */
+"component.link" = "Link";
+
+/* Week */
+"week.current" = "· This week";
+"week.retro" = "· Past";
+"week.yearWeek" = "Week %2$lld, %1$lld";
+
+/* Notification */
+"notification.default.title" = "Task reminder";
+
+/* Settings */
+"settings.title" = "Settings";
+"settings.done" = "Done";
+"settings.language.section" = "Language";
+"settings.language.system" = "System";
+"settings.language.zh" = "Chinese (Simplified)";
+"settings.language.en" = "English";
+"settings.language.note" = "Applies immediately";
+"settings.parse.section" = "Clipboard parsing rules";
+"settings.parse.builtin" = "Smart detection (default)";
+"settings.parse.builtin.desc" = "Auto-detect ticket, link and title";
+"settings.parse.hint" = "Custom regex rules take priority; falls back to default";
+"settings.parse.addRule" = "Add regex rule";
+"settings.rule.new" = "New rule";
+"settings.rule.name" = "Name";
+"settings.rule.section.regex" = "Regex";
+"settings.rule.pattern" = "Pattern";
+"settings.rule.section.groups" = "Capture group mapping";
+"settings.rule.issueGroup" = "Ticket (group)";
+"settings.rule.titleGroup" = "Title (group)";
+"settings.rule.linkGroup" = "Link (group)";
+"settings.rule.groupNote" = "0 = none; number = capture group index";
+"settings.rule.section.test" = "Test";
+"settings.rule.testPlaceholder" = "Paste text to test";
+"settings.rule.noMatch" = "No match";
+"settings.rule.delete" = "Delete rule";

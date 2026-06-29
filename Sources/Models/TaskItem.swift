@@ -21,6 +21,9 @@ final class TaskItem {
     var createdAt: Date = Date.now
     var sortOrder: Double = 0
 
+    /// 所属周的起始（周一 00:00）。每周内容相互独立。
+    var weekStart: Date = Date.now
+
     /// 外部链接（URL 字符串）。
     var links: [String] = []
     /// 工单号，如 ONES2-2296709。
@@ -37,6 +40,9 @@ final class TaskItem {
     @Relationship(inverse: \Tag.tasks)
     var tags: [Tag]? = []
 
+    /// 详细内容：富文本（RTFD，内嵌粘贴的图片），可直接编辑、图文混排。
+    @Attribute(.externalStorage) var richContent: Data?
+
     init(title: String = "",
          notes: String = "",
          isUrgent: Bool = false,
@@ -45,7 +51,8 @@ final class TaskItem {
          remindAt: Date? = nil,
          links: [String] = [],
          issueKey: String? = nil,
-         sortOrder: Double = 0) {
+         sortOrder: Double = 0,
+         weekStart: Date = Week.currentStart) {
         self.title = title
         self.notes = notes
         self.isUrgent = isUrgent
@@ -55,6 +62,7 @@ final class TaskItem {
         self.links = links
         self.issueKey = issueKey
         self.sortOrder = sortOrder
+        self.weekStart = weekStart
         self.createdAt = .now
         self.taskUUID = UUID().uuidString
     }

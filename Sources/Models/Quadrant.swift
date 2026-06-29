@@ -30,19 +30,19 @@ enum Quadrant: Int, CaseIterable, Identifiable, Hashable {
 
     var title: String {
         switch self {
-        case .urgentImportant: return "紧急且重要"
-        case .important:       return "重要不紧急"
-        case .urgent:          return "紧急不重要"
-        case .neither:         return "不紧急不重要"
+        case .urgentImportant: L("quadrant.urgentImportant.title")
+        case .important:       L("quadrant.important.title")
+        case .urgent:          L("quadrant.urgent.title")
+        case .neither:         L("quadrant.neither.title")
         }
     }
 
     var actionHint: String {
         switch self {
-        case .urgentImportant: return "立即做"
-        case .important:       return "计划做"
-        case .urgent:          return "委派 / 快速做"
-        case .neither:         return "考虑删减"
+        case .urgentImportant: L("quadrant.urgentImportant.hint")
+        case .important:       L("quadrant.important.hint")
+        case .urgent:          L("quadrant.urgent.hint")
+        case .neither:         L("quadrant.neither.hint")
         }
     }
 

@@ -29,15 +29,20 @@ struct FourQuadrantsApp: App {
         let cloudConfig = ModelConfiguration("FourQuadrants",
                                              schema: schema,
                                              cloudKitDatabase: .automatic)
-        if let container = try? ModelContainer(for: schema, configurations: [cloudConfig]) {
-            return container
+        let container: ModelContainer
+        if let c = try? ModelContainer(for: schema, configurations: [cloudConfig]) {
+            container = c
+        } else {
+            let localConfig = ModelConfiguration("FourQuadrants-Local",
+                                                 schema: schema,
+                                                 cloudKitDatabase: .none)
+            guard let c = try? ModelContainer(for: schema, configurations: [localConfig]) else {
+                fatalError("无法创建 ModelContainer")
+            }
+            container = c
         }
-        let localConfig = ModelConfiguration("FourQuadrants-Local",
-                                             schema: schema,
-                                             cloudKitDatabase: .none)
-        if let container = try? ModelContainer(for: schema, configurations: [localConfig]) {
-            return container
-        }
-        fatalError("无法创建 ModelContainer")
+        // 关闭自动保存：所有改动显式 save()，详情页编辑可用 rollback() 取消。
+        container.mainContext.autosaveEnabled = false
+        return container
     }
 }

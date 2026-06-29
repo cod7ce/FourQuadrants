@@ -32,7 +32,7 @@ enum ClipboardReader {
     }
 
     private static func parsed(from raw: String, change: Int) -> (ParsedTaskInput, Int)? {
-        let result = TaskInputParser.parse(raw)
+        let result = ParseEngine.parse(raw)
         guard !result.links.isEmpty || result.issueKey != nil else { return nil }
         return (result, change)
     }

@@ -19,6 +19,8 @@ enum SampleData {
         t1.tags = [work]
         let sub = TaskItem(title: "复现卡死现象", isUrgent: true, isImportant: true, sortOrder: 0)
         sub.parent = t1
+        t1.richContent = RichText.data(NSAttributedString(
+            string: "客户在私有部署环境点击「发布」后界面卡死，已抓取 HAR。下一步：对照日志定位接口超时点。"))
         context.insert(t1)
         context.insert(sub)
 

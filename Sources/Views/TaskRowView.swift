@@ -16,7 +16,7 @@ struct TaskRowView: View {
                         if let key = task.issueKey {
                             IssueKeyBadge(key: key, url: task.urls.first)
                         }
-                        Text(task.title.isEmpty ? "新任务" : task.title)
+                        Text(task.title.isEmpty ? L("task.default.title") : task.title)
                             .strikethrough(task.isCompleted)
                             .foregroundStyle(task.isCompleted ? .secondary : .primary)
                     }
@@ -62,12 +62,12 @@ struct TaskRowView: View {
         let subs = task.sortedSubtasks
         HStack(spacing: 10) {
             if let due = task.dueDate {
-                Label(due.formatted(.dateTime.month().day().hour().minute()),
+                Label(due.formatted(.dateTime.month().day().hour().minute().locale(.app)),
                       systemImage: "calendar")
                     .foregroundStyle(due < .now && !task.isCompleted ? Color.red : Color.secondary)
             }
             if task.remindAt != nil { Image(systemName: "bell.fill") }
-            if !task.links.isEmpty { Label("\(task.links.count)", systemImage: "link") }
+            if !task.urls.isEmpty { TaskLinksButton(urls: task.urls) }
             if !subs.isEmpty {
                 Label("\(subs.filter(\.isCompleted).count)/\(subs.count)", systemImage: "checklist")
             }

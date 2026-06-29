@@ -3,8 +3,11 @@ import SwiftData
 
 struct QuadrantGridView: View {
     @Binding var selectedTask: TaskItem?
-    @Query(sort: \TaskItem.sortOrder) private var tasks: [TaskItem]
+    let weekStart: Date
+    @Query(sort: \TaskItem.sortOrder) private var allTasks: [TaskItem]
     @State private var showAdd = false
+
+    private var tasks: [TaskItem] { allTasks.inWeek(weekStart) }
 
     private let columns = [
         GridItem(.flexible(), spacing: 12),
@@ -22,14 +25,14 @@ struct QuadrantGridView: View {
             }
             .padding()
         }
-        .navigationTitle("总览")
+        .navigationTitle(L("overview.title"))
         .toolbar {
             ToolbarItem {
-                Button { showAdd = true } label: { Label("新建", systemImage: "plus") }
+                Button { showAdd = true } label: { Label(L("action.create"), systemImage: "plus") }
             }
         }
         .sheet(isPresented: $showAdd) {
-            QuickAddView(defaultQuadrant: .urgentImportant)
+            QuickAddView(defaultQuadrant: .urgentImportant, weekStart: weekStart)
         }
     }
 }
@@ -54,7 +57,7 @@ private struct QuadrantCard: View {
             }
             Divider()
             if tasks.isEmpty {
-                Text("暂无任务")
+                Text(L("grid.empty"))
                     .font(.caption).foregroundStyle(.tertiary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.vertical, 8)
@@ -66,7 +69,7 @@ private struct QuadrantCard: View {
                         .draggable(TaskTransfer(taskUUID: task.taskUUID))
                 }
                 if tasks.count > 6 {
-                    Text("还有 \(tasks.count - 6) 条…")
+                    Text(String(format: L("grid.more"), tasks.count - 6))
                         .font(.caption2).foregroundStyle(.secondary)
                 }
             }
@@ -94,7 +97,7 @@ private struct CompactTaskRow: View {
         HStack(spacing: 6) {
             CompletionToggle(isCompleted: task.isCompleted) { toggle() }
             if let key = task.issueKey { IssueKeyBadge(key: key) }
-            Text(task.title.isEmpty ? "新任务" : task.title)
+            Text(task.title.isEmpty ? L("task.default.title") : task.title)
                 .lineLimit(1)
                 .strikethrough(task.isCompleted)
                 .foregroundStyle(task.isCompleted ? .secondary : .primary)
@@ -112,6 +115,6 @@ private struct CompactTaskRow: View {
 
 #Preview {
     @Previewable @State var sel: TaskItem?
-    return NavigationStack { QuadrantGridView(selectedTask: $sel) }
+    return NavigationStack { QuadrantGridView(selectedTask: $sel, weekStart: Week.currentStart) }
         .modelContainer(previewContainer)
 }

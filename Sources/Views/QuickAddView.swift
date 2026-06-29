@@ -7,39 +7,41 @@ struct QuickAddView: View {
     @Environment(\.dismiss) private var dismiss
 
     let defaultQuadrant: Quadrant
+    let weekStart: Date
 
     @State private var raw = ""
     @State private var parsed = ParsedTaskInput(issueKey: nil, title: "", links: [])
     @State private var quadrant: Quadrant
 
-    init(defaultQuadrant: Quadrant) {
+    init(defaultQuadrant: Quadrant, weekStart: Date) {
         self.defaultQuadrant = defaultQuadrant
+        self.weekStart = weekStart
         _quadrant = State(initialValue: defaultQuadrant)
     }
 
     var body: some View {
         NavigationStack {
             Form {
-                Section("输入（可直接粘贴工单文本）") {
+                Section(L("add.input.section")) {
                     TextEditor(text: $raw)
                         .frame(minHeight: 90)
                         .autocorrectionDisabled()
                 }
 
                 if !parsed.isEmpty {
-                    Section("解析预览") {
+                    Section(L("add.preview.section")) {
                         if let key = parsed.issueKey {
-                            LabeledContent("工单号") { IssueKeyBadge(key: key) }
+                            LabeledContent(L("add.preview.issueKey")) { IssueKeyBadge(key: key) }
                         }
                         if !parsed.title.isEmpty {
-                            LabeledContent("标题", value: parsed.title)
+                            LabeledContent(L("add.preview.title"), value: parsed.title)
                         }
                         ForEach(parsed.links, id: \.self) { LinkRow(urlString: $0) }
                     }
                 }
 
-                Section("象限") {
-                    Picker("象限", selection: $quadrant) {
+                Section(L("add.section.quadrant")) {
+                    Picker(L("add.section.quadrant"), selection: $quadrant) {
                         ForEach(Quadrant.allCases) { q in
                             Text(q.title).tag(q)
                         }
@@ -50,17 +52,17 @@ struct QuickAddView: View {
                 }
             }
             .formStyle(.grouped)
-            .navigationTitle("新建任务")
+            .navigationTitle(L("add.title"))
             .onChange(of: raw) { _, value in
-                parsed = TaskInputParser.parse(value)
+                parsed = ParseEngine.parse(value)
             }
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("添加", action: add)
+                    Button(L("action.add"), action: add)
                         .disabled(parsed.title.isEmpty && parsed.issueKey == nil)
                 }
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("取消") { dismiss() }
+                    Button(L("action.cancel")) { dismiss() }
                 }
             }
         }
@@ -68,12 +70,15 @@ struct QuickAddView: View {
 
     private func add() {
         let flags = quadrant.flags
-        let title = parsed.title.isEmpty ? (parsed.issueKey ?? "新任务") : parsed.title
+        let title = parsed.title.isEmpty
+            ? (parsed.issueKey ?? L("task.default.title"))
+            : parsed.title
         let task = TaskItem(title: title,
                             isUrgent: flags.isUrgent,
                             isImportant: flags.isImportant,
                             links: parsed.links,
-                            issueKey: parsed.issueKey)
+                            issueKey: parsed.issueKey,
+                            weekStart: weekStart)
         context.insert(task)
         try? context.save()
         dismiss()
@@ -81,6 +86,6 @@ struct QuickAddView: View {
 }
 
 #Preview {
-    QuickAddView(defaultQuadrant: .urgentImportant)
+    QuickAddView(defaultQuadrant: .urgentImportant, weekStart: Week.currentStart)
         .modelContainer(previewContainer)
 }

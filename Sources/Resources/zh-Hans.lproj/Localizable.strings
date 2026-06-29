@@ -1,0 +1,128 @@
+/* App */
+"app.title" = "四象限";
+
+/* 通用动作 */
+"action.add" = "添加";
+"action.cancel" = "取消";
+"action.done" = "完成";
+"action.edit" = "编辑";
+"action.delete" = "删除";
+"action.create" = "新建";
+"action.complete" = "完成";
+"action.incomplete" = "未完成";
+"action.urgent" = "紧急";
+"action.thisWeek" = "本周";
+
+/* 象限 */
+"quadrant.urgentImportant.title" = "紧急且重要";
+"quadrant.important.title" = "重要不紧急";
+"quadrant.urgent.title" = "紧急不重要";
+"quadrant.neither.title" = "不紧急不重要";
+"quadrant.urgentImportant.hint" = "立即做";
+"quadrant.important.hint" = "计划做";
+"quadrant.urgent.hint" = "委派 / 快速做";
+"quadrant.neither.hint" = "考虑删减";
+
+/* 范围 / 清单 */
+"scope.all" = "全部";
+"scope.scheduled" = "有日程";
+"scope.completed" = "已完成";
+
+/* 侧栏 */
+"sidebar.overview" = "总览";
+"sidebar.section.quadrants" = "象限";
+"sidebar.section.lists" = "清单";
+"sidebar.section.tags" = "标签";
+
+/* 总览 / 网格 */
+"overview.title" = "总览";
+"grid.empty" = "暂无任务";
+"grid.more" = "还有 %lld 条…";
+
+/* 列表 */
+"list.search.prompt" = "搜索标题 / 工单号 / 标签";
+"list.empty" = "暂无任务";
+"list.noMatch" = "无匹配结果";
+
+/* 详情 */
+"detail.section.schedule" = "日程";
+"detail.field.due" = "截止日期";
+"detail.field.due.short" = "截止";
+"detail.field.remind" = "提醒";
+"detail.section.completion" = "完成";
+"detail.field.completed" = "已完成";
+"detail.field.status" = "状态";
+"detail.status.inProgress" = "进行中";
+"detail.schedule.none" = "无日程";
+"detail.section.tags" = "标签";
+"detail.section.links" = "链接";
+"detail.section.subtasks" = "子任务";
+"detail.field.title" = "标题";
+"detail.field.issueKey" = "工单号";
+"detail.field.issueKey.placeholder" = "工单号（如 ONES2-2296709）";
+"detail.section.quadrant" = "象限";
+"detail.flag.urgent" = "紧急";
+"detail.flag.important" = "重要";
+"detail.title.untitled" = "无标题";
+"detail.tag.new" = "新建标签";
+"detail.link.new" = "添加链接 URL";
+"detail.subtask.new" = "新建子任务";
+"detail.unavailable" = "选择一个任务查看详情";
+"detail.nav.task" = "任务";
+"detail.segment.basic" = "基础信息";
+"detail.segment.content" = "详细内容";
+"detail.content.title" = "详细内容";
+"detail.content.hint" = "可直接输入文字、粘贴图片";
+
+/* 新建任务 */
+"add.title" = "新建任务";
+"add.input.section" = "输入（可直接粘贴工单文本）";
+"add.preview.section" = "解析预览";
+"add.preview.issueKey" = "工单号";
+"add.preview.title" = "标题";
+"add.section.quadrant" = "象限";
+
+/* 任务默认标题 */
+"task.default.title" = "新任务";
+
+/* 剪贴板 */
+"clipboard.prompt.title" = "检测到剪贴板内容，添加到哪个象限？";
+"clipboard.issuePrefix" = "工单";
+
+/* 组件 */
+"component.link" = "链接";
+
+/* 周 */
+"week.current" = "· 本周";
+"week.retro" = "· 回溯";
+"week.yearWeek" = "%1$lld 年第 %2$lld 周";
+
+/* 通知 */
+"notification.default.title" = "任务提醒";
+
+/* 设置 */
+"settings.title" = "设置";
+"settings.done" = "完成";
+"settings.language.section" = "语言";
+"settings.language.system" = "跟随系统";
+"settings.language.zh" = "简体中文";
+"settings.language.en" = "英文";
+"settings.language.note" = "切换后界面立即更新";
+"settings.parse.section" = "粘贴解析规则";
+"settings.parse.builtin" = "智能识别（默认）";
+"settings.parse.builtin.desc" = "自动识别工单号、链接与标题";
+"settings.parse.hint" = "自定义正则规则优先；都不匹配时回退到默认";
+"settings.parse.addRule" = "添加正则规则";
+"settings.rule.new" = "新规则";
+"settings.rule.name" = "名称";
+"settings.rule.section.regex" = "正则";
+"settings.rule.pattern" = "正则表达式";
+"settings.rule.section.groups" = "捕获组映射";
+"settings.rule.issueGroup" = "编号（组）";
+"settings.rule.titleGroup" = "标题（组）";
+"settings.rule.linkGroup" = "链接（组）";
+"settings.rule.groupNote" = "0 表示无；数字为正则捕获组序号";
+"settings.rule.section.test" = "测试";
+"settings.rule.testPlaceholder" = "粘贴一段文本测试";
+"settings.rule.noMatch" = "未匹配";
+"settings.rule.delete" = "删除规则";

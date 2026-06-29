@@ -49,6 +49,32 @@ struct CompletionToggle: View {
     }
 }
 
+/// 列表行内可点击的链接：单个直接打开，多个弹出菜单选择。
+struct TaskLinksButton: View {
+    let urls: [URL]
+
+    var body: some View {
+        if urls.count == 1, let url = urls.first {
+            Link(destination: url) {
+                Label(L("component.link"), systemImage: "link")
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.tint)
+        } else if urls.count > 1 {
+            Menu {
+                ForEach(urls, id: \.self) { url in
+                    Link(url.host() ?? url.absoluteString, destination: url)
+                }
+            } label: {
+                Label("\(urls.count)", systemImage: "link")
+            }
+            .menuIndicator(.hidden)
+            .fixedSize()
+            .foregroundStyle(.tint)
+        }
+    }
+}
+
 struct LinkRow: View {
     let urlString: String
     var body: some View {

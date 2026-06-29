@@ -5,13 +5,14 @@ struct TaskListView: View {
     @Environment(\.modelContext) private var context
     let scope: TaskScope
     @Binding var selectedTask: TaskItem?
+    let weekStart: Date
 
     @Query(sort: \TaskItem.sortOrder) private var allTasks: [TaskItem]
     @State private var search = ""
     @State private var showAdd = false
 
     private var tasks: [TaskItem] {
-        let base = allTasks.inScope(scope)
+        let base = allTasks.inWeek(weekStart).inScope(scope)
         guard !search.isEmpty else { return base }
         return base.filter {
             $0.title.localizedCaseInsensitiveContains(search)
@@ -25,6 +26,9 @@ struct TaskListView: View {
         return .urgentImportant
     }
 
+    private var emptyText: String { search.isEmpty ? L("list.empty") : L("list.noMatch") }
+    private func completeText(_ done: Bool) -> String { done ? L("action.incomplete") : L("action.complete") }
+
     var body: some View {
         List(selection: $selectedTask) {
             ForEach(tasks) { task in
@@ -33,40 +37,38 @@ struct TaskListView: View {
                     .draggable(TaskTransfer(taskUUID: task.taskUUID))
                     .swipeActions(edge: .leading) {
                         Button { toggle(task) } label: {
-                            Label(task.isCompleted ? "未完成" : "完成",
+                            Label(completeText(task.isCompleted),
                                   systemImage: "checkmark.circle")
                         }.tint(.green)
                     }
                     .swipeActions(edge: .trailing) {
                         Button(role: .destructive) { delete(task) } label: {
-                            Label("删除", systemImage: "trash")
+                            Label(L("action.delete"), systemImage: "trash")
                         }
                         Button { task.isUrgent.toggle(); save(task) } label: {
-                            Label("紧急", systemImage: "bolt.fill")
+                            Label(L("action.urgent"), systemImage: "bolt.fill")
                         }.tint(.orange)
                     }
             }
             .onMove(perform: reorder)
         }
         .navigationTitle(scope.title)
-        .searchable(text: $search, prompt: "搜索标题 / 工单号 / 标签")
+        .searchable(text: $search, prompt: L("list.search.prompt"))
         .overlay {
             if tasks.isEmpty {
-                ContentUnavailableView(
-                    search.isEmpty ? "暂无任务" : "无匹配结果",
-                    systemImage: scope.symbol)
+                ContentUnavailableView(emptyText, systemImage: scope.symbol)
             }
         }
         .toolbar {
             ToolbarItem {
-                Button { showAdd = true } label: { Label("新建", systemImage: "plus") }
+                Button { showAdd = true } label: { Label(L("action.create"), systemImage: "plus") }
             }
             #if os(iOS)
             ToolbarItem(placement: .topBarTrailing) { EditButton() }
             #endif
         }
         .sheet(isPresented: $showAdd) {
-            QuickAddView(defaultQuadrant: defaultQuadrant)
+            QuickAddView(defaultQuadrant: defaultQuadrant, weekStart: weekStart)
         }
         .dropDestination(for: TaskTransfer.self) { items, _ in
             guard case .quadrant(let q) = scope else { return false }
@@ -103,7 +105,7 @@ struct TaskListView: View {
 #Preview {
     @Previewable @State var sel: TaskItem?
     return NavigationStack {
-        TaskListView(scope: .quadrant(.urgentImportant), selectedTask: $sel)
+        TaskListView(scope: .quadrant(.urgentImportant), selectedTask: $sel, weekStart: Week.currentStart)
     }
     .modelContainer(previewContainer)
 }

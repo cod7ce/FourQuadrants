@@ -4,15 +4,18 @@ import SwiftData
 struct SidebarView: View {
     @Environment(\.modelContext) private var context
     @Binding var selection: SidebarItem?
-    @Query(sort: \TaskItem.sortOrder) private var tasks: [TaskItem]
+    let weekStart: Date
+    @Query(sort: \TaskItem.sortOrder) private var allTasks: [TaskItem]
     @Query(sort: \Tag.name) private var tags: [Tag]
+
+    private var tasks: [TaskItem] { allTasks.inWeek(weekStart) }
 
     var body: some View {
         List(selection: $selection) {
-            Label("总览", systemImage: "square.grid.2x2")
+            Label(L("sidebar.overview"), systemImage: "square.grid.2x2")
                 .tag(SidebarItem.overview)
 
-            Section("象限") {
+            Section(L("sidebar.section.quadrants")) {
                 ForEach(Quadrant.allCases) { q in
                     Label(q.title, systemImage: q.symbol)
                         .foregroundStyle(q.color)
@@ -27,14 +30,14 @@ struct SidebarView: View {
                 }
             }
 
-            Section("清单") {
+            Section(L("sidebar.section.lists")) {
                 scopeRow(.all)
                 scopeRow(.scheduled)
                 scopeRow(.completed)
             }
 
             if !tags.isEmpty {
-                Section("标签") {
+                Section(L("sidebar.section.tags")) {
                     ForEach(tags) { tag in
                         Label(tag.name, systemImage: "tag.fill")
                             .foregroundStyle(tag.color)
@@ -59,6 +62,6 @@ struct SidebarView: View {
 
 #Preview {
     @Previewable @State var sel: SidebarItem? = .overview
-    return NavigationStack { SidebarView(selection: $sel) }
+    return NavigationStack { SidebarView(selection: $sel, weekStart: Week.currentStart) }
         .modelContainer(previewContainer)
 }

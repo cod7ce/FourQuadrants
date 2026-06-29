@@ -9,9 +9,12 @@ enum SidebarItem: Hashable {
 struct ContentView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.scenePhase) private var scenePhase
+    @AppStorage(LocalizationConfig.storageKey) private var language = AppLanguage.zhHans.rawValue
 
     @State private var sidebar: SidebarItem? = .overview
     @State private var selectedTask: TaskItem?
+    @State private var selectedWeek = Week.currentStart
+    @State private var showSettings = false
 
     // 剪贴板感知
     @State private var clipboardCandidate: ParsedTaskInput?
@@ -20,18 +23,29 @@ struct ContentView: View {
 
     var body: some View {
         NavigationSplitView {
-            SidebarView(selection: $sidebar)
-                .navigationTitle("四象限")
+            SidebarView(selection: $sidebar, weekStart: selectedWeek)
+                .navigationTitle(L("app.title"))
+                .toolbar {
+                    ToolbarItem {
+                        Button { showSettings = true } label: {
+                            Label(L("settings.title"), systemImage: "gearshape")
+                        }
+                    }
+                }
         } detail: {
-            // 上下结构：上方为象限网格/列表，下方为所选任务详情。
-            MainArea(sidebar: sidebar ?? .overview, selectedTask: $selectedTask)
+            MainArea(sidebar: sidebar ?? .overview,
+                     selectedTask: $selectedTask,
+                     weekStart: $selectedWeek)
         }
+        .environment(\.locale, .app)
+        .id(language)   // 切换语言时整体重建，立即生效
+        .sheet(isPresented: $showSettings) { SettingsView() }
         .task { await checkClipboard() }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { Task { await checkClipboard() } }
         }
         .confirmationDialog(
-            "检测到剪贴板内容，添加到哪个象限？",
+            L("clipboard.prompt.title"),
             isPresented: $showClipboardPrompt,
             titleVisibility: .visible,
             presenting: clipboardCandidate
@@ -39,7 +53,7 @@ struct ContentView: View {
             ForEach(Quadrant.allCases) { q in
                 Button(q.title) { add(parsed, to: q) }
             }
-            Button("取消", role: .cancel) { clipboardCandidate = nil }
+            Button(L("action.cancel"), role: .cancel) { clipboardCandidate = nil }
         } message: { parsed in
             Text(previewText(parsed))
         }
@@ -55,13 +69,14 @@ struct ContentView: View {
     private func add(_ parsed: ParsedTaskInput, to quadrant: Quadrant) {
         let flags = quadrant.flags
         let title = parsed.title.isEmpty
-            ? (parsed.issueKey ?? parsed.links.first ?? "新任务")
+            ? (parsed.issueKey ?? parsed.links.first ?? L("task.default.title"))
             : parsed.title
         let task = TaskItem(title: title,
                             isUrgent: flags.isUrgent,
                             isImportant: flags.isImportant,
                             links: parsed.links,
-                            issueKey: parsed.issueKey)
+                            issueKey: parsed.issueKey,
+                            weekStart: selectedWeek)
         context.insert(task)
         try? context.save()
         clipboardCandidate = nil
@@ -69,7 +84,7 @@ struct ContentView: View {
 
     private func previewText(_ p: ParsedTaskInput) -> String {
         var parts: [String] = []
-        if let k = p.issueKey { parts.append("工单 \(k)") }
+        if let k = p.issueKey { parts.append("\(L("clipboard.issuePrefix")) \(k)") }
         if !p.title.isEmpty { parts.append(p.title) }
         if let link = p.links.first { parts.append(link) }
         return parts.joined(separator: "\n")
@@ -79,10 +94,18 @@ struct ContentView: View {
 private struct MainArea: View {
     let sidebar: SidebarItem
     @Binding var selectedTask: TaskItem?
+    @Binding var weekStart: Date
 
     var body: some View {
+        VStack(spacing: 0) {
+            WeekNavigatorBar(weekStart: $weekStart)
+            Divider()
+            split
+        }
+    }
+
+    @ViewBuilder private var split: some View {
         #if os(macOS)
-        // VSplitView 不会自动撑满，必须显式 maxWidth/maxHeight 才能填满 detail 区域。
         VSplitView {
             top
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -101,28 +124,70 @@ private struct MainArea: View {
         #endif
     }
 
-    // 上：象限总览或某个范围的列表
     @ViewBuilder private var top: some View {
         NavigationStack {
             switch sidebar {
             case .overview:
-                QuadrantGridView(selectedTask: $selectedTask)
+                QuadrantGridView(selectedTask: $selectedTask, weekStart: weekStart)
             case .scope(let scope):
-                TaskListView(scope: scope, selectedTask: $selectedTask)
+                TaskListView(scope: scope, selectedTask: $selectedTask, weekStart: weekStart)
             }
         }
     }
 
-    // 下：所选任务的详情
     @ViewBuilder private var bottom: some View {
         NavigationStack {
             if let task = selectedTask {
                 TaskDetailView(task: task)
             } else {
-                ContentUnavailableView("选择一个任务查看详情",
+                ContentUnavailableView(L("detail.unavailable"),
                                        systemImage: "square.grid.2x2")
             }
         }
+    }
+}
+
+/// 周导航：上一周 / 当前周范围 / 下一周，以及「回到本周」。
+struct WeekNavigatorBar: View {
+    @Binding var weekStart: Date
+
+    private var weekMark: String {
+        Week.isCurrent(weekStart) ? L("week.current") : L("week.retro")
+    }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Button { weekStart = Week.shift(weekStart, by: -1) } label: {
+                Image(systemName: "chevron.left")
+            }
+            .buttonStyle(.borderless)
+
+            VStack(spacing: 2) {
+                Text(Week.label(weekStart)).font(.headline)
+                HStack(spacing: 6) {
+                    Text(Week.yearWeekLabel(weekStart))
+                    Text(weekMark)
+                        .foregroundStyle(Week.isCurrent(weekStart) ? .secondary : Color.orange)
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
+            .frame(minWidth: 180)
+
+            Button { weekStart = Week.shift(weekStart, by: 1) } label: {
+                Image(systemName: "chevron.right")
+            }
+            .buttonStyle(.borderless)
+
+            if !Week.isCurrent(weekStart) {
+                Button(L("action.thisWeek")) { weekStart = Week.currentStart }
+                    .buttonStyle(.bordered)
+            }
+
+            Spacer()
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
     }
 }
 

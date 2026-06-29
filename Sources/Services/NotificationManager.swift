@@ -26,7 +26,9 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
         await requestAuthorizationIfNeeded()
 
         let content = UNMutableNotificationContent()
-        content.title = task.title.isEmpty ? "任务提醒" : task.title
+        content.title = task.title.isEmpty
+            ? L("notification.default.title")
+            : task.title
         if let key = task.issueKey { content.subtitle = key }
         if !task.notes.isEmpty { content.body = task.notes }
         content.sound = .default
