@@ -62,9 +62,9 @@ struct TaskRowView: View {
         let subs = task.sortedSubtasks
         HStack(spacing: 10) {
             if let due = task.dueDate {
-                Label(due.formatted(.dateTime.month().day().hour().minute().locale(.app)),
+                Label(due.formatted(.dateTime.month().day().locale(.app)),
                       systemImage: "calendar")
-                    .foregroundStyle(due < .now && !task.isCompleted ? Color.red : Color.secondary)
+                    .foregroundStyle(task.isOverdue ? Color.red : Color.secondary)
             }
             if task.remindAt != nil { Image(systemName: "bell.fill") }
             if !task.urls.isEmpty { TaskLinksButton(urls: task.urls) }

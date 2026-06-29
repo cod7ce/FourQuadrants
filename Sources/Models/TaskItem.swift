@@ -99,4 +99,11 @@ extension TaskItem {
     }
 
     var notificationID: String { "task-\(taskUUID)" }
+
+    /// 是否过期：截止日期按当天 23:59:59 计算。
+    var isOverdue: Bool {
+        guard let due = dueDate, !isCompleted else { return false }
+        let endOfDay = Calendar.current.date(bySettingHour: 23, minute: 59, second: 59, of: due) ?? due
+        return endOfDay < .now
+    }
 }

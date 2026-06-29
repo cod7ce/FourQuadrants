@@ -39,7 +39,7 @@ struct BasicInfoPane: View {
 
         Section(L("detail.section.schedule")) {
             if let due = task.dueDate {
-                LabeledContent(L("detail.field.due.short"), value: due.formatted(.dateTime.month().day().hour().minute().locale(.app)))
+                LabeledContent(L("detail.field.due.short"), value: due.formatted(.dateTime.year().month().day().locale(.app)))
             }
             if let remind = task.remindAt {
                 LabeledContent(L("detail.field.remind"), value: remind.formatted(.dateTime.month().day().hour().minute().locale(.app)))
@@ -99,8 +99,10 @@ struct BasicInfoPane: View {
         }
 
         Section(L("detail.section.schedule")) {
-            OptionalDateRow(title: L("detail.field.due"), date: $task.dueDate)
-            OptionalDateRow(title: L("detail.field.remind"), date: $task.remindAt)
+            OptionalDateRow(title: L("detail.field.due"), date: $task.dueDate,
+                            components: [.date])
+            OptionalDateRow(title: L("detail.field.remind"), date: $task.remindAt,
+                            components: [.date, .hourAndMinute], snapMinutes: 30)
         }
 
         Section(L("detail.section.completion")) {

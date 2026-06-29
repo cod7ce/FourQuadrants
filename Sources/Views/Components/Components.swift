@@ -94,19 +94,33 @@ struct OptionalDateRow: View {
     let title: String
     @Binding var date: Date?
     var components: DatePickerComponents = [.date, .hourAndMinute]
+    /// 若设置，时间会吸附到该分钟间隔（如 30）。
+    var snapMinutes: Int? = nil
 
     var body: some View {
         Toggle(title, isOn: Binding(
             get: { date != nil },
-            set: { date = $0 ? (date ?? .now.addingTimeInterval(3600)) : nil }
+            set: { date = $0 ? (date ?? snap(.now.addingTimeInterval(3600))) : nil }
         ))
         if date != nil {
             DatePicker(
                 title,
-                selection: Binding(get: { date ?? .now }, set: { date = $0 }),
+                selection: Binding(get: { date ?? .now }, set: { date = snap($0) }),
                 displayedComponents: components
             )
             .labelsHidden()
         }
+    }
+
+    private func snap(_ d: Date) -> Date {
+        guard let interval = snapMinutes, interval > 0 else { return d }
+        let cal = Calendar.current
+        var comps = cal.dateComponents([.year, .month, .day, .hour, .minute], from: d)
+        let minute = comps.minute ?? 0
+        let rounded = Int((Double(minute) / Double(interval)).rounded()) * interval
+        comps.minute = 0
+        comps.second = 0
+        let base = cal.date(from: comps) ?? d
+        return cal.date(byAdding: .minute, value: rounded, to: base) ?? d
     }
 }
