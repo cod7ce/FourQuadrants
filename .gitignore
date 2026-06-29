@@ -1,0 +1,10 @@
+# Xcode / Swift
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+*.xcscmblueprint
+.DS_Store
+
+# XcodeGen 生成的工程（由 project.yml 重建；如需纳入版本库可删除此行）
+FourQuadrants.xcodeproj/

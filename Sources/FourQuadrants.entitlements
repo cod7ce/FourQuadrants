@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  本地模式 entitlements —— 不含 iCloud / Push，可在「个人开发团队」下直接编译运行。
+  数据存本地（app 会自动回退到本地存储）。
+  需要跨设备 iCloud 同步时：用付费账号，把 project.yml 的 CODE_SIGN_ENTITLEMENTS
+  指向 FourQuadrants-CloudKit.entitlements。
+-->
+<plist version="1.0">
+<dict>
+	<key>com.apple.security.app-sandbox</key>
+	<true/>
+	<key>com.apple.security.network.client</key>
+	<true/>
+	<key>com.apple.security.files.user-selected.read-write</key>
+	<true/>
+</dict>
+</plist>

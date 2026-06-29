@@ -1,0 +1,55 @@
+name: FourQuadrants
+options:
+  bundleIdPrefix: com.cod7ce
+  createIntermediateGroups: true
+  deploymentTarget:
+    iOS: "26.0"
+    macOS: "26.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    CODE_SIGN_STYLE: Automatic
+    DEVELOPMENT_TEAM: ""
+    SWIFT_STRICT_CONCURRENCY: minimal
+targets:
+  FourQuadrants:
+    type: application
+    supportedDestinations: [macOS, iOS]
+    sources:
+      - path: Sources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.cod7ce.FourQuadrants
+        PRODUCT_NAME: FourQuadrants
+        GENERATE_INFOPLIST_FILE: "YES"
+        ENABLE_PREVIEWS: "YES"
+        CODE_SIGN_ENTITLEMENTS: Sources/FourQuadrants.entitlements
+        INFOPLIST_KEY_CFBundleDisplayName: 四象限
+        INFOPLIST_KEY_LSApplicationCategoryType: "public.app-category.productivity"
+        INFOPLIST_KEY_UILaunchScreen_Generation: "YES"
+        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: "YES"
+        INFOPLIST_KEY_NSHumanReadableCopyright: ""
+  FourQuadrantsTests:
+    type: bundle.unit-test
+    supportedDestinations: [macOS, iOS]
+    sources:
+      - path: Tests
+    dependencies:
+      - target: FourQuadrants
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.cod7ce.FourQuadrants.Tests
+        GENERATE_INFOPLIST_FILE: "YES"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/FourQuadrants.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/FourQuadrants"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+schemes:
+  FourQuadrants:
+    build:
+      targets:
+        FourQuadrants: all
+        FourQuadrantsTests: [test]
+    test:
+      targets:
+        - FourQuadrantsTests
