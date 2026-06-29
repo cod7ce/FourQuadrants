@@ -104,7 +104,8 @@ private struct CompactTaskRow: View {
                 .lineLimit(1)
                 .strikethrough(task.isCompleted)
                 .foregroundStyle(task.isCompleted ? .secondary : .primary)
-            Spacer(minLength: 0)
+            Spacer(minLength: 6)
+            DueDateLabel(task: task)
         }
         .font(.callout)
         .padding(.horizontal, 6)

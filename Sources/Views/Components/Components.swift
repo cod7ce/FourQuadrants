@@ -36,6 +36,19 @@ struct TagChip: View {
     }
 }
 
+/// 右侧的截止日期（仅日期）；过期显示红色。
+struct DueDateLabel: View {
+    let task: TaskItem
+    var body: some View {
+        if let due = task.dueDate {
+            Text(due.formatted(.dateTime.month().day().locale(.app)))
+                .font(.caption)
+                .monospacedDigit()
+                .foregroundStyle(task.isOverdue ? Color.red : Color.secondary)
+        }
+    }
+}
+
 struct CompletionToggle: View {
     let isCompleted: Bool
     let action: () -> Void

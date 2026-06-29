@@ -28,7 +28,9 @@ struct TaskRowView: View {
                     }
                 }
 
-                Spacer(minLength: 0)
+                Spacer(minLength: 6)
+
+                DueDateLabel(task: task)
 
                 if !task.sortedSubtasks.isEmpty {
                     Button { withAnimation { expanded.toggle() } } label: {
@@ -61,11 +63,6 @@ struct TaskRowView: View {
     private var metaLine: some View {
         let subs = task.sortedSubtasks
         HStack(spacing: 10) {
-            if let due = task.dueDate {
-                Label(due.formatted(.dateTime.month().day().locale(.app)),
-                      systemImage: "calendar")
-                    .foregroundStyle(task.isOverdue ? Color.red : Color.secondary)
-            }
             if task.remindAt != nil { Image(systemName: "bell.fill") }
             if !task.urls.isEmpty { TaskLinksButton(urls: task.urls) }
             if !subs.isEmpty {
