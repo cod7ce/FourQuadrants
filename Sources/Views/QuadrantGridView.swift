@@ -63,7 +63,8 @@ private struct QuadrantCard: View {
                     .padding(.vertical, 8)
             } else {
                 ForEach(tasks.prefix(6)) { task in
-                    CompactTaskRow(task: task)
+                    CompactTaskRow(task: task,
+                                   isSelected: selectedTask?.persistentModelID == task.persistentModelID)
                         .contentShape(Rectangle())
                         .onTapGesture { selectedTask = task }
                         .draggable(TaskTransfer(taskUUID: task.taskUUID))
@@ -92,11 +93,13 @@ private struct QuadrantCard: View {
 private struct CompactTaskRow: View {
     @Environment(\.modelContext) private var context
     @Bindable var task: TaskItem
+    var isSelected: Bool = false
 
     var body: some View {
         HStack(spacing: 6) {
             CompletionToggle(isCompleted: task.isCompleted) { toggle() }
             if let key = task.issueKey { IssueKeyBadge(key: key) }
+            ForEach(task.tagList) { TagChip(tag: $0) }
             Text(task.title.isEmpty ? L("task.default.title") : task.title)
                 .lineLimit(1)
                 .strikethrough(task.isCompleted)
@@ -104,6 +107,14 @@ private struct CompactTaskRow: View {
             Spacer(minLength: 0)
         }
         .font(.callout)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 3)
+        .background(isSelected ? Color.accentColor.opacity(0.18) : Color.clear,
+                    in: RoundedRectangle(cornerRadius: 6))
+        .overlay(
+            RoundedRectangle(cornerRadius: 6)
+                .strokeBorder(Color.accentColor.opacity(isSelected ? 0.6 : 0), lineWidth: 1)
+        )
     }
 
     private func toggle() {
