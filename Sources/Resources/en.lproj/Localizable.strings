@@ -126,3 +126,7 @@
 "settings.rule.testPlaceholder" = "Paste text to test";
 "settings.rule.noMatch" = "No match";
 "settings.rule.delete" = "Delete rule";
+
+/* Display */
+"settings.display.section" = "Display";
+"settings.showCompleted" = "Show completed tasks";

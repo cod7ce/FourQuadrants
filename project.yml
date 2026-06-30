@@ -31,7 +31,7 @@ targets:
         GENERATE_INFOPLIST_FILE: "YES"
         ENABLE_PREVIEWS: "YES"
         CODE_SIGN_ENTITLEMENTS: Sources/FourQuadrants.entitlements
-        INFOPLIST_KEY_CFBundleDisplayName: 四象限
+        INFOPLIST_KEY_CFBundleDisplayName: 肆
         INFOPLIST_KEY_LSApplicationCategoryType: "public.app-category.productivity"
         INFOPLIST_KEY_UILaunchScreen_Generation: "YES"
         INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: "YES"

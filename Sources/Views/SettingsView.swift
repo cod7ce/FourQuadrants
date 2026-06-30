@@ -3,6 +3,7 @@ import SwiftUI
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @AppStorage(LocalizationConfig.storageKey) private var language = AppLanguage.zhHans.rawValue
+    @AppStorage("showCompleted") private var showCompleted = false
     @State private var rules: [ParseRule] = ParseRuleStore.load()
 
     var body: some View {
@@ -16,6 +17,10 @@ struct SettingsView: View {
                     }
                     Text(L("settings.language.note"))
                         .font(.caption).foregroundStyle(.secondary)
+                }
+
+                Section(L("settings.display.section")) {
+                    Toggle(L("settings.showCompleted"), isOn: $showCompleted)
                 }
 
                 Section {

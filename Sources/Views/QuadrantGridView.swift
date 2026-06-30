@@ -4,6 +4,7 @@ import SwiftData
 struct QuadrantGridView: View {
     @Binding var selectedTask: TaskItem?
     let weekStart: Date
+    @AppStorage("showCompleted") private var showCompleted = false
     @Query(sort: \TaskItem.sortOrder) private var allTasks: [TaskItem]
     @State private var showAdd = false
 
@@ -19,7 +20,7 @@ struct QuadrantGridView: View {
             LazyVGrid(columns: columns, spacing: 12) {
                 ForEach(Quadrant.allCases) { q in
                     QuadrantCard(quadrant: q,
-                                 tasks: tasks.inScope(.quadrant(q)),
+                                 tasks: tasks.inScope(.quadrant(q), showCompleted: showCompleted),
                                  selectedTask: $selectedTask)
                 }
             }
@@ -76,7 +77,7 @@ private struct QuadrantCard: View {
             }
         }
         .padding()
-        .frame(maxWidth: .infinity, minHeight: 190, alignment: .topLeading)
+        .frame(maxWidth: .infinity, minHeight: 190, maxHeight: .infinity, alignment: .topLeading)
         .background(quadrant.color.opacity(isTargeted ? 0.20 : 0.07),
                     in: RoundedRectangle(cornerRadius: 14))
         .overlay(RoundedRectangle(cornerRadius: 14)

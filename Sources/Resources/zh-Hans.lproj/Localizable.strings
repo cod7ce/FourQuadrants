@@ -1,5 +1,5 @@
 /* App */
-"app.title" = "四象限";
+"app.title" = "肆";
 
 /* 通用动作 */
 "action.add" = "添加";
@@ -126,3 +126,7 @@
 "settings.rule.testPlaceholder" = "粘贴一段文本测试";
 "settings.rule.noMatch" = "未匹配";
 "settings.rule.delete" = "删除规则";
+
+/* 显示 */
+"settings.display.section" = "显示";
+"settings.showCompleted" = "显示已完成任务";

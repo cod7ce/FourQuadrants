@@ -41,21 +41,26 @@ extension Array where Element == TaskItem {
     var active: [TaskItem] { filter { !$0.isCompleted } }
     var completed: [TaskItem] { filter { $0.isCompleted } }
 
-    func inScope(_ scope: TaskScope) -> [TaskItem] {
+    func inScope(_ scope: TaskScope, showCompleted: Bool = false) -> [TaskItem] {
         let top = topLevel
+        func visible(_ arr: [TaskItem]) -> [TaskItem] {
+            showCompleted ? arr : arr.filter { !$0.isCompleted }
+        }
         switch scope {
         case .all:
-            return top.active
+            return visible(top)
         case .quadrant(let q):
-            return top.active.filter { $0.quadrant == q }
+            return visible(top.filter { $0.quadrant == q })
         case .scheduled:
-            return top.active.filter { $0.dueDate != nil }
+            return visible(top.filter { $0.dueDate != nil })
         case .completed:
             return top.completed
         case .tag(let name):
-            return top.filter { $0.tagList.contains { $0.name == name } }
+            return visible(top.filter { $0.tagList.contains { $0.name == name } })
         }
     }
 
-    func count(in scope: TaskScope) -> Int { inScope(scope).count }
+    func count(in scope: TaskScope, showCompleted: Bool = false) -> Int {
+        inScope(scope, showCompleted: showCompleted).count
+    }
 }
