@@ -100,48 +100,13 @@ private struct MainArea: View {
         VStack(spacing: 0) {
             WeekNavigatorBar(weekStart: $weekStart)
             Divider()
-            split
-        }
-    }
-
-    @ViewBuilder private var split: some View {
-        #if os(macOS)
-        VSplitView {
-            top
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .frame(minHeight: 240)
-            bottom
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .frame(minHeight: 200)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        #else
-        VStack(spacing: 0) {
-            top
-            Divider()
-            bottom
-        }
-        #endif
-    }
-
-    @ViewBuilder private var top: some View {
-        NavigationStack {
-            switch sidebar {
-            case .overview:
-                QuadrantGridView(selectedTask: $selectedTask, weekStart: weekStart)
-            case .scope(let scope):
-                TaskListView(scope: scope, selectedTask: $selectedTask, weekStart: weekStart)
-            }
-        }
-    }
-
-    @ViewBuilder private var bottom: some View {
-        NavigationStack {
-            if let task = selectedTask {
-                TaskDetailView(task: task)
-            } else {
-                ContentUnavailableView(L("detail.unavailable"),
-                                       systemImage: "square.grid.2x2")
+            NavigationStack {
+                switch sidebar {
+                case .overview:
+                    QuadrantGridView(selectedTask: $selectedTask, weekStart: weekStart)
+                case .scope(let scope):
+                    TaskListView(scope: scope, selectedTask: $selectedTask, weekStart: weekStart)
+                }
             }
         }
     }

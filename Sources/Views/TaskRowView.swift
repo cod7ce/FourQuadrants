@@ -5,6 +5,7 @@ struct TaskRowView: View {
     @Environment(\.modelContext) private var context
     @Bindable var task: TaskItem
     @State private var expanded = false
+    @State private var showPopover = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -57,6 +58,9 @@ struct TaskRowView: View {
             }
         }
         .padding(.vertical, 2)
+        .contentShape(Rectangle())
+        .onTapGesture(count: 2) { showPopover = true }
+        .popover(isPresented: $showPopover) { TaskEditor(task: task) }
     }
 
     @ViewBuilder

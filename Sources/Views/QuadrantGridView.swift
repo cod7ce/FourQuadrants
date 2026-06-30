@@ -65,9 +65,8 @@ private struct QuadrantCard: View {
             } else {
                 ForEach(tasks.prefix(6)) { task in
                     CompactTaskRow(task: task,
-                                   isSelected: selectedTask?.persistentModelID == task.persistentModelID)
-                        .contentShape(Rectangle())
-                        .onTapGesture { selectedTask = task }
+                                   isSelected: selectedTask?.persistentModelID == task.persistentModelID,
+                                   onSelect: { selectedTask = task })
                         .draggable(TaskTransfer(taskUUID: task.taskUUID))
                 }
                 if tasks.count > 6 {
@@ -95,6 +94,8 @@ private struct CompactTaskRow: View {
     @Environment(\.modelContext) private var context
     @Bindable var task: TaskItem
     var isSelected: Bool = false
+    var onSelect: () -> Void = {}
+    @State private var showPopover = false
 
     var body: some View {
         HStack(spacing: 6) {
@@ -117,6 +118,10 @@ private struct CompactTaskRow: View {
             RoundedRectangle(cornerRadius: 6)
                 .strokeBorder(Color.accentColor.opacity(isSelected ? 0.6 : 0), lineWidth: 1)
         )
+        .contentShape(Rectangle())
+        .onTapGesture(count: 2) { showPopover = true }
+        .onTapGesture { onSelect() }
+        .popover(isPresented: $showPopover) { TaskEditor(task: task) }
     }
 
     private func toggle() {
