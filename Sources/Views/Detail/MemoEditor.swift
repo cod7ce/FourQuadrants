@@ -43,6 +43,44 @@ enum MemoHighlight {
     static let appliedOpacity: Double = 0.45   // 实际高亮的透明度
 }
 
+#if os(macOS)
+// macOS 走 TextKit 1：图片附件由 NSTextAttachmentCell 按「图片自身 size」渲染，
+// 并被 layoutManager.defaultAttachmentScaling 自动缩到内容宽，attachment.bounds 被
+// 忽略。因此必须用 NSImage.size 控制显示尺寸，并替换成我们掌控的普通附件
+//（RichTextKit 的自定义附件每次都用原图尺寸重建 cell，无法改尺寸）。
+
+/// 从附件取底图（兼容 RichTextKit 自定义附件与 RTFD 还原的普通附件）。
+func memoImage(from att: NSTextAttachment) -> NSImage? {
+    if let i = att.image { return i }
+    if let c = att.contents, let i = NSImage(data: c) { return i }
+    if let cell = att.attachmentCell as? NSTextAttachmentCell, let i = cell.image { return i }
+    return nil
+}
+
+/// 原始像素尺寸（在多次「重设 size」后仍稳定，作为「实际大小」基准）。
+func memoNaturalSize(_ img: NSImage) -> NSSize {
+    if let rep = img.representations.first, rep.pixelsWide > 0, rep.pixelsHigh > 0 {
+        return NSSize(width: CGFloat(rep.pixelsWide), height: CGFloat(rep.pixelsHigh))
+    }
+    return img.size
+}
+
+/// 生成「受控」的普通图片附件，用 NSImage.size 决定显示尺寸。
+func memoMakeAttachment(_ img: NSImage, width: CGFloat) -> NSTextAttachment {
+    let nat = memoNaturalSize(img)
+    let w = max(1, width)
+    let h = nat.width > 0 ? nat.height * (w / nat.width) : w
+    let size = NSSize(width: w, height: h)
+    let sized = NSImage(size: size)
+    sized.addRepresentations(img.representations)
+    sized.size = size
+    let att = NSTextAttachment()
+    att.image = sized
+    att.bounds = CGRect(origin: .zero, size: size)
+    return att
+}
+#endif
+
 /// 每周备忘：用社区库 RichTextKit 的富文本编辑器（WYSIWYG，跨 iOS/macOS）。
 /// 数据以 RTFD 存（复用 RichText.load/data，保留字体/颜色/下划线/图片）。
 struct MemoEditor: View {
@@ -199,10 +237,28 @@ struct MemoEditor: View {
         #if os(macOS)
         guard let tv = holder.component as? NSTextView, let storage = tv.textStorage,
               let maxW = usableWidth(tv) else { return }
+        let full = NSRange(location: 0, length: storage.length)
+        var reps: [(NSRange, NSTextAttachment)] = []
+        storage.enumerateAttribute(.attachment, in: full) { obj, range, _ in
+            guard let att = obj as? NSTextAttachment, let img = memoImage(from: att) else { return }
+            let nat = memoNaturalSize(img)
+            guard nat.width > 0 else { return }
+            // 已是「受控」附件且尺寸合理（未超内容宽、未被放大超过原图）→ 保留，
+            // 这样既保住手动调过的较小尺寸，又跳过已归正的，避免重复替换。
+            if att.image != nil, att.bounds.width > 0,
+               att.bounds.width <= maxW + 0.5, att.bounds.width <= nat.width + 0.5 { return }
+            reps.append((range, memoMakeAttachment(img, width: min(nat.width, maxW))))
+        }
+        guard !reps.isEmpty else { return }
+        storage.beginEditing()
+        for (range, newAtt) in reps { storage.addAttribute(.attachment, value: newAtt, range: range) }
+        storage.endEditing()
+        if let tc = tv.textContainer { tv.layoutManager?.ensureLayout(for: tc) }
+        tv.needsDisplay = true
+        scheduleSave()
         #else
         guard let tv = holder.component as? UITextView, let storage = tv.textStorage as NSTextStorage?,
               let maxW = usableWidth(tv) else { return }
-        #endif
         let full = NSRange(location: 0, length: storage.length)
         var edits: [(NSRange, NSTextAttachment, CGSize)] = []
         storage.enumerateAttribute(.attachment, in: full) { obj, range, _ in
@@ -219,14 +275,10 @@ struct MemoEditor: View {
             storage.addAttribute(.attachment, value: att, range: range)
         }
         storage.endEditing()
-        #if os(macOS)
-        if let tc = tv.textContainer { tv.layoutManager?.ensureLayout(for: tc) }
-        tv.needsDisplay = true
-        #else
         tv.layoutManager.ensureLayout(for: tv.textContainer)
         tv.setNeedsDisplay()
-        #endif
         scheduleSave()
+        #endif
     }
 
     /// 直接读底层文本视图的当前内容（比 text 绑定更可靠）。
@@ -428,9 +480,17 @@ private struct MemoToolbar: View {
         guard let tv = holder.component as? UITextView, let storage = tv.textStorage as NSTextStorage? else { return nil }
         let r = tv.selectedRange
         #endif
-        guard r.length >= 1, r.location + r.length <= storage.length else { return nil }
+        guard storage.length > 0 else { return nil }
+        // 选区内有图片 → 用它；否则看光标紧邻（前一个/当前位置）的字符是不是图片，
+        // 这样单击图片旁边也能出现尺寸按钮。
+        var search = r
+        if r.length == 0 {
+            let start = max(0, r.location - 1)
+            search = NSRange(location: start, length: min(2, storage.length - start))
+        }
+        guard search.location + search.length <= storage.length else { return nil }
         var result: (NSTextAttachment, NSRange)?
-        storage.enumerateAttribute(.attachment, in: r) { obj, range, stop in
+        storage.enumerateAttribute(.attachment, in: search) { obj, range, stop in
             if let att = obj as? NSTextAttachment, att.attachedImage != nil {
                 result = (att, range); stop.pointee = true
             }
@@ -452,37 +512,50 @@ private struct MemoToolbar: View {
         #endif
     }
 
+    /// 当前显示宽度（受控附件用 bounds，回退到图片 size）。
+    private func currentImageWidth(_ att: NSTextAttachment) -> CGFloat {
+        if att.bounds.width > 0 { return att.bounds.width }
+        return att.attachedImage?.size.width ?? 0
+    }
+
     private func scaleImage(_ factor: CGFloat, _ sel: (NSTextAttachment, NSRange)) {
-        let (att, _) = sel
-        guard let img = att.attachedImage, img.size.width > 0 else { return }
-        let cur = att.bounds.width > 0 ? att.bounds.width : img.size.width
-        let w = min(max(40, cur * factor), imageMaxWidth())
-        applyImageWidth(w, to: sel, image: img)
+        let cur = currentImageWidth(sel.0)
+        guard cur > 0 else { return }
+        applyImageWidth(min(max(40, cur * factor), imageMaxWidth()), to: sel)
     }
 
     private func fitImage(_ sel: (NSTextAttachment, NSRange)) {
-        let (att, _) = sel
-        guard let img = att.attachedImage, img.size.width > 0 else { return }
-        applyImageWidth(min(img.size.width, imageMaxWidth()), to: sel, image: img)
+        #if os(macOS)
+        guard let img = memoImage(from: sel.0) else { return }
+        let natural = memoNaturalSize(img).width
+        #else
+        guard let img = sel.0.attachedImage else { return }
+        let natural = img.size.width
+        #endif
+        guard natural > 0 else { return }
+        applyImageWidth(min(natural, imageMaxWidth()), to: sel)
     }
 
-    private func applyImageWidth(_ w: CGFloat, to sel: (NSTextAttachment, NSRange), image img: ImageRepresentable) {
+    private func applyImageWidth(_ w: CGFloat, to sel: (NSTextAttachment, NSRange)) {
         let (att, range) = sel
-        let h = img.size.height * (w / img.size.width)
-        att.bounds = CGRect(x: 0, y: 0, width: w, height: h)
         #if os(macOS)
-        guard let tv = holder.component as? NSTextView, let storage = tv.textStorage else { return }
+        // macOS：bounds 无效，必须换成用 NSImage.size 控制尺寸的受控附件
+        guard let tv = holder.component as? NSTextView, let storage = tv.textStorage,
+              let img = memoImage(from: att) else { return }
+        let newAtt = memoMakeAttachment(img, width: w)
+        storage.beginEditing()
+        storage.addAttribute(.attachment, value: newAtt, range: range)
+        storage.endEditing()
+        if let tc = tv.textContainer { tv.layoutManager?.ensureLayout(for: tc) }
+        tv.needsDisplay = true
         #else
-        guard let tv = holder.component as? UITextView, let storage = tv.textStorage as NSTextStorage? else { return }
-        #endif
+        guard let tv = holder.component as? UITextView, let storage = tv.textStorage as NSTextStorage?,
+              let img = att.attachedImage, img.size.width > 0 else { return }
+        att.bounds = CGRect(x: 0, y: 0, width: w, height: img.size.height * (w / img.size.width))
         storage.beginEditing()
         storage.removeAttribute(.attachment, range: range)
         storage.addAttribute(.attachment, value: att, range: range)
         storage.endEditing()
-        #if os(macOS)
-        if let tc = tv.textContainer { tv.layoutManager?.ensureLayout(for: tc) }
-        tv.needsDisplay = true
-        #else
         tv.layoutManager.ensureLayout(for: tv.textContainer)
         tv.setNeedsDisplay()
         #endif
