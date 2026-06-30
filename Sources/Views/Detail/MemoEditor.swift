@@ -18,7 +18,7 @@ enum MemoStyle {
     static let lineSpacingRatio: CGFloat = 0.30     // 段内软换行的行间距
     static let inset: CGFloat = 14             // 文本容器内边距（上下左右）
     static let horizontalPadding: CGFloat = 16 // 编辑器外层左右留白
-    static let defaultFontSize: Double = 15
+    static let defaultFontSize: Double = 16   // 与 macOS Notes 正文一致
 
     /// 按当前字号设置默认段落间距，可在已有样式上调整以保留对齐。
     static func applyDefaultSpacing(_ p: NSMutableParagraphStyle, fontSize: Double) {

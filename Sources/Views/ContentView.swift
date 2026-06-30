@@ -143,15 +143,18 @@ struct WeekNavigatorBar: View {
 
     var body: some View {
         HStack(spacing: 12) {
+            Spacer()
+
             Button { weekStart = Week.shift(weekStart, by: -1) } label: {
                 Image(systemName: "chevron.left")
             }
             .buttonStyle(.borderless)
 
             VStack(spacing: 2) {
-                Text(Week.label(weekStart)).appFont(.headline)
+                // 周信息为标题；日期范围 + 本周/回溯 为描述
+                Text(Week.yearWeekLabel(weekStart)).appFont(.headline)
                 HStack(spacing: 6) {
-                    Text(Week.yearWeekLabel(weekStart))
+                    Text(Week.label(weekStart))
                     Text(weekMark)
                         .foregroundStyle(Week.isCurrent(weekStart) ? .secondary : Color.orange)
                 }
@@ -165,12 +168,14 @@ struct WeekNavigatorBar: View {
             }
             .buttonStyle(.borderless)
 
+            Spacer()
+        }
+        .overlay(alignment: .trailing) {
             if !Week.isCurrent(weekStart) {
                 Button(L("action.thisWeek")) { weekStart = Week.currentStart }
                     .buttonStyle(.bordered)
+                    .padding(.trailing, 12)
             }
-
-            Spacer()
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)

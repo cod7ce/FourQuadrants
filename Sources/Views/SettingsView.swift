@@ -6,7 +6,7 @@ struct SettingsView: View {
     @AppStorage("showCompleted") private var showCompleted = false
     @AppStorage("notesFolder") private var notesFolder = "四象限"
     @AppStorage("notesNativeChecklist") private var notesNativeChecklist = false
-    @AppStorage("memoFontSize") private var memoFontSize = 15.0
+    @AppStorage("memoFontSize") private var memoFontSize = 16.0
     @State private var rules: [ParseRule] = ParseRuleStore.load()
 
     var body: some View {
