@@ -20,7 +20,8 @@ struct QuadrantGridView: View {
             LazyVGrid(columns: columns, spacing: 12) {
                 ForEach(Quadrant.allCases) { q in
                     QuadrantCard(quadrant: q,
-                                 tasks: tasks.inScope(.quadrant(q), showCompleted: showCompleted),
+                                 tasks: tasks.inScope(.quadrant(q), showCompleted: true),
+                                 showCompleted: showCompleted,
                                  selectedTask: $selectedTask)
                 }
             }
@@ -41,37 +42,45 @@ struct QuadrantGridView: View {
 private struct QuadrantCard: View {
     @Environment(\.modelContext) private var context
     let quadrant: Quadrant
-    let tasks: [TaskItem]
+    let tasks: [TaskItem]          // 全部（含已完成），用于计数
+    let showCompleted: Bool
     @Binding var selectedTask: TaskItem?
     @State private var isTargeted = false
+
+    private var displayed: [TaskItem] {
+        showCompleted ? tasks : tasks.filter { !$0.isCompleted }
+    }
+    private var doneCount: Int { tasks.filter(\.isCompleted).count }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
                 Image(systemName: quadrant.symbol).foregroundStyle(quadrant.color)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(quadrant.title).font(.headline)
-                    Text(quadrant.actionHint).font(.caption).foregroundStyle(.secondary)
+                    Text(quadrant.title).appFont(.headline)
+                    Text(quadrant.actionHint).appFont(.caption).foregroundStyle(.secondary)
                 }
                 Spacer()
-                Text("\(tasks.count)").font(.callout.monospacedDigit()).foregroundStyle(.secondary)
+                Text("\(doneCount) / \(tasks.count)")
+                    .appFont(.callout, monospacedDigit: true)
+                    .foregroundStyle(.secondary)
             }
             Divider()
-            if tasks.isEmpty {
+            if displayed.isEmpty {
                 Text(L("grid.empty"))
-                    .font(.caption).foregroundStyle(.tertiary)
+                    .appFont(.caption).foregroundStyle(.tertiary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.vertical, 8)
             } else {
-                ForEach(tasks.prefix(6)) { task in
+                ForEach(displayed.prefix(6)) { task in
                     CompactTaskRow(task: task,
                                    isSelected: selectedTask?.persistentModelID == task.persistentModelID,
                                    onSelect: { selectedTask = task })
                         .draggable(TaskTransfer(taskUUID: task.taskUUID))
                 }
-                if tasks.count > 6 {
-                    Text(String(format: L("grid.more"), tasks.count - 6))
-                        .font(.caption2).foregroundStyle(.secondary)
+                if displayed.count > 6 {
+                    Text(String(format: L("grid.more"), displayed.count - 6))
+                        .appFont(.caption2).foregroundStyle(.secondary)
                 }
             }
         }
@@ -92,10 +101,14 @@ private struct QuadrantCard: View {
 
 private struct CompactTaskRow: View {
     @Environment(\.modelContext) private var context
+    @Environment(\.openURL) private var openURL
+    @Environment(\.commandHeld) private var commandHeld
     @Bindable var task: TaskItem
     var isSelected: Bool = false
     var onSelect: () -> Void = {}
     @State private var showPopover = false
+
+    private var linkActive: Bool { commandHeld && !task.urls.isEmpty }
 
     var body: some View {
         HStack(spacing: 6) {
@@ -103,13 +116,14 @@ private struct CompactTaskRow: View {
             if let key = task.issueKey { IssueKeyBadge(key: key) }
             ForEach(task.tagList) { TagChip(tag: $0) }
             Text(task.title.isEmpty ? L("task.default.title") : task.title)
+                .appFont(.body)
                 .lineLimit(1)
                 .strikethrough(task.isCompleted)
-                .foregroundStyle(task.isCompleted ? .secondary : .primary)
+                .underline(linkActive)
+                .foregroundStyle(linkActive ? Color.accentColor : (task.isCompleted ? .secondary : .primary))
             Spacer(minLength: 6)
             DueDateLabel(task: task)
         }
-        .font(.callout)
         .padding(.horizontal, 6)
         .padding(.vertical, 3)
         .background(isSelected ? Color.accentColor.opacity(0.18) : Color.clear,
@@ -119,6 +133,13 @@ private struct CompactTaskRow: View {
                 .strokeBorder(Color.accentColor.opacity(isSelected ? 0.6 : 0), lineWidth: 1)
         )
         .contentShape(Rectangle())
+        #if os(macOS)
+        .highPriorityGesture(
+            TapGesture().modifiers(.command).onEnded {
+                if let url = task.urls.first { openURL(url) }
+            }
+        )
+        #endif
         .onTapGesture(count: 2) { showPopover = true }
         .onTapGesture { onSelect() }
         .popover(isPresented: $showPopover) { TaskEditor(task: task) }

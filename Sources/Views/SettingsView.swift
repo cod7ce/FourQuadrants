@@ -4,6 +4,8 @@ struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @AppStorage(LocalizationConfig.storageKey) private var language = AppLanguage.zhHans.rawValue
     @AppStorage("showCompleted") private var showCompleted = false
+    @AppStorage("notesFolder") private var notesFolder = "四象限"
+    @AppStorage("notesNativeChecklist") private var notesNativeChecklist = false
     @State private var rules: [ParseRule] = ParseRuleStore.load()
 
     var body: some View {
@@ -16,7 +18,7 @@ struct SettingsView: View {
                         }
                     }
                     Text(L("settings.language.note"))
-                        .font(.caption).foregroundStyle(.secondary)
+                        .appFont(.caption).foregroundStyle(.secondary)
                 }
 
                 Section(L("settings.display.section")) {
@@ -24,10 +26,21 @@ struct SettingsView: View {
                 }
 
                 Section {
+                    LabeledContent(L("settings.export.folder")) {
+                        TextField("", text: $notesFolder).multilineTextAlignment(.trailing)
+                    }
+                    Toggle(L("settings.export.native"), isOn: $notesNativeChecklist)
+                } header: {
+                    Text(L("settings.export.section"))
+                } footer: {
+                    Text(notesNativeChecklist ? L("settings.export.native.note") : L("settings.export.note"))
+                }
+
+                Section {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(L("settings.parse.builtin"))
                         Text(L("settings.parse.builtin.desc"))
-                            .font(.caption).foregroundStyle(.secondary)
+                            .appFont(.caption).foregroundStyle(.secondary)
                     }
                     ForEach($rules) { $rule in
                         NavigationLink {
@@ -37,7 +50,7 @@ struct SettingsView: View {
                                 Text(rule.name.isEmpty ? L("settings.rule.new") : rule.name)
                                 if !rule.pattern.isEmpty {
                                     Text(rule.pattern)
-                                        .font(.caption.monospaced())
+                                        .appFont(.caption, monospaced: true)
                                         .foregroundStyle(.secondary)
                                         .lineLimit(1)
                                 }
@@ -60,12 +73,17 @@ struct SettingsView: View {
             .formStyle(.grouped)
             .navigationTitle(L("settings.title"))
             .onChange(of: rules) { _, new in ParseRuleStore.save(new) }
+            #if os(iOS)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button(L("settings.done")) { dismiss() }
                 }
             }
+            #endif
         }
+        #if os(macOS)
+        .frame(minWidth: 460, minHeight: 520)
+        #endif
     }
 }
 
@@ -80,7 +98,7 @@ private struct RuleEditorView: View {
             }
             Section(L("settings.rule.section.regex")) {
                 TextField(L("settings.rule.pattern"), text: $rule.pattern, axis: .vertical)
-                    .font(.body.monospaced())
+                    .appFont(.body, monospaced: true)
                     .autocorrectionDisabled()
             }
             Section {

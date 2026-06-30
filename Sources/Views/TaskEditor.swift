@@ -16,7 +16,7 @@ struct TaskEditor: View {
         Form {
             Section {
                 TextField(L("detail.field.title"), text: $task.title, axis: .vertical)
-                    .font(.headline)
+                    .appFont(.headline)
                 TextField(L("detail.field.issueKey.placeholder"), text: Binding($task.issueKey))
                     .autocorrectionDisabled()
             }

@@ -10,11 +10,25 @@ struct ContentView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage(LocalizationConfig.storageKey) private var language = AppLanguage.zhHans.rawValue
+    @AppStorage(FontScale.key) private var fontIndex = FontScale.defaultIndex
+    #if os(macOS)
+    @StateObject private var modifiers = ModifierWatcher()
+    #endif
+
+    private var commandHeld: Bool {
+        #if os(macOS)
+        modifiers.command
+        #else
+        false
+        #endif
+    }
 
     @State private var sidebar: SidebarItem? = .overview
     @State private var selectedTask: TaskItem?
     @State private var selectedWeek = Week.currentStart
+    #if os(iOS)
     @State private var showSettings = false
+    #endif
 
     // 剪贴板感知
     @State private var clipboardCandidate: ParsedTaskInput?
@@ -25,6 +39,7 @@ struct ContentView: View {
         NavigationSplitView {
             SidebarView(selection: $sidebar, weekStart: selectedWeek)
                 .navigationTitle(L("app.title"))
+                #if os(iOS)
                 .toolbar {
                     ToolbarItem {
                         Button { showSettings = true } label: {
@@ -32,14 +47,20 @@ struct ContentView: View {
                         }
                     }
                 }
+                #endif
         } detail: {
             MainArea(sidebar: sidebar ?? .overview,
                      selectedTask: $selectedTask,
                      weekStart: $selectedWeek)
         }
         .environment(\.locale, .app)
+        .environment(\.commandHeld, commandHeld)                         // 按住 ⌘ 提示可点链接
+        .environment(\.fontScale, FontScale.scale(fontIndex))            // ⌘+ / ⌘- 调整字号
+        .environment(\.font, AppFont.font(.body, scale: FontScale.scale(fontIndex)))
         .id(language)   // 切换语言时整体重建，立即生效
+        #if os(iOS)
         .sheet(isPresented: $showSettings) { SettingsView() }
+        #endif
         .task { await checkClipboard() }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { Task { await checkClipboard() } }
@@ -128,13 +149,13 @@ struct WeekNavigatorBar: View {
             .buttonStyle(.borderless)
 
             VStack(spacing: 2) {
-                Text(Week.label(weekStart)).font(.headline)
+                Text(Week.label(weekStart)).appFont(.headline)
                 HStack(spacing: 6) {
                     Text(Week.yearWeekLabel(weekStart))
                     Text(weekMark)
                         .foregroundStyle(Week.isCurrent(weekStart) ? .secondary : Color.orange)
                 }
-                .font(.caption)
+                .appFont(.caption)
                 .foregroundStyle(.secondary)
             }
             .frame(minWidth: 180)

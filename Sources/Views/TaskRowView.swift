@@ -3,9 +3,13 @@ import SwiftData
 
 struct TaskRowView: View {
     @Environment(\.modelContext) private var context
+    @Environment(\.openURL) private var openURL
+    @Environment(\.commandHeld) private var commandHeld
     @Bindable var task: TaskItem
     @State private var expanded = false
     @State private var showPopover = false
+
+    private var linkActive: Bool { commandHeld && !task.urls.isEmpty }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -18,8 +22,10 @@ struct TaskRowView: View {
                             IssueKeyBadge(key: key, url: task.urls.first)
                         }
                         Text(task.title.isEmpty ? L("task.default.title") : task.title)
+                            .appFont(.body)
                             .strikethrough(task.isCompleted)
-                            .foregroundStyle(task.isCompleted ? .secondary : .primary)
+                            .underline(linkActive)
+                            .foregroundStyle(linkActive ? Color.accentColor : (task.isCompleted ? .secondary : .primary))
                     }
                     metaLine
                     if !task.tagList.isEmpty {
@@ -36,7 +42,7 @@ struct TaskRowView: View {
                 if !task.sortedSubtasks.isEmpty {
                     Button { withAnimation { expanded.toggle() } } label: {
                         Image(systemName: expanded ? "chevron.down" : "chevron.right")
-                            .font(.caption)
+                            .appFont(.caption)
                     }
                     .buttonStyle(.plain)
                     .foregroundStyle(.secondary)
@@ -48,7 +54,7 @@ struct TaskRowView: View {
                     HStack(spacing: 8) {
                         CompletionToggle(isCompleted: sub.isCompleted) { toggle(sub) }
                         Text(sub.title)
-                            .font(.callout)
+                            .appFont(.callout)
                             .strikethrough(sub.isCompleted)
                             .foregroundStyle(sub.isCompleted ? .secondary : .primary)
                         Spacer(minLength: 0)
@@ -59,6 +65,13 @@ struct TaskRowView: View {
         }
         .padding(.vertical, 2)
         .contentShape(Rectangle())
+        #if os(macOS)
+        .highPriorityGesture(
+            TapGesture().modifiers(.command).onEnded {
+                if let url = task.urls.first { openURL(url) }
+            }
+        )
+        #endif
         .onTapGesture(count: 2) { showPopover = true }
         .popover(isPresented: $showPopover) { TaskEditor(task: task) }
     }
@@ -73,7 +86,7 @@ struct TaskRowView: View {
                 Label("\(subs.filter(\.isCompleted).count)/\(subs.count)", systemImage: "checklist")
             }
         }
-        .font(.caption2)
+        .appFont(.caption2)
         .foregroundStyle(.secondary)
     }
 

@@ -9,9 +9,12 @@ struct QuickAddView: View {
     let defaultQuadrant: Quadrant
     let weekStart: Date
 
+    @Query(sort: \Tag.name) private var allTags: [Tag]
     @State private var raw = ""
     @State private var parsed = ParsedTaskInput(issueKey: nil, title: "", links: [])
     @State private var quadrant: Quadrant
+    @State private var chosenTags: Set<Tag> = []
+    @State private var newTagName = ""
 
     init(defaultQuadrant: Quadrant, weekStart: Date) {
         self.defaultQuadrant = defaultQuadrant
@@ -50,6 +53,25 @@ struct QuickAddView: View {
                     .pickerStyle(.navigationLink)
                     #endif
                 }
+
+                Section(L("detail.section.tags")) {
+                    ForEach(allTags) { tag in
+                        Button { toggle(tag) } label: {
+                            HStack {
+                                TagChip(tag: tag)
+                                Spacer()
+                                if chosenTags.contains(tag) {
+                                    Image(systemName: "checkmark").foregroundStyle(.tint)
+                                }
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    HStack {
+                        TextField(L("detail.tag.new"), text: $newTagName)
+                        Button(L("action.add"), action: addTag).disabled(newTagName.isEmpty)
+                    }
+                }
             }
             .formStyle(.grouped)
             .navigationTitle(L("add.title"))
@@ -62,7 +84,10 @@ struct QuickAddView: View {
                         .disabled(parsed.title.isEmpty && parsed.issueKey == nil)
                 }
                 ToolbarItem(placement: .cancellationAction) {
-                    Button(L("action.cancel")) { dismiss() }
+                    Button(L("action.cancel")) {
+                        context.rollback()   // 丢弃未保存的新标签
+                        dismiss()
+                    }
                 }
             }
         }
@@ -79,9 +104,24 @@ struct QuickAddView: View {
                             links: parsed.links,
                             issueKey: parsed.issueKey,
                             weekStart: weekStart)
+        task.tags = Array(chosenTags)
         context.insert(task)
         try? context.save()
         dismiss()
+    }
+
+    private func toggle(_ tag: Tag) {
+        if chosenTags.contains(tag) { chosenTags.remove(tag) } else { chosenTags.insert(tag) }
+    }
+
+    private func addTag() {
+        let name = newTagName.trimmingCharacters(in: .whitespaces)
+        guard !name.isEmpty else { return }
+        let hex = TagPalette.hexes[allTags.count % TagPalette.hexes.count]
+        let tag = Tag(name: name, colorHex: hex)
+        context.insert(tag)
+        chosenTags.insert(tag)
+        newTagName = ""
     }
 }
 

@@ -59,7 +59,7 @@
 "detail.section.subtasks" = "Subtasks";
 "detail.field.title" = "Title";
 "detail.field.issueKey" = "Ticket";
-"detail.field.issueKey.placeholder" = "Ticket (e.g. ONES2-2296709)";
+"detail.field.issueKey.placeholder" = "Ticket";
 "detail.section.quadrant" = "Quadrant";
 "detail.flag.urgent" = "Urgent";
 "detail.flag.important" = "Important";
@@ -130,3 +130,17 @@
 /* Display */
 "settings.display.section" = "Display";
 "settings.showCompleted" = "Show completed tasks";
+
+/* Menu */
+"menu.fontIncrease" = "Increase Text Size";
+"menu.fontDecrease" = "Decrease Text Size";
+"menu.fontReset" = "Actual Size";
+
+/* Export */
+"menu.exportNotes" = "Export This Week to Notes";
+"settings.export.section" = "Export to Notes";
+"settings.export.folder" = "Target folder";
+"settings.export.note" = "Export the current week via the File menu or ⇧⌘E; a note with the same title is overwritten.";
+"export.failed" = "Export failed";
+"settings.export.native" = "Native checklist (experimental)";
+"settings.export.native.note" = "Uses GUI automation to build a native checklist; first run needs Accessibility permission for the app. Don't touch keyboard/mouse during export. Turn off for robust ☐/☑ text.";

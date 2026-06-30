@@ -7,8 +7,7 @@ struct IssueKeyBadge: View {
 
     private var label: some View {
         Text(key)
-            .font(.caption2.weight(.semibold))
-            .monospaced()
+            .appFont(.caption2, weight: .semibold, monospaced: true)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
             .background(Color.accentColor.opacity(0.15), in: Capsule())
@@ -28,7 +27,7 @@ struct TagChip: View {
     let tag: Tag
     var body: some View {
         Text(tag.name)
-            .font(.caption2)
+            .appFont(.caption2)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
             .background(tag.color.opacity(0.18), in: Capsule())
@@ -42,8 +41,7 @@ struct DueDateLabel: View {
     var body: some View {
         if let due = task.dueDate {
             Text(due.formatted(.dateTime.month().day().locale(.app)))
-                .font(.caption)
-                .monospacedDigit()
+                .appFont(.caption, monospacedDigit: true)
                 .foregroundStyle(task.isOverdue ? Color.red : Color.secondary)
         }
     }

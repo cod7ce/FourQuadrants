@@ -4,6 +4,9 @@ import SwiftData
 @main
 struct FourQuadrantsApp: App {
     let container: ModelContainer
+    @AppStorage(FontScale.key) private var fontIndex = FontScale.defaultIndex
+    @AppStorage("notesFolder") private var notesFolder = "四象限"
+    @AppStorage("notesNativeChecklist") private var notesNativeChecklist = false
 
     init() {
         container = Self.makeContainer()
@@ -18,6 +21,32 @@ struct FourQuadrantsApp: App {
         #if os(macOS)
         .commands {
             SidebarCommands()
+            CommandGroup(after: .importExport) {
+                Button(L("menu.exportNotes")) {
+                    NotesExporter.export(weekStart: Week.currentStart,
+                                         folder: notesFolder,
+                                         nativeChecklist: notesNativeChecklist,
+                                         context: container.mainContext)
+                }
+                .keyboardShortcut("e", modifiers: [.command, .shift])
+            }
+            CommandGroup(after: .sidebar) {
+                Button(L("menu.fontIncrease")) { fontIndex = FontScale.clamp(fontIndex + 1) }
+                    .keyboardShortcut("+", modifiers: .command)
+                Button(L("menu.fontDecrease")) { fontIndex = FontScale.clamp(fontIndex - 1) }
+                    .keyboardShortcut("-", modifiers: .command)
+                Button(L("menu.fontReset")) { fontIndex = FontScale.defaultIndex }
+                    .keyboardShortcut("0", modifiers: .command)
+                Divider()
+            }
+        }
+        #endif
+
+        #if os(macOS)
+        // 「设置…」菜单项（自带 ⌘,）
+        Settings {
+            SettingsView()
+                .environment(\.locale, .app)
         }
         #endif
     }

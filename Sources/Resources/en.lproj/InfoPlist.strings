@@ -1,1 +1,2 @@
 "CFBundleDisplayName" = "FourQuadrants";
+"NSAppleEventsUsageDescription" = "Used to export this week's tasks to Notes.";

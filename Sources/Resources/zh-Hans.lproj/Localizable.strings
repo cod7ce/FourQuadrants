@@ -59,7 +59,7 @@
 "detail.section.subtasks" = "子任务";
 "detail.field.title" = "标题";
 "detail.field.issueKey" = "工单号";
-"detail.field.issueKey.placeholder" = "工单号（如 ONES2-2296709）";
+"detail.field.issueKey.placeholder" = "工单号";
 "detail.section.quadrant" = "象限";
 "detail.flag.urgent" = "紧急";
 "detail.flag.important" = "重要";
@@ -130,3 +130,17 @@
 /* 显示 */
 "settings.display.section" = "显示";
 "settings.showCompleted" = "显示已完成任务";
+
+/* 菜单 */
+"menu.fontIncrease" = "增大字号";
+"menu.fontDecrease" = "缩小字号";
+"menu.fontReset" = "实际大小";
+
+/* 导出 */
+"menu.exportNotes" = "导出本周到备忘录";
+"settings.export.section" = "导出到备忘录";
+"settings.export.folder" = "目标文件夹";
+"settings.export.note" = "通过「文件」菜单或 ⇧⌘E 导出当周任务；同名笔记会被覆盖。";
+"export.failed" = "导出失败";
+"settings.export.native" = "原生可勾选清单（实验）";
+"settings.export.native.note" = "用 GUI 自动化生成原生清单；首次需在「隐私与安全性 → 辅助功能」里授权「肆」。导出时请勿操作键盘鼠标。关闭则用稳健的 ☐/☑ 文本。";
