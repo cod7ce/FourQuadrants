@@ -4,12 +4,12 @@ import SwiftData
 struct TaskRowView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.openURL) private var openURL
-    @Environment(\.commandHeld) private var commandHeld
+    @Environment(\.optionHeld) private var optionHeld
     @Bindable var task: TaskItem
     @State private var expanded = false
     @State private var showPopover = false
 
-    private var linkActive: Bool { commandHeld && !task.urls.isEmpty }
+    private var linkActive: Bool { optionHeld && !task.urls.isEmpty }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -67,7 +67,7 @@ struct TaskRowView: View {
         .contentShape(Rectangle())
         #if os(macOS)
         .highPriorityGesture(
-            TapGesture().modifiers(.command).onEnded {
+            TapGesture().modifiers(.option).onEnded {
                 if let url = task.urls.first { openURL(url) }
             }
         )

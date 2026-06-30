@@ -15,9 +15,9 @@ struct ContentView: View {
     @StateObject private var modifiers = ModifierWatcher()
     #endif
 
-    private var commandHeld: Bool {
+    private var optionHeld: Bool {
         #if os(macOS)
-        modifiers.command
+        modifiers.option
         #else
         false
         #endif
@@ -54,7 +54,7 @@ struct ContentView: View {
                      weekStart: $selectedWeek)
         }
         .environment(\.locale, .app)
-        .environment(\.commandHeld, commandHeld)                         // 按住 ⌘ 提示可点链接
+        .environment(\.optionHeld, optionHeld)                           // 按住 ⌥ 提示可点链接
         .environment(\.fontScale, FontScale.scale(fontIndex))            // ⌘+ / ⌘- 调整字号
         .environment(\.font, AppFont.font(.body, scale: FontScale.scale(fontIndex)))
         .id(language)   // 切换语言时整体重建，立即生效

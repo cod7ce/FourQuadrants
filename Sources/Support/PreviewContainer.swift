@@ -4,7 +4,7 @@ import SwiftData
 @MainActor
 let previewContainer: ModelContainer = {
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(for: TaskItem.self, Tag.self, configurations: config)
+    let container = try! ModelContainer(for: TaskItem.self, Tag.self, WeekNote.self, configurations: config)
     SampleData.populate(container.mainContext)
     return container
 }()

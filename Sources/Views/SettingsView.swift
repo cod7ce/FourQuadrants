@@ -6,6 +6,7 @@ struct SettingsView: View {
     @AppStorage("showCompleted") private var showCompleted = false
     @AppStorage("notesFolder") private var notesFolder = "四象限"
     @AppStorage("notesNativeChecklist") private var notesNativeChecklist = false
+    @AppStorage("memoFontSize") private var memoFontSize = 15.0
     @State private var rules: [ParseRule] = ParseRuleStore.load()
 
     var body: some View {
@@ -23,6 +24,9 @@ struct SettingsView: View {
 
                 Section(L("settings.display.section")) {
                     Toggle(L("settings.showCompleted"), isOn: $showCompleted)
+                    Stepper(value: $memoFontSize, in: 11...28, step: 1) {
+                        LabeledContent(L("settings.memo.fontSize"), value: "\(Int(memoFontSize))")
+                    }
                 }
 
                 Section {

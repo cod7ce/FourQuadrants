@@ -15,7 +15,7 @@ struct QuadrantGridView: View {
         GridItem(.flexible(), spacing: 12)
     ]
 
-    var body: some View {
+    private var gridScroll: some View {
         ScrollView {
             LazyVGrid(columns: columns, spacing: 12) {
                 ForEach(Quadrant.allCases) { q in
@@ -27,15 +27,39 @@ struct QuadrantGridView: View {
             }
             .padding()
         }
-        .navigationTitle(L("overview.title"))
-        .toolbar {
-            ToolbarItem {
-                Button { showAdd = true } label: { Label(L("action.create"), systemImage: "plus") }
+    }
+
+    var body: some View {
+        content
+            .navigationTitle(L("overview.title"))
+            .toolbar {
+                ToolbarItem {
+                    Button { showAdd = true } label: { Label(L("action.create"), systemImage: "plus") }
+                }
             }
+            .sheet(isPresented: $showAdd) {
+                QuickAddView(defaultQuadrant: .urgentImportant, weekStart: weekStart)
+            }
+    }
+
+    @ViewBuilder private var content: some View {
+        #if os(macOS)
+        VSplitView {
+            gridScroll
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .frame(minHeight: 220)
+            MemoEditor(weekStart: weekStart)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .frame(minHeight: 180)
         }
-        .sheet(isPresented: $showAdd) {
-            QuickAddView(defaultQuadrant: .urgentImportant, weekStart: weekStart)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        #else
+        VStack(spacing: 0) {
+            gridScroll
+            Divider()
+            MemoEditor(weekStart: weekStart).frame(minHeight: 220)
         }
+        #endif
     }
 }
 
@@ -102,13 +126,13 @@ private struct QuadrantCard: View {
 private struct CompactTaskRow: View {
     @Environment(\.modelContext) private var context
     @Environment(\.openURL) private var openURL
-    @Environment(\.commandHeld) private var commandHeld
+    @Environment(\.optionHeld) private var optionHeld
     @Bindable var task: TaskItem
     var isSelected: Bool = false
     var onSelect: () -> Void = {}
     @State private var showPopover = false
 
-    private var linkActive: Bool { commandHeld && !task.urls.isEmpty }
+    private var linkActive: Bool { optionHeld && !task.urls.isEmpty }
 
     var body: some View {
         HStack(spacing: 6) {
@@ -135,7 +159,7 @@ private struct CompactTaskRow: View {
         .contentShape(Rectangle())
         #if os(macOS)
         .highPriorityGesture(
-            TapGesture().modifiers(.command).onEnded {
+            TapGesture().modifiers(.option).onEnded {
                 if let url = task.urls.first { openURL(url) }
             }
         )
