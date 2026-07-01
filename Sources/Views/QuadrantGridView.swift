@@ -10,11 +10,6 @@ struct QuadrantGridView: View {
 
     private var weekTasks: [TaskItem] { allTasks.inWeek(weekStart).topLevel }
 
-    private let columns = [
-        GridItem(.flexible(), spacing: 16),
-        GridItem(.flexible(), spacing: 16)
-    ]
-
     var body: some View {
         VStack(spacing: 0) {
             WeekHeaderBar(weekStart: $weekStart, tasks: weekTasks)
@@ -23,13 +18,10 @@ struct QuadrantGridView: View {
                 .padding(.bottom, 14)
 
             ScrollView {
-                LazyVGrid(columns: columns, spacing: 16) {
-                    ForEach(Quadrant.allCases) { q in
-                        QuadrantCard(quadrant: q,
-                                     tasks: weekTasks.filter { $0.quadrant == q },
-                                     showCompleted: showCompleted,
-                                     selectedTask: $selectedTask)
-                    }
+                // 手动 2×2：每张卡片 maxWidth:.infinity，保证左右两列等宽并让长标题截断
+                VStack(spacing: 16) {
+                    gridRow(.urgentImportant, .important)
+                    gridRow(.urgent, .neither)
                 }
                 .padding(.horizontal, 24)
                 .padding(.bottom, 24)
@@ -58,6 +50,20 @@ struct QuadrantGridView: View {
         .sheet(isPresented: $showAdd) {
             QuickAddView(defaultQuadrant: .urgentImportant, weekStart: weekStart)
         }
+    }
+
+    private func gridRow(_ a: Quadrant, _ b: Quadrant) -> some View {
+        HStack(alignment: .top, spacing: 16) {
+            card(a)
+            card(b)
+        }
+    }
+
+    private func card(_ q: Quadrant) -> some View {
+        QuadrantCard(quadrant: q,
+                     tasks: weekTasks.filter { $0.quadrant == q },
+                     showCompleted: showCompleted,
+                     selectedTask: $selectedTask)
     }
 }
 
@@ -160,7 +166,7 @@ private struct QuadrantCard: View {
             }
         }
         .padding(16)
-        .frame(maxWidth: .infinity, minHeight: 200, alignment: .topLeading)
+        .frame(maxWidth: .infinity, minHeight: 200, maxHeight: .infinity, alignment: .topLeading)
         .background(quadrant.color.opacity(isTargeted ? 0.18 : 0.08),
                     in: RoundedRectangle(cornerRadius: 16))
         .overlay(
@@ -237,7 +243,8 @@ private struct OverviewTaskRow: View {
                                      : (task.isCompleted ? .secondary : .primary))
                 if !task.isCompleted { metaLine }
             }
-            Spacer(minLength: 6)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            Spacer(minLength: 0)
             DueDateLabel(task: task)
         }
         .padding(.vertical, 1)
