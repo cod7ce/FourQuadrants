@@ -30,6 +30,16 @@
 
 /* 侧栏 */
 "sidebar.overview" = "总览";
+"sidebar.thisWeek" = "本周";
+"sidebar.calendar" = "日历";
+"sidebar.tags" = "标签";
+"sidebar.archive" = "归档";
+"sidebar.savedLocal" = "已保存到本地";
+"overview.weekProgress" = "本周完成";
+"grid.completedCount" = "已完成 %d";
+"grid.clean.title" = "这里很干净";
+"grid.clean.subtitle" = "把可以删掉的任务拖到这里";
+"notes.title" = "笔记";
 "sidebar.section.quadrants" = "象限";
 "sidebar.section.lists" = "清单";
 "sidebar.section.tags" = "标签";

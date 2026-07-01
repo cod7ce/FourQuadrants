@@ -3,7 +3,10 @@ import SwiftData
 
 enum SidebarItem: Hashable {
     case overview
-    case scope(TaskScope)
+    case thisWeek
+    case calendar
+    case tags
+    case archive
 }
 
 struct ContentView: View {
@@ -26,6 +29,7 @@ struct ContentView: View {
     @State private var sidebar: SidebarItem? = .overview
     @State private var selectedTask: TaskItem?
     @State private var selectedWeek = Week.currentStart
+    @AppStorage("notesPanelCollapsed") private var notesCollapsed = false
     #if os(iOS)
     @State private var showSettings = false
     #endif
@@ -37,21 +41,27 @@ struct ContentView: View {
 
     var body: some View {
         NavigationSplitView {
-            SidebarView(selection: $sidebar, weekStart: selectedWeek)
+            #if os(iOS)
+            SidebarView(selection: $sidebar, onSettings: { showSettings = true })
                 .navigationTitle(L("app.title"))
-                #if os(iOS)
-                .toolbar {
-                    ToolbarItem {
-                        Button { showSettings = true } label: {
-                            Label(L("settings.title"), systemImage: "gearshape")
-                        }
-                    }
-                }
-                #endif
+            #else
+            SidebarView(selection: $sidebar)
+            #endif
         } detail: {
-            MainArea(sidebar: sidebar ?? .overview,
-                     selectedTask: $selectedTask,
-                     weekStart: $selectedWeek)
+            HStack(spacing: 0) {
+                MainArea(sidebar: sidebar ?? .overview,
+                         selectedTask: $selectedTask,
+                         weekStart: $selectedWeek)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                Divider()
+                if notesCollapsed {
+                    NotesCollapsedStrip(collapsed: $notesCollapsed)
+                } else {
+                    NotesPanel(weekStart: selectedWeek, collapsed: $notesCollapsed)
+                        .frame(width: 380)
+                }
+            }
         }
         .environment(\.locale, .app)
         .environment(\.optionHeld, optionHeld)                           // 按住 ⌥ 提示可点链接
@@ -118,17 +128,27 @@ private struct MainArea: View {
     @Binding var weekStart: Date
 
     var body: some View {
+        NavigationStack {
+            switch sidebar {
+            case .overview:
+                QuadrantGridView(selectedTask: $selectedTask, weekStart: $weekStart)
+            case .thisWeek:
+                listArea(.all)
+            case .calendar:
+                listArea(.scheduled)
+            case .tags:
+                TagsScreen(selectedTask: $selectedTask, weekStart: weekStart)
+            case .archive:
+                listArea(.completed)
+            }
+        }
+    }
+
+    private func listArea(_ scope: TaskScope) -> some View {
         VStack(spacing: 0) {
             WeekNavigatorBar(weekStart: $weekStart)
             Divider()
-            NavigationStack {
-                switch sidebar {
-                case .overview:
-                    QuadrantGridView(selectedTask: $selectedTask, weekStart: weekStart)
-                case .scope(let scope):
-                    TaskListView(scope: scope, selectedTask: $selectedTask, weekStart: weekStart)
-                }
-            }
+            TaskListView(scope: scope, selectedTask: $selectedTask, weekStart: weekStart)
         }
     }
 }

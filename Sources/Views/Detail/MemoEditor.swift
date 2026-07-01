@@ -88,7 +88,6 @@ struct MemoEditor: View {
     let weekStart: Date
 
     @Environment(\.scenePhase) private var scenePhase
-    @AppStorage("memoCollapsed") private var collapsed = false
     @AppStorage("memoFontSize") private var memoFontSize = MemoStyle.defaultFontSize
     @Query(sort: \WeekNote.weekStart) private var notes: [WeekNote]
     @State private var text = NSAttributedString(string: "")
@@ -134,20 +133,17 @@ struct MemoEditor: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            MemoToolbar(context: rtContext, holder: holder,
-                        collapsed: $collapsed, onContentChanged: { scheduleSave() })
-            if !collapsed {
-                Divider()
-                RichTextKit.RichTextEditor(text: $text, context: rtContext) { component in
-                    holder.component = component
-                    configureEditor(component)
-                }
-                .richTextEditorStyle(.init(font: .systemFont(ofSize: CGFloat(memoFontSize))))
-                .id(memoFontSize)   // 改字号时重建编辑器以重新套用默认样式
-                .focusedValue(\.richTextContext, rtContext)
-                .padding(.horizontal, MemoStyle.horizontalPadding)
-                .padding(.bottom, 8)
+            MemoToolbar(context: rtContext, holder: holder, onContentChanged: { scheduleSave() })
+            Divider()
+            RichTextKit.RichTextEditor(text: $text, context: rtContext) { component in
+                holder.component = component
+                configureEditor(component)
             }
+            .richTextEditorStyle(.init(font: .systemFont(ofSize: CGFloat(memoFontSize))))
+            .id(memoFontSize)   // 改字号时重建编辑器以重新套用默认样式
+            .focusedValue(\.richTextContext, rtContext)
+            .padding(.horizontal, MemoStyle.horizontalPadding)
+            .padding(.bottom, 8)
         }
         .background(.background)
         .onAppear { pushIntoEditor(load(weekStart)) }
@@ -317,39 +313,11 @@ final class RichTextViewHolder: ObservableObject {
 private struct MemoToolbar: View {
     @ObservedObject var context: RichTextKit.RichTextContext
     let holder: RichTextViewHolder
-    @Binding var collapsed: Bool
     var onContentChanged: () -> Void = {}
 
     var body: some View {
-        HStack(spacing: 0) {
-            if collapsed {
-                Image(systemName: "note.text").font(.headline).foregroundStyle(.secondary)
-                    .help(L("memo.section"))
-                    .padding(.horizontal, 12).padding(.vertical, 6)
-                Spacer(minLength: 0)
-            } else {
-                tools
-            }
-            Divider().frame(height: 20)
-            Button {
-                withAnimation(.easeInOut(duration: 0.15)) { collapsed.toggle() }
-            } label: {
-                Image(systemName: collapsed ? "chevron.down" : "chevron.up")
-                    .frame(width: 28, height: 24)
-            }
-            .buttonStyle(.borderless)
-            .help(collapsed ? L("memo.expand") : L("memo.collapse"))
-            .padding(.trailing, 6)
-        }
-    }
-
-    private var tools: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 10) {
-                Image(systemName: "note.text").font(.headline).foregroundStyle(.secondary)
-                    .help(L("memo.section"))
-                Divider().frame(height: 16)
-
                 styleButton(.bold, "bold", L("memo.bold"))
                 styleButton(.italic, "italic", L("memo.italic"))
                 styleButton(.underlined, "underline", L("memo.underline"))

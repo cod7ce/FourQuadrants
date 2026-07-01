@@ -30,6 +30,16 @@
 
 /* Sidebar */
 "sidebar.overview" = "Overview";
+"sidebar.thisWeek" = "This Week";
+"sidebar.calendar" = "Calendar";
+"sidebar.tags" = "Tags";
+"sidebar.archive" = "Archive";
+"sidebar.savedLocal" = "Saved locally";
+"overview.weekProgress" = "Done this week";
+"grid.completedCount" = "%d done";
+"grid.clean.title" = "All clear";
+"grid.clean.subtitle" = "Drag deletable tasks here";
+"notes.title" = "Notes";
 "sidebar.section.quadrants" = "Quadrants";
 "sidebar.section.lists" = "Lists";
 "sidebar.section.tags" = "Tags";
