@@ -138,6 +138,11 @@
 
 /* Export */
 "menu.exportNotes" = "Export This Week to Notes";
+"menu.exportMd" = "Export Markdown";
+"menu.exportMd.file" = "Export to File…";
+"menu.exportMd.clipboard" = "Copy to Clipboard";
+"export.md.title" = "This Week";
+"export.md.untagged" = "Untagged";
 "settings.export.section" = "Export to Notes";
 "settings.export.folder" = "Target folder";
 "settings.export.note" = "Export the current week via the File menu or ⇧⌘E; a note with the same title is overwritten.";

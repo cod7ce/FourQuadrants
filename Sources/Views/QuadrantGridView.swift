@@ -35,6 +35,20 @@ struct QuadrantGridView: View {
         content
             .navigationTitle(L("overview.title"))
             .toolbar {
+                #if os(macOS)
+                ToolbarItem {
+                    Menu {
+                        Button(L("menu.exportMd.file")) {
+                            MarkdownExporter.exportToFile(weekStart: weekStart, weekTasks: tasks)
+                        }
+                        Button(L("menu.exportMd.clipboard")) {
+                            MarkdownExporter.copyToPasteboard(weekStart: weekStart, weekTasks: tasks)
+                        }
+                    } label: {
+                        Label(L("menu.exportMd"), systemImage: "square.and.arrow.up")
+                    }
+                }
+                #endif
                 ToolbarItem {
                     Button { showAdd = true } label: { Label(L("action.create"), systemImage: "plus") }
                 }

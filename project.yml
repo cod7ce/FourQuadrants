@@ -31,6 +31,11 @@ targets:
       - package: RichTextKit
     settings:
       base:
+        # 目标级也固定本地签名，避免 xcodegen 默认注入 "iPhone Developer" 覆盖项目级 "-"
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGN_IDENTITY: "-"
+        DEVELOPMENT_TEAM: ""
+        PROVISIONING_PROFILE_SPECIFIER: ""
         PRODUCT_BUNDLE_IDENTIFIER: com.cod7ce.FourQuadrants
         PRODUCT_NAME: FourQuadrants
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon

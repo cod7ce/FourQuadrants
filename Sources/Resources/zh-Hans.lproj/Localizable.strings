@@ -138,6 +138,11 @@
 
 /* 导出 */
 "menu.exportNotes" = "导出本周到备忘录";
+"menu.exportMd" = "导出 Markdown";
+"menu.exportMd.file" = "导出到文件…";
+"menu.exportMd.clipboard" = "复制到剪贴板";
+"export.md.title" = "本周工作";
+"export.md.untagged" = "未分类";
 "settings.export.section" = "导出到备忘录";
 "settings.export.folder" = "目标文件夹";
 "settings.export.note" = "通过「文件」菜单或 ⇧⌘E 导出当周任务；同名笔记会被覆盖。";
