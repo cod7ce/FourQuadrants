@@ -5,6 +5,8 @@ struct QuadrantGridView: View {
     @Binding var selectedTask: TaskItem?
     let weekStart: Date
     @AppStorage("showCompleted") private var showCompleted = false
+    @AppStorage("memoCollapsed") private var memoCollapsed = false
+    private static let collapsedMemoHeight: CGFloat = 44
     @Query(sort: \TaskItem.sortOrder) private var allTasks: [TaskItem]
     @State private var showAdd = false
 
@@ -49,15 +51,19 @@ struct QuadrantGridView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .frame(minHeight: 220)
             MemoEditor(weekStart: weekStart)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .frame(minHeight: 180)
+                .frame(maxWidth: .infinity)
+                // 收起时固定为工具条高度（min=max），窗口缩放也不会被压没
+                .frame(minHeight: memoCollapsed ? Self.collapsedMemoHeight : 180,
+                       maxHeight: memoCollapsed ? Self.collapsedMemoHeight : .infinity)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         #else
         VStack(spacing: 0) {
             gridScroll
             Divider()
-            MemoEditor(weekStart: weekStart).frame(minHeight: 220)
+            MemoEditor(weekStart: weekStart)
+                .frame(minHeight: memoCollapsed ? Self.collapsedMemoHeight : 220,
+                       maxHeight: memoCollapsed ? Self.collapsedMemoHeight : nil)
         }
         #endif
     }

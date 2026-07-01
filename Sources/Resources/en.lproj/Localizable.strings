@@ -179,4 +179,6 @@
 "memo.image.smaller" = "Shrink image";
 "memo.image.larger" = "Enlarge image";
 "memo.image.fit" = "Fit width";
+"memo.collapse" = "Collapse";
+"memo.expand" = "Expand";
 "settings.memo.fontSize" = "Memo font size";

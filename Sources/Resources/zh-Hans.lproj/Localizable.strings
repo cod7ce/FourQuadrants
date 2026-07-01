@@ -179,4 +179,6 @@
 "memo.image.smaller" = "缩小图片";
 "memo.image.larger" = "放大图片";
 "memo.image.fit" = "适应宽度";
+"memo.collapse" = "收起";
+"memo.expand" = "展开";
 "settings.memo.fontSize" = "备忘字号";
