@@ -10,6 +10,7 @@ struct FourQuadrantsApp: App {
     @AppStorage(FontScale.key) private var fontIndex = FontScale.defaultIndex
     @AppStorage("notesFolder") private var notesFolder = "四象限"
     @AppStorage("notesNativeChecklist") private var notesNativeChecklist = false
+    @AppStorage("notesPanelCollapsed") private var notesCollapsed = false
 
     init() {
         container = Self.makeContainer()
@@ -35,6 +36,11 @@ struct FourQuadrantsApp: App {
                 .keyboardShortcut("e", modifiers: [.command, .shift])
             }
             CommandGroup(after: .sidebar) {
+                Button(L("menu.toggleNotes")) {
+                    withAnimation(.easeInOut(duration: 0.15)) { notesCollapsed.toggle() }
+                }
+                .keyboardShortcut("/", modifiers: .command)
+                Divider()
                 Button(L("menu.fontIncrease")) { fontIndex = FontScale.clamp(fontIndex + 1) }
                     .keyboardShortcut("+", modifiers: .command)
                 Button(L("menu.fontDecrease")) { fontIndex = FontScale.clamp(fontIndex - 1) }

@@ -30,6 +30,7 @@ struct ContentView: View {
     @State private var selectedTask: TaskItem?
     @State private var selectedWeek = Week.currentStart
     @AppStorage("notesPanelCollapsed") private var notesCollapsed = false
+    @AppStorage("notesPanelWidth") private var notesWidth = 380.0
     #if os(iOS)
     @State private var showSettings = false
     #endif
@@ -48,18 +49,28 @@ struct ContentView: View {
             SidebarView(selection: $sidebar)
             #endif
         } detail: {
+            // 收起窄条占布局空间 → 四象限按剩余内部宽度渲染；
+            // 展开的宽面板作为浮层覆盖在四象限之上，不挤压其布局。
             HStack(spacing: 0) {
                 MainArea(sidebar: sidebar ?? .overview,
                          selectedTask: $selectedTask,
                          weekStart: $selectedWeek)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-
                 Divider()
-                if notesCollapsed {
-                    NotesCollapsedStrip(collapsed: $notesCollapsed)
-                } else {
-                    NotesPanel(weekStart: selectedWeek, collapsed: $notesCollapsed)
-                        .frame(width: 380)
+                NotesCollapsedStrip(collapsed: $notesCollapsed)
+            }
+            // 点击笔记以外的区域收起笔记（透明捕获层，位于面板之下）
+            .overlay {
+                if !notesCollapsed {
+                    Color.clear.contentShape(Rectangle())
+                        .onTapGesture { withAnimation(.easeInOut(duration: 0.15)) { notesCollapsed = true } }
+                }
+            }
+            .overlay(alignment: .trailing) {
+                if !notesCollapsed {
+                    NotesPanel(weekStart: selectedWeek,
+                               collapsed: $notesCollapsed,
+                               width: $notesWidth)
                 }
             }
         }

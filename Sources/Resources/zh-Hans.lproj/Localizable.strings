@@ -146,6 +146,7 @@
 "settings.showCompleted" = "显示已完成任务";
 
 /* 菜单 */
+"menu.toggleNotes" = "显示 / 隐藏笔记";
 "menu.fontIncrease" = "增大字号";
 "menu.fontDecrease" = "缩小字号";
 "menu.fontReset" = "实际大小";

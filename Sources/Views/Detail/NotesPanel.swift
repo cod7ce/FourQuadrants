@@ -1,11 +1,37 @@
 import SwiftUI
 
-/// 右侧「笔记」栏：标题 + 收起箭头 + 富文本编辑器（每周独立）。
+/// 右侧「笔记」浮层：标题 + 收起箭头 + 富文本编辑器（每周独立）。
+/// 展开时层级高于四象限，左边缘可拖拽调整宽度（松手才持久化）。
 struct NotesPanel: View {
     let weekStart: Date
     @Binding var collapsed: Bool
+    @Binding var width: Double
+
+    static let minWidth: Double = 280
+    static let maxWidth: Double = 680
+
+    @State private var draft: Double?      // 拖拽中的临时宽度，避免每帧写 AppStorage
+    @State private var baseWidth: Double = 0
+    @State private var startX: CGFloat = 0
+
+    private var currentWidth: Double { draft ?? width }
 
     var body: some View {
+        HStack(spacing: 0) {
+            resizeHandle
+            content
+        }
+        .frame(width: currentWidth)
+        .frame(maxHeight: .infinity)
+        .background(.background)
+        // 左边缘竖直细边框（用 Rectangle，避免 Divider 在 overlay 里变成横线）
+        .overlay(alignment: .leading) {
+            Rectangle().fill(Color.primary.opacity(0.12)).frame(width: 0.5)
+        }
+        .shadow(color: .black.opacity(0.08), radius: 3, x: -1, y: 0)
+    }
+
+    private var content: some View {
         VStack(spacing: 0) {
             HStack {
                 Text(L("notes.title")).font(.title3.bold())
@@ -26,12 +52,36 @@ struct NotesPanel: View {
 
             MemoEditor(weekStart: weekStart)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(.background)
+    }
+
+    /// 左边缘拖拽手柄：用全局坐标计算，避免手柄随面板移动造成的抖动。
+    private var resizeHandle: some View {
+        Rectangle()
+            .fill(Color.clear)
+            .frame(width: 8)
+            .frame(maxHeight: .infinity)
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(coordinateSpace: .global)
+                    .onChanged { g in
+                        if draft == nil { baseWidth = width; startX = g.location.x }
+                        let dx = Double(g.location.x - startX)   // 向左拖 dx<0 → 变宽
+                        draft = min(max(Self.minWidth, baseWidth - dx), Self.maxWidth)
+                    }
+                    .onEnded { _ in
+                        if let d = draft { width = d }
+                        draft = nil
+                    }
+            )
+            #if os(macOS)
+            .onHover { inside in
+                if inside { NSCursor.resizeLeftRight.push() } else { NSCursor.pop() }
+            }
+            #endif
     }
 }
 
-/// 笔记栏收起后，右侧留一条可点开的窄条。
+/// 笔记栏收起后的窄条（占布局空间，让四象限按剩余内部宽度渲染）。
 struct NotesCollapsedStrip: View {
     @Binding var collapsed: Bool
 
@@ -46,6 +96,5 @@ struct NotesCollapsedStrip: View {
         }
         .buttonStyle(.plain)
         .help(L("notes.title"))
-        .background(.background)
     }
 }

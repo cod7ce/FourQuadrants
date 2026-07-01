@@ -114,6 +114,13 @@ struct MemoEditor: View {
         #if os(macOS)
         guard let tv = component as? NSTextView else { return }
         let font = NSFont.systemFont(ofSize: CGFloat(memoFontSize))
+        // 关闭所有拼写/语法检查与自动替换（去掉红色虚线下划线）
+        tv.isContinuousSpellCheckingEnabled = false
+        tv.isGrammarCheckingEnabled = false
+        tv.isAutomaticSpellingCorrectionEnabled = false
+        tv.isAutomaticTextReplacementEnabled = false
+        tv.isAutomaticQuoteSubstitutionEnabled = false
+        tv.isAutomaticDashSubstitutionEnabled = false
         tv.isAutomaticLinkDetectionEnabled = true
         tv.textContainerInset = NSSize(width: MemoStyle.inset, height: MemoStyle.inset)
         tv.font = font
@@ -122,6 +129,8 @@ struct MemoEditor: View {
         #else
         guard let tv = component as? UITextView else { return }
         let font = UIFont.systemFont(ofSize: CGFloat(memoFontSize))
+        tv.spellCheckingType = .no
+        tv.autocorrectionType = .no
         tv.dataDetectorTypes = .link
         tv.textContainerInset = UIEdgeInsets(top: MemoStyle.inset, left: MemoStyle.inset,
                                              bottom: MemoStyle.inset, right: MemoStyle.inset)

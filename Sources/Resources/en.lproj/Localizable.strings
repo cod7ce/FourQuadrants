@@ -146,6 +146,7 @@
 "settings.showCompleted" = "Show completed tasks";
 
 /* Menu */
+"menu.toggleNotes" = "Show / Hide Notes";
 "menu.fontIncrease" = "Increase Text Size";
 "menu.fontDecrease" = "Decrease Text Size";
 "menu.fontReset" = "Actual Size";
