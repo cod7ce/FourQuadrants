@@ -129,6 +129,10 @@
 
 /* Display */
 "settings.display.section" = "Display";
+"settings.tags.section" = "Tags";
+"settings.tags.name" = "Tag name";
+"settings.tags.empty" = "No tags yet. Create tags when adding a task.";
+"settings.tags.note" = "Renaming or recoloring applies to every task using the tag; swipe to delete.";
 "settings.showCompleted" = "Show completed tasks";
 
 /* Menu */

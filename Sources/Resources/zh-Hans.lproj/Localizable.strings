@@ -129,6 +129,10 @@
 
 /* 显示 */
 "settings.display.section" = "显示";
+"settings.tags.section" = "标签";
+"settings.tags.name" = "标签名称";
+"settings.tags.empty" = "暂无标签。在新建任务时可创建标签。";
+"settings.tags.note" = "修改名称与颜色会应用到所有使用该标签的任务；左滑可删除。";
 "settings.showCompleted" = "显示已完成任务";
 
 /* 菜单 */

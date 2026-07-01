@@ -1,7 +1,10 @@
 import SwiftUI
+import SwiftData
 
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var context
+    @Query(sort: \Tag.name) private var tags: [Tag]
     @AppStorage(LocalizationConfig.storageKey) private var language = AppLanguage.zhHans.rawValue
     @AppStorage("showCompleted") private var showCompleted = false
     @AppStorage("notesFolder") private var notesFolder = "四象限"
@@ -27,6 +30,23 @@ struct SettingsView: View {
                     Stepper(value: $memoFontSize, in: 11...28, step: 1) {
                         LabeledContent(L("settings.memo.fontSize"), value: "\(Int(memoFontSize))")
                     }
+                }
+
+                Section {
+                    if tags.isEmpty {
+                        Text(L("settings.tags.empty"))
+                            .appFont(.caption).foregroundStyle(.secondary)
+                    } else {
+                        ForEach(tags) { tag in TagEditRow(tag: tag) }
+                            .onDelete { offsets in
+                                for i in offsets { context.delete(tags[i]) }
+                                try? context.save()
+                            }
+                    }
+                } header: {
+                    Text(L("settings.tags.section"))
+                } footer: {
+                    Text(L("settings.tags.note")).appFont(.caption)
                 }
 
                 Section {
@@ -89,6 +109,37 @@ struct SettingsView: View {
         .frame(minWidth: 460, minHeight: 520)
         #endif
     }
+}
+
+/// 标签管理行：改名（文本框）、换色（调色板圆点）、右侧实时预览。
+private struct TagEditRow: View {
+    @Environment(\.modelContext) private var context
+    @Bindable var tag: Tag
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                TextField(L("settings.tags.name"), text: $tag.name)
+                    .onChange(of: tag.name) { _, _ in save() }
+                Spacer()
+                TagChip(tag: tag)   // 实时预览
+            }
+            HStack(spacing: 8) {
+                ForEach(TagPalette.hexes, id: \.self) { hex in
+                    Circle()
+                        .fill(Color(hex: hex) ?? .blue)
+                        .frame(width: 18, height: 18)
+                        .overlay(Circle().strokeBorder(Color.primary,
+                                                       lineWidth: tag.colorHex == hex ? 2 : 0))
+                        .contentShape(Circle())
+                        .onTapGesture { tag.colorHex = hex; save() }
+                }
+            }
+        }
+        .padding(.vertical, 2)
+    }
+
+    private func save() { try? context.save() }
 }
 
 private struct RuleEditorView: View {

@@ -52,6 +52,7 @@ struct FourQuadrantsApp: App {
             SettingsView()
                 .environment(\.locale, .app)
         }
+        .modelContainer(container)   // 设置窗口也需要容器（标签管理用到 @Query/保存）
         #endif
     }
 
