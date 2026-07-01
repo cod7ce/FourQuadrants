@@ -201,18 +201,7 @@ private struct CompactTaskRow: View {
 
             // 父任务下，列出其子任务（checkbox 错开一个父 checkbox，对齐到内容列；字号一致）
             ForEach(subs) { sub in
-                HStack(spacing: CompactTaskRow.gap) {
-                    CompletionToggle(isCompleted: sub.isCompleted) { toggle(sub) }
-                        .frame(width: CompactTaskRow.checkboxWidth)
-                    Text(sub.title.isEmpty ? L("task.default.title") : sub.title)
-                        .appFont(.body)
-                        .lineLimit(1)
-                        .strikethrough(sub.isCompleted)
-                        .foregroundStyle(sub.isCompleted ? .secondary : .primary)
-                    Spacer(minLength: 0)
-                }
-                .padding(.leading, CompactTaskRow.checkboxWidth + CompactTaskRow.gap)
-                .padding(.horizontal, 6)
+                CompactSubtaskRow(sub: sub)
             }
         }
         .popover(isPresented: $showPopover) { TaskEditor(task: task) }
@@ -223,8 +212,46 @@ private struct CompactTaskRow: View {
         try? context.save()
         Task { await NotificationManager.shared.reschedule(for: task) }
     }
+}
 
-    private func toggle(_ sub: TaskItem) {
+/// 象限卡片里的子任务行：可勾选，双击打开编辑器配置。
+private struct CompactSubtaskRow: View {
+    @Environment(\.modelContext) private var context
+    @Environment(\.openURL) private var openURL
+    @Environment(\.optionHeld) private var optionHeld
+    @Bindable var sub: TaskItem
+    @State private var showPopover = false
+
+    private var linkActive: Bool { optionHeld && !sub.urls.isEmpty }
+
+    var body: some View {
+        HStack(spacing: CompactTaskRow.gap) {
+            CompletionToggle(isCompleted: sub.isCompleted) { toggle() }
+                .frame(width: CompactTaskRow.checkboxWidth)
+            Text(sub.title.isEmpty ? L("task.default.title") : sub.title)
+                .appFont(.body)
+                .lineLimit(1)
+                .strikethrough(sub.isCompleted)
+                .underline(linkActive)
+                .foregroundStyle(linkActive ? Color.accentColor : (sub.isCompleted ? .secondary : .primary))
+            Spacer(minLength: 6)
+            DueDateLabel(task: sub)
+        }
+        .padding(.leading, CompactTaskRow.checkboxWidth + CompactTaskRow.gap)
+        .padding(.horizontal, 6)
+        .contentShape(Rectangle())
+        #if os(macOS)
+        .highPriorityGesture(
+            TapGesture().modifiers(.option).onEnded {
+                if let url = sub.urls.first { openURL(url) }
+            }
+        )
+        #endif
+        .onTapGesture(count: 2) { showPopover = true }
+        .popover(isPresented: $showPopover) { TaskEditor(task: sub) }
+    }
+
+    private func toggle() {
         sub.toggleCompleted()
         try? context.save()
     }

@@ -51,15 +51,7 @@ struct TaskRowView: View {
 
             if expanded {
                 ForEach(task.sortedSubtasks) { sub in
-                    HStack(spacing: 8) {
-                        CompletionToggle(isCompleted: sub.isCompleted) { toggle(sub) }
-                        Text(sub.title)
-                            .appFont(.callout)
-                            .strikethrough(sub.isCompleted)
-                            .foregroundStyle(sub.isCompleted ? .secondary : .primary)
-                        Spacer(minLength: 0)
-                    }
-                    .padding(.leading, 28)
+                    SubtaskEditableRow(sub: sub)
                 }
             }
         }
@@ -94,5 +86,46 @@ struct TaskRowView: View {
         t.toggleCompleted()
         try? context.save()
         Task { await NotificationManager.shared.reschedule(for: t) }
+    }
+}
+
+/// 列表里的子任务行：可勾选，双击打开编辑器配置。
+private struct SubtaskEditableRow: View {
+    @Environment(\.modelContext) private var context
+    @Environment(\.openURL) private var openURL
+    @Environment(\.optionHeld) private var optionHeld
+    @Bindable var sub: TaskItem
+    @State private var showPopover = false
+
+    private var linkActive: Bool { optionHeld && !sub.urls.isEmpty }
+
+    var body: some View {
+        HStack(spacing: 8) {
+            CompletionToggle(isCompleted: sub.isCompleted) { toggle() }
+            Text(sub.title)
+                .appFont(.callout)
+                .strikethrough(sub.isCompleted)
+                .underline(linkActive)
+                .foregroundStyle(linkActive ? Color.accentColor : (sub.isCompleted ? .secondary : .primary))
+            Spacer(minLength: 6)
+            DueDateLabel(task: sub)
+        }
+        .padding(.leading, 28)
+        .contentShape(Rectangle())
+        #if os(macOS)
+        .highPriorityGesture(
+            TapGesture().modifiers(.option).onEnded {
+                if let url = sub.urls.first { openURL(url) }
+            }
+        )
+        #endif
+        .onTapGesture(count: 2) { showPopover = true }
+        .popover(isPresented: $showPopover) { TaskEditor(task: sub) }
+    }
+
+    private func toggle() {
+        sub.toggleCompleted()
+        try? context.save()
+        Task { await NotificationManager.shared.reschedule(for: sub) }
     }
 }

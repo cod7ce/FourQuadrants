@@ -26,16 +26,19 @@ struct TaskEditor: View {
                     .frame(minHeight: 120)
             }
 
-            Section(L("detail.section.quadrant")) {
-                Toggle(L("detail.flag.urgent"), isOn: $task.isUrgent)
-                Toggle(L("detail.flag.important"), isOn: $task.isImportant)
-                HStack {
-                    Image(systemName: task.quadrant.symbol)
-                    Text(task.quadrant.title)
-                    Spacer()
-                    Text(task.quadrant.actionHint).foregroundStyle(.secondary)
+            // 象限跟随父任务，子任务不单独配置
+            if task.parent == nil {
+                Section(L("detail.section.quadrant")) {
+                    Toggle(L("detail.flag.urgent"), isOn: $task.isUrgent)
+                    Toggle(L("detail.flag.important"), isOn: $task.isImportant)
+                    HStack {
+                        Image(systemName: task.quadrant.symbol)
+                        Text(task.quadrant.title)
+                        Spacer()
+                        Text(task.quadrant.actionHint).foregroundStyle(.secondary)
+                    }
+                    .foregroundStyle(task.quadrant.color)
                 }
-                .foregroundStyle(task.quadrant.color)
             }
 
             Section(L("detail.section.schedule")) {
@@ -52,9 +55,12 @@ struct TaskEditor: View {
                 ))
             }
 
-            tagSection
+            // 标签跟随父任务，子任务不单独配置
+            if task.parent == nil {
+                tagSection
+                subtaskSection
+            }
             linkSection
-            subtaskSection
         }
         .formStyle(.grouped)
         .frame(minWidth: 320, idealWidth: 360, maxWidth: 420,
