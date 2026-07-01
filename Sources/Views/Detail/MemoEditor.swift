@@ -323,7 +323,8 @@ private struct MemoToolbar: View {
     var body: some View {
         HStack(spacing: 0) {
             if collapsed {
-                Text(L("memo.section")).font(.headline)
+                Image(systemName: "note.text").font(.headline).foregroundStyle(.secondary)
+                    .help(L("memo.section"))
                     .padding(.horizontal, 12).padding(.vertical, 6)
                 Spacer(minLength: 0)
             } else {
@@ -345,7 +346,8 @@ private struct MemoToolbar: View {
     private var tools: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 10) {
-                Text(L("memo.section")).font(.headline)
+                Image(systemName: "note.text").font(.headline).foregroundStyle(.secondary)
+                    .help(L("memo.section"))
                 Divider().frame(height: 16)
 
                 styleButton(.bold, "bold", L("memo.bold"))
