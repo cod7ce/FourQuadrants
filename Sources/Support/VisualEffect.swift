@@ -28,6 +28,8 @@ struct WindowTranslucency: NSViewRepresentable {
             if let w = v.window {
                 w.isOpaque = false
                 w.backgroundColor = .clear
+                // 标题栏透明，由同一层窗口材质透上来，避免与内容区出现分界
+                w.titlebarAppearsTransparent = true
             }
         }
         return v
