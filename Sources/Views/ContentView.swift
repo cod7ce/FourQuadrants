@@ -31,6 +31,9 @@ struct ContentView: View {
     @State private var selectedWeek = Week.currentStart
     @AppStorage("notesPanelCollapsed") private var notesCollapsed = false
     @AppStorage("notesPanelWidth") private var notesWidth = 380.0
+
+    /// 玻璃材质的「实心」程度：0 = 全玻璃，1 = 全实心。改这个数一步步看效果。
+    static let glassTint: Double = 0.95
     #if os(iOS)
     @State private var showSettings = false
     #endif
@@ -65,6 +68,15 @@ struct ContentView: View {
                 }
             }
         }
+        #if os(macOS)
+        // 玻璃材质背景。glassTint 为「实心」旋钮：0 = 全玻璃，1 = 全实心（一步步调它看效果）。
+        .background {
+            VisualEffectView()
+                .overlay(Color(nsColor: .windowBackgroundColor).opacity(Self.glassTint))
+                .ignoresSafeArea()
+        }
+        .background(WindowTranslucency())                   // 窗口非不透明，透出桌面
+        #endif
         .environment(\.locale, .app)
         .environment(\.optionHeld, optionHeld)                           // 按住 ⌥ 提示可点链接
         .environment(\.fontScale, FontScale.scale(fontIndex))            // ⌘+ / ⌘- 调整字号

@@ -20,7 +20,6 @@ struct NotesPanel: View {
         content
             .frame(width: currentWidth)
             .frame(maxHeight: .infinity)
-            .background(.background)
             // 拖拽手柄作为左边缘浮层，不占布局（否则会把工具栏往右推出一条缝）
             .overlay(alignment: .leading) { resizeHandle }
     }

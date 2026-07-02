@@ -149,6 +149,9 @@ struct MemoEditor: View {
         guard let tv = component as? NSTextView else { return }
         let font = NSFont.systemFont(ofSize: CGFloat(memoFontSize))
         // 关闭所有拼写/语法检查与自动替换（去掉红色虚线下划线）
+        tv.drawsBackground = false
+        tv.enclosingScrollView?.drawsBackground = false
+        tv.backgroundColor = .clear
         tv.isContinuousSpellCheckingEnabled = false
         tv.isGrammarCheckingEnabled = false
         tv.isAutomaticSpellingCorrectionEnabled = false
@@ -188,7 +191,6 @@ struct MemoEditor: View {
             .padding(.horizontal, MemoStyle.horizontalPadding)
             .padding(.bottom, 8)
         }
-        .background(.background)
         .onAppear { pushIntoEditor(load(weekStart)) }
         .onChange(of: weekStart) { oldWeek, newWeek in
             saveNow(to: oldWeek)
