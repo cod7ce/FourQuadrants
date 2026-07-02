@@ -227,11 +227,24 @@ private struct OverviewTaskRow: View {
     var onSelect: () -> Void = {}
     @State private var showPopover = false
 
+    static let checkboxWidth: CGFloat = 22
+    static let gap: CGFloat = 9
+
     private var linkActive: Bool { optionHeld && !task.urls.isEmpty }
     private var subs: [TaskItem] { task.sortedSubtasks }
 
     var body: some View {
-        HStack(alignment: .top, spacing: 9) {
+        VStack(alignment: .leading, spacing: 6) {
+            parentRow
+            // 父任务下列出子任务（未完成的父任务才展开，保持已完成区紧凑）
+            if !task.isCompleted {
+                ForEach(subs) { sub in OverviewSubtaskRow(sub: sub) }
+            }
+        }
+    }
+
+    private var parentRow: some View {
+        HStack(alignment: .top, spacing: Self.gap) {
             completionToggle
             VStack(alignment: .leading, spacing: 3) {
                 Text(task.title.isEmpty ? L("task.default.title") : task.title)
@@ -270,6 +283,7 @@ private struct OverviewTaskRow: View {
                 .foregroundStyle(task.isCompleted ? Color.green : Color.secondary.opacity(0.6))
         }
         .buttonStyle(.plain)
+        .frame(width: Self.checkboxWidth)
     }
 
     @ViewBuilder
@@ -296,6 +310,54 @@ private struct OverviewTaskRow: View {
         task.toggleCompleted()
         try? context.save()
         Task { await NotificationManager.shared.reschedule(for: task) }
+    }
+}
+
+/// 卡片里的子任务行：checkbox 错开一个父 checkbox，对齐到父任务内容列；
+/// 可勾选、双击编辑、⌥ 点链接、显示截止日期。
+private struct OverviewSubtaskRow: View {
+    @Environment(\.modelContext) private var context
+    @Environment(\.openURL) private var openURL
+    @Environment(\.optionHeld) private var optionHeld
+    @Bindable var sub: TaskItem
+    @State private var showPopover = false
+
+    private var linkActive: Bool { optionHeld && !sub.urls.isEmpty }
+
+    var body: some View {
+        HStack(spacing: OverviewTaskRow.gap) {
+            Button { toggle() } label: {
+                Image(systemName: sub.isCompleted ? "checkmark.circle.fill" : "circle")
+                    .imageScale(.medium)
+                    .foregroundStyle(sub.isCompleted ? Color.green : Color.secondary.opacity(0.6))
+            }
+            .buttonStyle(.plain)
+            Text(sub.title.isEmpty ? L("task.default.title") : sub.title)
+                .appFont(.callout)
+                .lineLimit(1)
+                .strikethrough(sub.isCompleted)
+                .underline(linkActive)
+                .foregroundStyle(linkActive ? Color.accentColor
+                                 : (sub.isCompleted ? .secondary : .primary))
+            Spacer(minLength: 6)
+            DueDateLabel(task: sub)
+        }
+        .padding(.leading, OverviewTaskRow.checkboxWidth + OverviewTaskRow.gap)
+        .contentShape(Rectangle())
+        #if os(macOS)
+        .highPriorityGesture(
+            TapGesture().modifiers(.option).onEnded {
+                if let url = sub.urls.first { openURL(url) }
+            }
+        )
+        #endif
+        .onTapGesture(count: 2) { showPopover = true }
+        .popover(isPresented: $showPopover) { TaskEditor(task: sub) }
+    }
+
+    private func toggle() {
+        sub.toggleCompleted()
+        try? context.save()
     }
 }
 

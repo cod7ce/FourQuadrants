@@ -20,6 +20,22 @@ enum MemoStyle {
     static let horizontalPadding: CGFloat = 16 // 编辑器外层左右留白
     static let defaultFontSize: Double = 16   // 与 macOS Notes 正文一致
 
+    /// 正文默认颜色：比纯黑柔和的深灰（接近 Notes），适配深/浅色。
+    #if os(macOS)
+    static var textColor: NSColor {
+        NSColor(name: nil) { ap in
+            ap.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+                ? NSColor(calibratedWhite: 0.88, alpha: 1)
+                : NSColor(calibratedWhite: 0.20, alpha: 1)
+        }
+    }
+    #else
+    static var textColor: UIColor {
+        UIColor { tc in tc.userInterfaceStyle == .dark
+            ? UIColor(white: 0.88, alpha: 1) : UIColor(white: 0.20, alpha: 1) }
+    }
+    #endif
+
     /// 按当前字号设置默认段落间距，可在已有样式上调整以保留对齐。
     static func applyDefaultSpacing(_ p: NSMutableParagraphStyle, fontSize: Double) {
         let fs = CGFloat(fontSize)
@@ -65,19 +81,37 @@ func memoNaturalSize(_ img: NSImage) -> NSSize {
     return img.size
 }
 
-/// 生成「受控」的普通图片附件，用 NSImage.size 决定显示尺寸。
+/// 生成「受控」的普通图片附件：复制原图（共享底层 representations，但独立实例与
+/// 独立 size），用显式 cell 渲染。避免离屏重画产生空白，也避免共享同一 NSImage
+/// 造成的绘制冲突。
 func memoMakeAttachment(_ img: NSImage, width: CGFloat) -> NSTextAttachment {
     let nat = memoNaturalSize(img)
     let w = max(1, width)
     let h = nat.width > 0 ? nat.height * (w / nat.width) : w
     let size = NSSize(width: w, height: h)
-    let sized = NSImage(size: size)
-    sized.addRepresentations(img.representations)
-    sized.size = size
+
+    let display = (img.copy() as? NSImage) ?? img
+    display.size = size
+
     let att = NSTextAttachment()
-    att.image = sized
+    att.image = display
+    att.attachmentCell = NSTextAttachmentCell(imageCell: display)   // 显式 cell，确保被绘制
     att.bounds = CGRect(origin: .zero, size: size)
+    // 关键：写入图片数据（contents + fileWrapper），否则存 RTFD 时图片丢失、重开变空框
+    if let data = memoImageData(img) {
+        att.contents = data
+        att.fileType = "public.png"
+        let fw = FileWrapper(regularFileWithContents: data)
+        fw.preferredFilename = "image.png"
+        att.fileWrapper = fw
+    }
     return att
+}
+
+/// 把 NSImage 编码为 PNG 数据，用于附件持久化。
+func memoImageData(_ img: NSImage) -> Data? {
+    guard let tiff = img.tiffRepresentation, let bmp = NSBitmapImageRep(data: tiff) else { return nil }
+    return bmp.representation(using: .png, properties: [:])
 }
 #endif
 
@@ -123,9 +157,10 @@ struct MemoEditor: View {
         tv.isAutomaticDashSubstitutionEnabled = false
         tv.isAutomaticLinkDetectionEnabled = true
         tv.textContainerInset = NSSize(width: MemoStyle.inset, height: MemoStyle.inset)
-        tv.font = font
+        // 注意：不要设 tv.font / tv.textColor —— 它们会作用到整篇，重置已加载内容的
+        // 字体/颜色（加粗/斜体/字号/颜色全丢）。只设 typingAttributes（仅影响新输入）。
         tv.defaultParagraphStyle = para
-        tv.typingAttributes = [.font: font, .paragraphStyle: para, .foregroundColor: NSColor.textColor]
+        tv.typingAttributes = [.font: font, .paragraphStyle: para, .foregroundColor: MemoStyle.textColor]
         #else
         guard let tv = component as? UITextView else { return }
         let font = UIFont.systemFont(ofSize: CGFloat(memoFontSize))
@@ -134,8 +169,8 @@ struct MemoEditor: View {
         tv.dataDetectorTypes = .link
         tv.textContainerInset = UIEdgeInsets(top: MemoStyle.inset, left: MemoStyle.inset,
                                              bottom: MemoStyle.inset, right: MemoStyle.inset)
-        tv.font = font
-        tv.typingAttributes = [.font: font, .paragraphStyle: para, .foregroundColor: UIColor.label]
+        // 同 macOS：不设 tv.font / tv.textColor，避免重置已加载内容样式
+        tv.typingAttributes = [.font: font, .paragraphStyle: para, .foregroundColor: MemoStyle.textColor]
         #endif
     }
 
@@ -195,7 +230,30 @@ struct MemoEditor: View {
             updates.append((range, p))
         }
         for (range, p) in updates { mutable.addAttribute(.paragraphStyle, value: p, range: range) }
+
+        // 把「默认色/近黑」的正文统一换成柔和的默认色（保留用户自选的彩色/高亮）
+        var colorFixes: [NSRange] = []
+        mutable.enumerateAttribute(.foregroundColor, in: full) { value, range, _ in
+            if isNearDefaultTextColor(value as? ColorRepresentable) { colorFixes.append(range) }
+        }
+        for range in colorFixes {
+            mutable.addAttribute(.foregroundColor, value: MemoStyle.textColor, range: range)
+        }
         return mutable
+    }
+
+    /// 是否为「默认/近黑」文字色（nil 视为默认）。用于把旧的纯黑正文换成柔和色。
+    private func isNearDefaultTextColor(_ color: ColorRepresentable?) -> Bool {
+        guard let color else { return true }
+        #if os(macOS)
+        guard let rgb = color.usingColorSpace(.sRGB) else { return false }
+        let maxc = max(rgb.redComponent, rgb.greenComponent, rgb.blueComponent)
+        return rgb.alphaComponent > 0.9 && maxc < 0.25
+        #else
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        color.getRed(&r, green: &g, blue: &b, alpha: &a)
+        return a > 0.9 && max(r, g, b) < 0.25
+        #endif
     }
 
     private func scheduleSave() {
@@ -241,6 +299,17 @@ struct MemoEditor: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) { refitImages() }
     }
 
+    #if os(macOS)
+    /// 强制失效并重排/重绘整段，确保替换后的图片附件一定被绘制出来。
+    private func forceRelayout(_ tv: NSTextView, storage: NSTextStorage) {
+        let full = NSRange(location: 0, length: storage.length)
+        tv.layoutManager?.invalidateLayout(forCharacterRange: full, actualCharacterRange: nil)
+        tv.layoutManager?.invalidateDisplay(forCharacterRange: full)
+        if let tc = tv.textContainer { tv.layoutManager?.ensureLayout(for: tc) }
+        tv.needsDisplay = true
+    }
+    #endif
+
     /// 遍历所有图片附件，按规则归正其显示尺寸。
     private func refitImages() {
         #if os(macOS)
@@ -262,8 +331,7 @@ struct MemoEditor: View {
         storage.beginEditing()
         for (range, newAtt) in reps { storage.addAttribute(.attachment, value: newAtt, range: range) }
         storage.endEditing()
-        if let tc = tv.textContainer { tv.layoutManager?.ensureLayout(for: tc) }
-        tv.needsDisplay = true
+        forceRelayout(tv, storage: storage)
         scheduleSave()
         #else
         guard let tv = holder.component as? UITextView, let storage = tv.textStorage as NSTextStorage?,
@@ -614,13 +682,7 @@ private struct MemoToolbar: View {
         #endif
     }
 
-    private var defaultText: ColorRepresentable {
-        #if os(macOS)
-        NSColor.textColor
-        #else
-        UIColor.label
-        #endif
-    }
+    private var defaultText: ColorRepresentable { MemoStyle.textColor }
 
     private var clearColor: ColorRepresentable {
         #if os(macOS)
