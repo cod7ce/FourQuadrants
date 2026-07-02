@@ -20,6 +20,11 @@ struct NotesPanel: View {
         content
             .frame(width: currentWidth)
             .frame(maxHeight: .infinity)
+            // 左边缘分隔线：延伸到窗口顶部（穿过标题栏），与标题栏连通不割裂
+            .overlay(alignment: .leading) {
+                Rectangle().fill(Color(nsColor: .separatorColor)).frame(width: 0.5)
+                    .ignoresSafeArea(.container, edges: .top)
+            }
             // 拖拽手柄作为左边缘浮层，不占布局（否则会把工具栏往右推出一条缝）
             .overlay(alignment: .leading) { resizeHandle }
     }
@@ -89,5 +94,9 @@ struct NotesCollapsedStrip: View {
         }
         .buttonStyle(.plain)
         .help(L("notes.title"))
+        .overlay(alignment: .leading) {
+            Rectangle().fill(Color(nsColor: .separatorColor)).frame(width: 0.5)
+                .ignoresSafeArea(.container, edges: .top)
+        }
     }
 }

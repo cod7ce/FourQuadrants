@@ -450,6 +450,7 @@ private struct MemoToolbar: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
         }
+        .background(Color.primary.opacity(0.045))   // 工具栏浅灰底色带
     }
 
     private func styleButton(_ style: RichTextStyle, _ symbol: String, _ help: String) -> some View {

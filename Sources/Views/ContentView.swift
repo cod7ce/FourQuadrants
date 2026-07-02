@@ -58,7 +58,6 @@ struct ContentView: View {
                          selectedTask: $selectedTask,
                          weekStart: $selectedWeek)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                Divider()
                 if notesCollapsed {
                     NotesCollapsedStrip(collapsed: $notesCollapsed)
                 } else {
