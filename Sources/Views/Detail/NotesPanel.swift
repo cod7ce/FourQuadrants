@@ -17,18 +17,12 @@ struct NotesPanel: View {
     private var currentWidth: Double { draft ?? width }
 
     var body: some View {
-        HStack(spacing: 0) {
-            resizeHandle
-            content
-        }
-        .frame(width: currentWidth)
-        .frame(maxHeight: .infinity)
-        .background(.background)
-        // 左边缘竖直细边框（用 Rectangle，避免 Divider 在 overlay 里变成横线）
-        .overlay(alignment: .leading) {
-            Rectangle().fill(Color.primary.opacity(0.12)).frame(width: 0.5)
-        }
-        .shadow(color: .black.opacity(0.08), radius: 3, x: -1, y: 0)
+        content
+            .frame(width: currentWidth)
+            .frame(maxHeight: .infinity)
+            .background(.background)
+            // 拖拽手柄作为左边缘浮层，不占布局（否则会把工具栏往右推出一条缝）
+            .overlay(alignment: .leading) { resizeHandle }
     }
 
     private var content: some View {

@@ -4,7 +4,6 @@ import SwiftData
 struct QuadrantGridView: View {
     @Binding var selectedTask: TaskItem?
     @Binding var weekStart: Date
-    @AppStorage("showCompleted") private var showCompleted = false
     @Query(sort: \TaskItem.sortOrder) private var allTasks: [TaskItem]
     @State private var showAdd = false
 
@@ -62,7 +61,6 @@ struct QuadrantGridView: View {
     private func card(_ q: Quadrant) -> some View {
         QuadrantCard(quadrant: q,
                      tasks: weekTasks.filter { $0.quadrant == q },
-                     showCompleted: showCompleted,
                      selectedTask: $selectedTask)
     }
 }
@@ -138,7 +136,6 @@ private struct QuadrantCard: View {
     @Environment(\.modelContext) private var context
     let quadrant: Quadrant
     let tasks: [TaskItem]          // 该象限全部任务（含已完成）
-    let showCompleted: Bool
     @Binding var selectedTask: TaskItem?
     @State private var isTargeted = false
 

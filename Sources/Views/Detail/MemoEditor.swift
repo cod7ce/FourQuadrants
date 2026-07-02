@@ -16,8 +16,8 @@ enum MemoStyle {
     // 上一行的「段后」提供。
     static let paragraphSpaceRatio: CGFloat = 0.70  // 段后留白 = 字号 × 该比例
     static let lineSpacingRatio: CGFloat = 0.30     // 段内软换行的行间距
-    static let inset: CGFloat = 14             // 文本容器内边距（上下左右）
-    static let horizontalPadding: CGFloat = 16 // 编辑器外层左右留白
+    static let inset: CGFloat = 8              // 文本容器内边距（上下左右）
+    static let horizontalPadding: CGFloat = 4  // 编辑器外层左右留白
     static let defaultFontSize: Double = 16   // 与 macOS Notes 正文一致
 
     /// 正文默认颜色：比纯黑柔和的深灰（接近 Notes），适配深/浅色。
@@ -122,7 +122,7 @@ struct MemoEditor: View {
     let weekStart: Date
 
     @Environment(\.scenePhase) private var scenePhase
-    @AppStorage("memoFontSize") private var memoFontSize = MemoStyle.defaultFontSize
+    private let memoFontSize = MemoStyle.defaultFontSize
     @Query(sort: \WeekNote.weekStart) private var notes: [WeekNote]
     @State private var text = NSAttributedString(string: "")
     @StateObject private var rtContext = RichTextKit.RichTextContext()
@@ -184,7 +184,6 @@ struct MemoEditor: View {
                 configureEditor(component)
             }
             .richTextEditorStyle(.init(font: .systemFont(ofSize: CGFloat(memoFontSize))))
-            .id(memoFontSize)   // 改字号时重建编辑器以重新套用默认样式
             .focusedValue(\.richTextContext, rtContext)
             .padding(.horizontal, MemoStyle.horizontalPadding)
             .padding(.bottom, 8)

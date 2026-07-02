@@ -6,10 +6,6 @@ struct SettingsView: View {
     @Environment(\.modelContext) private var context
     @Query(sort: \Tag.name) private var tags: [Tag]
     @AppStorage(LocalizationConfig.storageKey) private var language = AppLanguage.zhHans.rawValue
-    @AppStorage("showCompleted") private var showCompleted = false
-    @AppStorage("notesFolder") private var notesFolder = "四象限"
-    @AppStorage("notesNativeChecklist") private var notesNativeChecklist = false
-    @AppStorage("memoFontSize") private var memoFontSize = 16.0
     @State private var rules: [ParseRule] = ParseRuleStore.load()
 
     var body: some View {
@@ -23,13 +19,6 @@ struct SettingsView: View {
                     }
                     Text(L("settings.language.note"))
                         .appFont(.caption).foregroundStyle(.secondary)
-                }
-
-                Section(L("settings.display.section")) {
-                    Toggle(L("settings.showCompleted"), isOn: $showCompleted)
-                    Stepper(value: $memoFontSize, in: 11...28, step: 1) {
-                        LabeledContent(L("settings.memo.fontSize"), value: "\(Int(memoFontSize))")
-                    }
                 }
 
                 Section {
@@ -47,17 +36,6 @@ struct SettingsView: View {
                     Text(L("settings.tags.section"))
                 } footer: {
                     Text(L("settings.tags.note")).appFont(.caption)
-                }
-
-                Section {
-                    LabeledContent(L("settings.export.folder")) {
-                        TextField("", text: $notesFolder).multilineTextAlignment(.trailing)
-                    }
-                    Toggle(L("settings.export.native"), isOn: $notesNativeChecklist)
-                } header: {
-                    Text(L("settings.export.section"))
-                } footer: {
-                    Text(notesNativeChecklist ? L("settings.export.native.note") : L("settings.export.note"))
                 }
 
                 Section {

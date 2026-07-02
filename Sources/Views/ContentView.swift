@@ -49,25 +49,16 @@ struct ContentView: View {
             SidebarView(selection: $sidebar)
             #endif
         } detail: {
-            // 收起窄条占布局空间 → 四象限按剩余内部宽度渲染；
-            // 展开的宽面板作为浮层覆盖在四象限之上，不挤压其布局。
+            // 笔记作为右侧真实列（非浮层）：与内容直接相邻，无间隔；布局稳定不抖。
             HStack(spacing: 0) {
                 MainArea(sidebar: sidebar ?? .overview,
                          selectedTask: $selectedTask,
                          weekStart: $selectedWeek)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 Divider()
-                NotesCollapsedStrip(collapsed: $notesCollapsed)
-            }
-            // 点击笔记以外的区域收起笔记（透明捕获层，位于面板之下）
-            .overlay {
-                if !notesCollapsed {
-                    Color.clear.contentShape(Rectangle())
-                        .onTapGesture { withAnimation(.easeInOut(duration: 0.15)) { notesCollapsed = true } }
-                }
-            }
-            .overlay(alignment: .trailing) {
-                if !notesCollapsed {
+                if notesCollapsed {
+                    NotesCollapsedStrip(collapsed: $notesCollapsed)
+                } else {
                     NotesPanel(weekStart: selectedWeek,
                                collapsed: $notesCollapsed,
                                width: $notesWidth)

@@ -8,8 +8,6 @@ import RichTextKit
 struct FourQuadrantsApp: App {
     let container: ModelContainer
     @AppStorage(FontScale.key) private var fontIndex = FontScale.defaultIndex
-    @AppStorage("notesFolder") private var notesFolder = "四象限"
-    @AppStorage("notesNativeChecklist") private var notesNativeChecklist = false
     @AppStorage("notesPanelCollapsed") private var notesCollapsed = false
 
     init() {
@@ -26,15 +24,6 @@ struct FourQuadrantsApp: App {
         .commands {
             SidebarCommands()
             RichTextCommand.FormatMenu()   // 备忘编辑器的 ⌘B/⌘I/⌘U 等格式菜单与快捷键
-            CommandGroup(after: .importExport) {
-                Button(L("menu.exportNotes")) {
-                    NotesExporter.export(weekStart: Week.currentStart,
-                                         folder: notesFolder,
-                                         nativeChecklist: notesNativeChecklist,
-                                         context: container.mainContext)
-                }
-                .keyboardShortcut("e", modifiers: [.command, .shift])
-            }
             CommandGroup(after: .sidebar) {
                 Button(L("menu.toggleNotes")) {
                     withAnimation(.easeInOut(duration: 0.15)) { notesCollapsed.toggle() }
