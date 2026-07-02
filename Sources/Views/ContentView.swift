@@ -66,6 +66,12 @@ struct ContentView: View {
                                width: $notesWidth)
                 }
             }
+            #if os(macOS)
+            // 标题栏下方分隔线：仅在内容区（不含侧边栏）
+            .overlay(alignment: .top) {
+                Rectangle().fill(Color(nsColor: .separatorColor)).frame(height: 0.5)
+            }
+            #endif
         }
         #if os(macOS)
         // 玻璃材质背景。glassTint 为「实心」旋钮：0 = 全玻璃，1 = 全实心（一步步调它看效果）。

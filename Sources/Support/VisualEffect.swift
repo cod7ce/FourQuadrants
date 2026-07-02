@@ -30,6 +30,8 @@ struct WindowTranslucency: NSViewRepresentable {
                 w.backgroundColor = .clear
                 // 标题栏透明，由同一层窗口材质透上来，避免与内容区出现分界
                 w.titlebarAppearsTransparent = true
+                // 标题栏下方加一条分隔线
+                w.titlebarSeparatorStyle = .line
             }
         }
         return v
