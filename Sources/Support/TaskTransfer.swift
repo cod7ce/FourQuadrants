@@ -30,6 +30,16 @@ enum TaskMutations {
         Task { await NotificationManager.shared.reschedule(for: task) }
     }
 
+    /// 安排任务到指定「周 + 象限」（用于从待安排 Inbox 拖入某周视图）。
+    @MainActor
+    static func schedule(uuid: String, to quadrant: Quadrant, week: Date, in context: ModelContext) {
+        guard let task = task(uuid: uuid, in: context) else { return }
+        task.move(to: quadrant)
+        task.weekStart = Week.start(of: week)
+        try? context.save()
+        Task { await NotificationManager.shared.reschedule(for: task) }
+    }
+
     /// 把 `draggedUUID` 拖到 `target` 之前，并对该同级组重排 sortOrder。
     /// `ordered` 是目标所在同级组当前的显示顺序。跨象限拖入会一并归入目标象限。
     @MainActor
@@ -41,9 +51,11 @@ enum TaskMutations {
         if let parent = target.parent {
             guard dragged.parent != nil else { return }   // 顶层任务不通过此路径变成子任务
             dragged.parent = parent
+            dragged.weekStart = parent.weekStart
         } else {
             guard dragged.parent == nil else { return }   // 子任务不通过此路径变成顶层
             dragged.move(to: target.quadrant)
+            dragged.weekStart = target.weekStart          // 跨周拖入时一并归到目标周
         }
         var arr = ordered.filter { $0.taskUUID != draggedUUID }
         guard let idx = arr.firstIndex(where: { $0.taskUUID == target.taskUUID }) else { return }

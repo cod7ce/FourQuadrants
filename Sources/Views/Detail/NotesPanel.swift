@@ -1,11 +1,14 @@
 import SwiftUI
 
-/// 右侧「笔记」浮层：标题 + 收起箭头 + 富文本编辑器（每周独立）。
+enum RightPanelMode: String { case notes, inbox }
+
+/// 右侧抽屉：可在「笔记」与「待安排 Inbox」之间切换（同一区域）。
 /// 展开时层级高于四象限，左边缘可拖拽调整宽度（松手才持久化）。
-struct NotesPanel: View {
+struct RightPanel: View {
     let weekStart: Date
     @Binding var collapsed: Bool
     @Binding var width: Double
+    @AppStorage("rightPanelMode") private var mode = RightPanelMode.notes
 
     static let minWidth: Double = 280
     static let maxWidth: Double = 680
@@ -30,9 +33,22 @@ struct NotesPanel: View {
 
     private var content: some View {
         VStack(spacing: 0) {
-            HStack {
-                Text(L("notes.title")).font(.title3.bold())
+            HStack(spacing: 8) {
+                Text(mode == .notes ? L("notes.title") : L("inbox.title")).font(.title3.bold())
                 Spacer()
+                // 切换 笔记 / 待安排
+                Button {
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        mode = (mode == .notes ? .inbox : .notes)
+                    }
+                } label: {
+                    Image(systemName: mode == .notes ? "tray" : "note.text")
+                        .font(.system(size: 13))
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .help(mode == .notes ? L("inbox.title") : L("notes.title"))
+
                 Button { withAnimation(.easeInOut(duration: 0.15)) { collapsed = true } } label: {
                     Image(systemName: "chevron.right")
                         .font(.system(size: 12, weight: .semibold))
@@ -47,7 +63,11 @@ struct NotesPanel: View {
 
             Divider()
 
-            MemoEditor(weekStart: weekStart)
+            if mode == .notes {
+                MemoEditor(weekStart: weekStart)
+            } else {
+                InboxView(weekStart: weekStart)
+            }
         }
     }
 

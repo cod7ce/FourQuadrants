@@ -64,7 +64,7 @@ struct ContentView: View {
                 if notesCollapsed {
                     NotesCollapsedStrip(collapsed: $notesCollapsed)
                 } else {
-                    NotesPanel(weekStart: selectedWeek,
+                    RightPanel(weekStart: selectedWeek,
                                collapsed: $notesCollapsed,
                                width: $notesWidth)
                 }

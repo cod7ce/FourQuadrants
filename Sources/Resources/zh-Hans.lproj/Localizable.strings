@@ -226,3 +226,9 @@
 "editor.delete" = "删除任务";
 "editor.autosave" = "改动自动保存";
 "editor.done" = "完成";
+"inbox.title" = "待安排";
+"inbox.subtitle" = "还没有安排 · 拖到某周的象限里";
+"inbox.quickAdd" = "快速添加到收集箱";
+"inbox.count" = "共 %d 项待安排";
+"inbox.week" = "第 %d 周";
+"week.current.short" = "本周";

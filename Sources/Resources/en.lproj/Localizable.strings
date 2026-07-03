@@ -226,3 +226,9 @@
 "editor.delete" = "Delete task";
 "editor.autosave" = "Changes saved automatically";
 "editor.done" = "Done";
+"inbox.title" = "Inbox";
+"inbox.subtitle" = "Unscheduled · drag onto a week's quadrant";
+"inbox.quickAdd" = "Quick add to inbox";
+"inbox.count" = "%d to schedule";
+"inbox.week" = "Week %d";
+"week.current.short" = "This week";

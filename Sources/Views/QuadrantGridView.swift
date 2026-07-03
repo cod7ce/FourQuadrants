@@ -67,6 +67,7 @@ struct QuadrantGridView: View {
     private func card(_ q: Quadrant) -> some View {
         QuadrantCard(quadrant: q,
                      tasks: weekTasks.filter { $0.quadrant == q },
+                     weekStart: weekStart,
                      selectedTask: $selectedTask)
     }
 }
@@ -142,6 +143,7 @@ private struct QuadrantCard: View {
     @Environment(\.modelContext) private var context
     let quadrant: Quadrant
     let tasks: [TaskItem]          // 该象限全部任务（含已完成）
+    let weekStart: Date
     @Binding var selectedTask: TaskItem?
     @State private var isTargeted = false
 
@@ -177,7 +179,9 @@ private struct QuadrantCard: View {
                 .strokeBorder(quadrant.color.opacity(isTargeted ? 0.7 : 0), lineWidth: 1.5)
         )
         .dropDestination(for: TaskTransfer.self) { items, _ in
-            for item in items { TaskMutations.move(uuid: item.taskUUID, to: quadrant, in: context) }
+            for item in items {
+                TaskMutations.schedule(uuid: item.taskUUID, to: quadrant, week: weekStart, in: context)
+            }
             return !items.isEmpty
         } isTargeted: { isTargeted = $0 }
     }
