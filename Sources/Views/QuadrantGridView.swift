@@ -231,6 +231,7 @@ private struct OverviewTaskRow: View {
     var siblings: [TaskItem] = []
     var onSelect: () -> Void = {}
     @State private var showPopover = false
+    @State private var dropTargeted = false
 
     static let checkboxWidth: CGFloat = 22
     static let gap: CGFloat = 9
@@ -246,6 +247,17 @@ private struct OverviewTaskRow: View {
                 ForEach(subs) { sub in OverviewSubtaskRow(sub: sub) }
             }
         }
+        .overlay(alignment: .top) {
+            if dropTargeted {
+                Capsule().fill(Color.accentColor).frame(height: 2).padding(.horizontal, -4).offset(y: -5)
+            }
+        }
+        .dropDestination(for: TaskTransfer.self) { items, _ in
+            for it in items {
+                TaskMutations.reorder(draggedUUID: it.taskUUID, before: task, ordered: siblings, in: context)
+            }
+            return !items.isEmpty
+        } isTargeted: { dropTargeted = $0 }
     }
 
     private var parentRow: some View {
@@ -282,12 +294,6 @@ private struct OverviewTaskRow: View {
         #endif
         .onTapGesture(count: 2) { showPopover = true }
         .onTapGesture { onSelect() }
-        .dropDestination(for: TaskTransfer.self) { items, _ in
-            for it in items {
-                TaskMutations.reorder(draggedUUID: it.taskUUID, before: task, ordered: siblings, in: context)
-            }
-            return !items.isEmpty
-        }
         .sheet(isPresented: $showPopover) { TaskEditor(task: task) }
     }
 
@@ -336,6 +342,7 @@ private struct OverviewSubtaskRow: View {
     @Environment(\.optionHeld) private var optionHeld
     @Bindable var sub: TaskItem
     @State private var showPopover = false
+    @State private var dropTargeted = false
 
     private var linkActive: Bool { optionHeld && !sub.urls.isEmpty }
 
@@ -367,6 +374,11 @@ private struct OverviewSubtaskRow: View {
         )
         #endif
         .onTapGesture(count: 2) { showPopover = true }
+        .overlay(alignment: .top) {
+            if dropTargeted {
+                Capsule().fill(Color.accentColor).frame(height: 2).offset(y: -4)
+            }
+        }
         .draggable(TaskTransfer(taskUUID: sub.taskUUID))
         .dropDestination(for: TaskTransfer.self) { items, _ in
             for it in items {
@@ -374,7 +386,7 @@ private struct OverviewSubtaskRow: View {
                                       ordered: sub.parent?.sortedSubtasks ?? [], in: context)
             }
             return !items.isEmpty
-        }
+        } isTargeted: { dropTargeted = $0 }
         .sheet(isPresented: $showPopover) { TaskEditor(task: sub) }
     }
 

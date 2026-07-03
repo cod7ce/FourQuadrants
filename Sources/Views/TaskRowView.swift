@@ -96,6 +96,7 @@ private struct SubtaskEditableRow: View {
     @Environment(\.optionHeld) private var optionHeld
     @Bindable var sub: TaskItem
     @State private var showPopover = false
+    @State private var dropTargeted = false
 
     private var linkActive: Bool { optionHeld && !sub.urls.isEmpty }
 
@@ -120,6 +121,11 @@ private struct SubtaskEditableRow: View {
         )
         #endif
         .onTapGesture(count: 2) { showPopover = true }
+        .overlay(alignment: .top) {
+            if dropTargeted {
+                Capsule().fill(Color.accentColor).frame(height: 2).offset(y: -3)
+            }
+        }
         .draggable(TaskTransfer(taskUUID: sub.taskUUID))
         .dropDestination(for: TaskTransfer.self) { items, _ in
             for it in items {
@@ -127,7 +133,7 @@ private struct SubtaskEditableRow: View {
                                       ordered: sub.parent?.sortedSubtasks ?? [], in: context)
             }
             return !items.isEmpty
-        }
+        } isTargeted: { dropTargeted = $0 }
         .sheet(isPresented: $showPopover) { TaskEditor(task: sub) }
     }
 
