@@ -9,7 +9,7 @@ struct TaskListView: View {
 
     @Query(sort: \TaskItem.sortOrder) private var allTasks: [TaskItem]
     @State private var search = ""
-    @State private var showAdd = false
+    @State private var newTask: TaskItem?
 
     private var tasks: [TaskItem] {
         let base = allTasks.inWeek(weekStart).inScope(scope, showCompleted: true)
@@ -61,20 +61,25 @@ struct TaskListView: View {
         }
         .toolbar {
             ToolbarItem {
-                Button { showAdd = true } label: { Label(L("action.create"), systemImage: "plus") }
+                Button { newTask = makeTask() } label: { Label(L("action.create"), systemImage: "plus") }
             }
             #if os(iOS)
             ToolbarItem(placement: .topBarTrailing) { EditButton() }
             #endif
         }
-        .sheet(isPresented: $showAdd) {
-            QuickAddView(defaultQuadrant: defaultQuadrant, weekStart: weekStart)
-        }
+        .sheet(item: $newTask) { TaskEditor(task: $0, isNew: true) }
         .dropDestination(for: TaskTransfer.self) { items, _ in
             guard case .quadrant(let q) = scope else { return false }
             for item in items { TaskMutations.move(uuid: item.taskUUID, to: q, in: context) }
             return !items.isEmpty
         }
+    }
+
+    private func makeTask() -> TaskItem {
+        let flags = defaultQuadrant.flags
+        let t = TaskItem(isUrgent: flags.isUrgent, isImportant: flags.isImportant, weekStart: weekStart)
+        context.insert(t)
+        return t
     }
 
     private func toggle(_ task: TaskItem) {

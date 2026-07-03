@@ -91,11 +91,12 @@ struct LinkRow: View {
     var body: some View {
         if let url = URL(string: urlString) {
             Link(destination: url) {
-                Label(url.host() ?? urlString, systemImage: "link")
+                Label(urlString, systemImage: "link")
                     .lineLimit(1)
+                    .truncationMode(.tail)
             }
         } else {
-            Label(urlString, systemImage: "link").lineLimit(1)
+            Label(urlString, systemImage: "link").lineLimit(1).truncationMode(.tail)
         }
     }
 }

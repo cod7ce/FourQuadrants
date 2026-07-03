@@ -65,7 +65,7 @@ struct TaskRowView: View {
         )
         #endif
         .onTapGesture(count: 2) { showPopover = true }
-        .popover(isPresented: $showPopover) { TaskEditor(task: task) }
+        .sheet(isPresented: $showPopover) { TaskEditor(task: task) }
     }
 
     @ViewBuilder
@@ -120,7 +120,7 @@ private struct SubtaskEditableRow: View {
         )
         #endif
         .onTapGesture(count: 2) { showPopover = true }
-        .popover(isPresented: $showPopover) { TaskEditor(task: sub) }
+        .sheet(isPresented: $showPopover) { TaskEditor(task: sub) }
     }
 
     private func toggle() {

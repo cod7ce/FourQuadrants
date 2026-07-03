@@ -2,10 +2,11 @@ import SwiftUI
 import SwiftData
 
 struct QuadrantGridView: View {
+    @Environment(\.modelContext) private var context
     @Binding var selectedTask: TaskItem?
     @Binding var weekStart: Date
     @Query(sort: \TaskItem.sortOrder) private var allTasks: [TaskItem]
-    @State private var showAdd = false
+    @State private var newTask: TaskItem?
 
     private var weekTasks: [TaskItem] { allTasks.inWeek(weekStart).topLevel }
 
@@ -43,12 +44,17 @@ struct QuadrantGridView: View {
             }
             #endif
             ToolbarItem {
-                Button { showAdd = true } label: { Label(L("action.create"), systemImage: "plus") }
+                Button { newTask = makeTask() } label: { Label(L("action.create"), systemImage: "plus") }
             }
         }
-        .sheet(isPresented: $showAdd) {
-            QuickAddView(defaultQuadrant: .urgentImportant, weekStart: weekStart)
-        }
+        .sheet(item: $newTask) { TaskEditor(task: $0, isNew: true) }
+    }
+
+    private func makeTask() -> TaskItem {
+        let flags = Quadrant.urgentImportant.flags
+        let t = TaskItem(isUrgent: flags.isUrgent, isImportant: flags.isImportant, weekStart: weekStart)
+        context.insert(t)
+        return t
     }
 
     private func gridRow(_ a: Quadrant, _ b: Quadrant) -> some View {
@@ -274,7 +280,7 @@ private struct OverviewTaskRow: View {
         #endif
         .onTapGesture(count: 2) { showPopover = true }
         .onTapGesture { onSelect() }
-        .popover(isPresented: $showPopover) { TaskEditor(task: task) }
+        .sheet(isPresented: $showPopover) { TaskEditor(task: task) }
     }
 
     private var completionToggle: some View {
@@ -353,7 +359,7 @@ private struct OverviewSubtaskRow: View {
         )
         #endif
         .onTapGesture(count: 2) { showPopover = true }
-        .popover(isPresented: $showPopover) { TaskEditor(task: sub) }
+        .sheet(isPresented: $showPopover) { TaskEditor(task: sub) }
     }
 
     private func toggle() {
