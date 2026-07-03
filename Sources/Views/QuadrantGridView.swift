@@ -231,7 +231,7 @@ private struct OverviewTaskRow: View {
     private var subs: [TaskItem] { task.sortedSubtasks }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 9) {
             parentRow
             // 父任务下列出子任务（未完成的父任务才展开，保持已完成区紧凑）
             if !task.isCompleted {
@@ -257,9 +257,13 @@ private struct OverviewTaskRow: View {
             Spacer(minLength: 0)
             DueDateLabel(task: task)
         }
-        .padding(.vertical, 1)
-        .background(isSelected ? Color.accentColor.opacity(0.14) : .clear,
-                    in: RoundedRectangle(cornerRadius: 6))
+        // 选中高亮：用外扩背景留出呼吸空间（不移动内容，保持子任务对齐）
+        .background {
+            RoundedRectangle(cornerRadius: 8)
+                .fill(isSelected ? Color.accentColor.opacity(0.14) : Color.clear)
+                .padding(.horizontal, -8)
+                .padding(.vertical, -5)
+        }
         .contentShape(Rectangle())
         #if os(macOS)
         .highPriorityGesture(
