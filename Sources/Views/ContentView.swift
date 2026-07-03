@@ -1,5 +1,8 @@
 import SwiftUI
 import SwiftData
+#if os(macOS)
+import AppKit
+#endif
 
 enum SidebarItem: Hashable {
     case overview
@@ -94,6 +97,12 @@ struct ContentView: View {
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { Task { await checkClipboard() } }
         }
+        #if os(macOS)
+        // macOS 上 scenePhase 在切回窗口时不一定触发；用应用激活通知兜底
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            Task { await checkClipboard() }
+        }
+        #endif
         .confirmationDialog(
             L("clipboard.prompt.title"),
             isPresented: $showClipboardPrompt,
