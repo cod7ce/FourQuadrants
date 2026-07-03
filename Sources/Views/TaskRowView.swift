@@ -120,6 +120,14 @@ private struct SubtaskEditableRow: View {
         )
         #endif
         .onTapGesture(count: 2) { showPopover = true }
+        .draggable(TaskTransfer(taskUUID: sub.taskUUID))
+        .dropDestination(for: TaskTransfer.self) { items, _ in
+            for it in items {
+                TaskMutations.reorder(draggedUUID: it.taskUUID, before: sub,
+                                      ordered: sub.parent?.sortedSubtasks ?? [], in: context)
+            }
+            return !items.isEmpty
+        }
         .sheet(isPresented: $showPopover) { TaskEditor(task: sub) }
     }
 

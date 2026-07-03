@@ -158,12 +158,12 @@ private struct QuadrantCard: View {
             } else {
                 ThinProgressBar(ratio: ratio, color: quadrant.color)
                 VStack(alignment: .leading, spacing: 10) {
-                    ForEach(active) { row($0, completed: false) }
+                    ForEach(active) { row($0, siblings: active) }
                     if !completed.isEmpty {
                         Text(String(format: L("grid.completedCount"), completed.count))
                             .font(.caption).foregroundStyle(.secondary)
                             .padding(.top, 2)
-                        ForEach(completed) { row($0, completed: true) }
+                        ForEach(completed) { row($0, siblings: completed) }
                     }
                 }
             }
@@ -211,9 +211,10 @@ private struct QuadrantCard: View {
     }
 
     @ViewBuilder
-    private func row(_ task: TaskItem, completed: Bool) -> some View {
+    private func row(_ task: TaskItem, siblings: [TaskItem]) -> some View {
         OverviewTaskRow(task: task,
                         isSelected: selectedTask?.persistentModelID == task.persistentModelID,
+                        siblings: siblings,
                         onSelect: { selectedTask = task })
             .draggable(TaskTransfer(taskUUID: task.taskUUID))
     }
@@ -227,6 +228,7 @@ private struct OverviewTaskRow: View {
     @Environment(\.optionHeld) private var optionHeld
     @Bindable var task: TaskItem
     var isSelected: Bool = false
+    var siblings: [TaskItem] = []
     var onSelect: () -> Void = {}
     @State private var showPopover = false
 
@@ -280,6 +282,12 @@ private struct OverviewTaskRow: View {
         #endif
         .onTapGesture(count: 2) { showPopover = true }
         .onTapGesture { onSelect() }
+        .dropDestination(for: TaskTransfer.self) { items, _ in
+            for it in items {
+                TaskMutations.reorder(draggedUUID: it.taskUUID, before: task, ordered: siblings, in: context)
+            }
+            return !items.isEmpty
+        }
         .sheet(isPresented: $showPopover) { TaskEditor(task: task) }
     }
 
@@ -359,6 +367,14 @@ private struct OverviewSubtaskRow: View {
         )
         #endif
         .onTapGesture(count: 2) { showPopover = true }
+        .draggable(TaskTransfer(taskUUID: sub.taskUUID))
+        .dropDestination(for: TaskTransfer.self) { items, _ in
+            for it in items {
+                TaskMutations.reorder(draggedUUID: it.taskUUID, before: sub,
+                                      ordered: sub.parent?.sortedSubtasks ?? [], in: context)
+            }
+            return !items.isEmpty
+        }
         .sheet(isPresented: $showPopover) { TaskEditor(task: sub) }
     }
 

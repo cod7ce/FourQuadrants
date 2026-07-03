@@ -114,6 +114,14 @@ struct TaskEditor: View {
                         Image(systemName: "xmark").font(.caption2).foregroundStyle(.tertiary)
                     }.buttonStyle(.plain)
                 }
+                .contentShape(Rectangle())
+                .draggable(TaskTransfer(taskUUID: sub.taskUUID))
+                .dropDestination(for: TaskTransfer.self) { items, _ in
+                    for it in items {
+                        TaskMutations.reorder(draggedUUID: it.taskUUID, before: sub, ordered: subs, in: context)
+                    }
+                    return !items.isEmpty
+                }
             }
             HStack(spacing: 10) {
                 Image(systemName: "plus").foregroundStyle(.secondary)

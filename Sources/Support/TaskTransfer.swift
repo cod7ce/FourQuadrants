@@ -29,4 +29,26 @@ enum TaskMutations {
         try? context.save()
         Task { await NotificationManager.shared.reschedule(for: task) }
     }
+
+    /// 把 `draggedUUID` 拖到 `target` 之前，并对该同级组重排 sortOrder。
+    /// `ordered` 是目标所在同级组当前的显示顺序。跨象限拖入会一并归入目标象限。
+    @MainActor
+    static func reorder(draggedUUID: String, before target: TaskItem,
+                        ordered: [TaskItem], in context: ModelContext) {
+        guard draggedUUID != target.taskUUID,
+              let dragged = task(uuid: draggedUUID, in: context) else { return }
+        // 让被拖任务归入目标所在的组（子任务→同一父；顶层→目标象限）
+        if let parent = target.parent {
+            guard dragged.parent != nil else { return }   // 顶层任务不通过此路径变成子任务
+            dragged.parent = parent
+        } else {
+            guard dragged.parent == nil else { return }   // 子任务不通过此路径变成顶层
+            dragged.move(to: target.quadrant)
+        }
+        var arr = ordered.filter { $0.taskUUID != draggedUUID }
+        guard let idx = arr.firstIndex(where: { $0.taskUUID == target.taskUUID }) else { return }
+        arr.insert(dragged, at: idx)
+        for (i, t) in arr.enumerated() { t.sortOrder = Double(i) }
+        try? context.save()
+    }
 }
