@@ -6,7 +6,7 @@ struct TaskRowView: View {
     @Environment(\.openURL) private var openURL
     @Environment(\.optionHeld) private var optionHeld
     @Bindable var task: TaskItem
-    @State private var expanded = false
+    @State private var expanded = true      // 列表里子任务默认展开
     @State private var showPopover = false
 
     private var linkActive: Bool { optionHeld && !task.urls.isEmpty }

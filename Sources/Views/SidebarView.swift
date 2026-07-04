@@ -2,10 +2,22 @@ import SwiftUI
 import SwiftData
 
 struct SidebarView: View {
+    @Environment(\.modelContext) private var context
     @Binding var selection: SidebarItem?
+    @Query(sort: \Tag.name) private var tags: [Tag]
+    @Query private var allTasks: [TaskItem]
+    @State private var showNewTag = false
+    @State private var newTagName = ""
     #if os(iOS)
     var onSettings: () -> Void = {}
     #endif
+
+    /// 该标签下的顶层任务数（含已完成，跨所有周）。
+    private func taskCount(_ tag: Tag) -> Int {
+        allTasks.filter {
+            $0.parent == nil && $0.tagList.contains { $0.name == tag.name }
+        }.count
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -22,13 +34,38 @@ struct SidebarView: View {
                 row(.overview, L("sidebar.overview"), "square.grid.2x2")
                 row(.thisWeek, L("sidebar.thisWeek"), "calendar")
                 row(.calendar, L("sidebar.calendar"), "clock")
-                row(.tags, L("sidebar.tags"), "tag")
-                row(.archive, L("sidebar.archive"), "archivebox")
+
+                Section {
+                    ForEach(tags) { tag in
+                        HStack(spacing: 10) {
+                            Circle().fill(tag.color).frame(width: 10, height: 10)
+                            Text(tag.name)
+                            Spacer(minLength: 6)
+                            Text("\(taskCount(tag))")
+                                .foregroundStyle(.secondary)
+                                .monospacedDigit()
+                        }
+                        .tag(SidebarItem.tag(tag.name))
+                    }
+
+                    Button { beginNewTag() } label: {
+                        Label(L("editor.tag.new"), systemImage: "plus")
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                } header: {
+                    Text(L("sidebar.tags"))
+                }
             }
             #if os(macOS)
             .listStyle(.sidebar)
             .scrollContentBackground(.hidden)
             #endif
+            .alert(L("editor.tag.new"), isPresented: $showNewTag) {
+                TextField(L("editor.tag.new"), text: $newTagName)
+                Button(L("action.add")) { addTag() }
+                Button(L("action.cancel"), role: .cancel) { }
+            }
 
             Divider().padding(.horizontal, 12)
 
@@ -50,6 +87,19 @@ struct SidebarView: View {
 
     private func row(_ item: SidebarItem, _ title: String, _ symbol: String) -> some View {
         Label(title, systemImage: symbol).tag(item)
+    }
+
+    private func beginNewTag() {
+        newTagName = ""
+        showNewTag = true
+    }
+
+    private func addTag() {
+        let name = newTagName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty else { return }
+        let hex = TagPalette.hexes[tags.count % TagPalette.hexes.count]
+        context.insert(Tag(name: name, colorHex: hex))
+        try? context.save()
     }
 
     @ViewBuilder

@@ -33,7 +33,6 @@
 "sidebar.thisWeek" = "This Week";
 "sidebar.calendar" = "Calendar";
 "sidebar.tags" = "Tags";
-"sidebar.archive" = "Archive";
 "sidebar.savedLocal" = "Saved locally";
 "overview.weekProgress" = "Done this week";
 "grid.completedCount" = "%d done";
@@ -103,8 +102,8 @@
 "component.link" = "Link";
 
 /* Week */
-"week.current" = "· This week";
-"week.retro" = "· Past";
+"week.current" = "This week";
+"week.retro" = "Past";
 "week.yearWeek" = "Week %2$lld, %1$lld";
 
 /* Notification */

@@ -22,6 +22,11 @@ enum Week {
         calendar.isDate(weekStart, equalTo: .now, toGranularity: .weekOfYear)
     }
 
+    /// 是否为已过去的周（严格早于本周）。
+    static func isPast(_ weekStart: Date) -> Bool {
+        start(of: weekStart) < currentStart
+    }
+
     static func shift(_ weekStart: Date, by weeks: Int) -> Date {
         calendar.date(byAdding: .weekOfYear, value: weeks, to: weekStart) ?? weekStart
     }

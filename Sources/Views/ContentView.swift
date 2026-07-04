@@ -8,8 +8,7 @@ enum SidebarItem: Hashable {
     case overview
     case thisWeek
     case calendar
-    case tags
-    case archive
+    case tag(String)      // 按标签名，直接在侧边栏展开
 }
 
 struct ContentView: View {
@@ -162,10 +161,8 @@ private struct MainArea: View {
                 listArea(.all)
             case .calendar:
                 listArea(.scheduled)
-            case .tags:
-                TagsScreen(selectedTask: $selectedTask, weekStart: weekStart)
-            case .archive:
-                listArea(.completed)
+            case .tag(let name):
+                listArea(.tag(name))
             }
         }
     }
@@ -183,8 +180,13 @@ private struct MainArea: View {
 struct WeekNavigatorBar: View {
     @Binding var weekStart: Date
 
-    private var weekMark: String {
-        Week.isCurrent(weekStart) ? L("week.current") : L("week.retro")
+    /// 周标记：本周 → 高亮色文字；过去 → 橙色「回溯」；未来 → 不显示。
+    @ViewBuilder private var weekMarkView: some View {
+        if Week.isCurrent(weekStart) {
+            Text(L("week.current")).foregroundStyle(Color.accentColor)
+        } else if Week.isPast(weekStart) {
+            Text(L("week.retro")).foregroundStyle(Color.orange)
+        }
     }
 
     var body: some View {
@@ -197,15 +199,14 @@ struct WeekNavigatorBar: View {
             .buttonStyle(.borderless)
 
             VStack(spacing: 2) {
-                // 周信息为标题；日期范围 + 本周/回溯 为描述
+                // 周信息为标题；日期范围 + 本周/回溯 为描述（未来周不加标记）
                 Text(Week.yearWeekLabel(weekStart)).appFont(.headline)
                 HStack(spacing: 6) {
                     Text(Week.label(weekStart))
-                    Text(weekMark)
-                        .foregroundStyle(Week.isCurrent(weekStart) ? .secondary : Color.orange)
+                        .foregroundStyle(.secondary)
+                    weekMarkView
                 }
                 .appFont(.caption)
-                .foregroundStyle(.secondary)
             }
             .frame(minWidth: 180)
 

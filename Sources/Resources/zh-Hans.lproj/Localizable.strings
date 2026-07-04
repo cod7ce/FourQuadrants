@@ -33,7 +33,6 @@
 "sidebar.thisWeek" = "本周";
 "sidebar.calendar" = "日历";
 "sidebar.tags" = "标签";
-"sidebar.archive" = "归档";
 "sidebar.savedLocal" = "已保存到本地";
 "overview.weekProgress" = "本周完成";
 "grid.completedCount" = "已完成 %d";
@@ -103,8 +102,8 @@
 "component.link" = "链接";
 
 /* 周 */
-"week.current" = "· 本周";
-"week.retro" = "· 回溯";
+"week.current" = "本周";
+"week.retro" = "回溯";
 "week.yearWeek" = "%1$lld 年第 %2$lld 周";
 
 /* 通知 */

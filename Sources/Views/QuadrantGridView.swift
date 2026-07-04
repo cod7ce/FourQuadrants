@@ -80,19 +80,26 @@ private struct WeekHeaderBar: View {
 
     private var done: Int { tasks.filter(\.isCompleted).count }
     private var total: Int { tasks.count }
-    private var mark: String { Week.isCurrent(weekStart) ? L("week.current") : L("week.retro") }
+    /// 周标记：本周 → 高亮色文字；过去 → 橙色「回溯」；未来 → 不显示。
+    @ViewBuilder private var weekMarkView: some View {
+        if Week.isCurrent(weekStart) {
+            Text(L("week.current")).foregroundStyle(Color.accentColor)
+        } else if Week.isPast(weekStart) {
+            Text(L("week.retro")).foregroundStyle(Color.orange)
+        }
+    }
 
     var body: some View {
         HStack(alignment: .center) {
             HStack(spacing: 12) {
                 navButton("chevron.left") { weekStart = Week.shift(weekStart, by: -1) }
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .center, spacing: 2) {
                     Text(Week.yearWeekLabel(weekStart)).font(.title3.bold())
                     HStack(spacing: 6) {
-                        Text(Week.label(weekStart))
-                        Text(mark).foregroundStyle(Week.isCurrent(weekStart) ? .secondary : Color.orange)
+                        Text(Week.label(weekStart)).foregroundStyle(.secondary)
+                        weekMarkView
                     }
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.caption)
                 }
                 navButton("chevron.right") { weekStart = Week.shift(weekStart, by: 1) }
             }
