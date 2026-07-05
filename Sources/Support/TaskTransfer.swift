@@ -40,6 +40,17 @@ enum TaskMutations {
         Task { await NotificationManager.shared.reschedule(for: task) }
     }
 
+    /// 安排任务到某一天（本周议程：从待安排拖到某天，或在天之间移动）。
+    /// 设置截止日期为当天 00:00，并把所属周同步到该天所在周。
+    @MainActor
+    static func schedule(uuid: String, onDay day: Date, in context: ModelContext) {
+        guard let task = task(uuid: uuid, in: context) else { return }
+        task.dueDate = Week.calendar.startOfDay(for: day)
+        task.weekStart = Week.start(of: day)
+        try? context.save()
+        Task { await NotificationManager.shared.reschedule(for: task) }
+    }
+
     /// 把 `draggedUUID` 拖到 `target` 之前，并对该同级组重排 sortOrder。
     /// `ordered` 是目标所在同级组当前的显示顺序。跨象限拖入会一并归入目标象限。
     @MainActor

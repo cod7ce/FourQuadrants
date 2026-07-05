@@ -8,7 +8,10 @@ struct InboxView: View {
     @Query(sort: \TaskItem.createdAt, order: .reverse) private var allTasks: [TaskItem]
     @State private var quickAdd = ""
 
-    private var items: [TaskItem] { allTasks.filter { $0.parent == nil && !$0.isCompleted } }
+    // 待安排 = 没有截止日期的未完成顶层任务。
+    private var items: [TaskItem] {
+        allTasks.filter { $0.parent == nil && !$0.isCompleted && $0.dueDate == nil }
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {

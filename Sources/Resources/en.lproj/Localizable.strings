@@ -226,7 +226,16 @@
 "editor.autosave" = "Changes saved automatically";
 "editor.done" = "Done";
 "inbox.title" = "Inbox";
-"inbox.subtitle" = "Unscheduled · drag onto a week's quadrant";
+"inbox.subtitle" = "No date yet · drag onto a day";
+
+/* Week agenda */
+"agenda.noTasks" = "No tasks";
+"agenda.todoCount" = "%d to do";
+"agenda.doneCount" = "%d done";
+"agenda.completedOnly" = "%d · done";
+"agenda.overdue" = "Overdue %d";
+"agenda.originalDue" = "Due %@";
+"agenda.today" = "Today";
 "inbox.quickAdd" = "Quick add to inbox";
 "inbox.count" = "%d to schedule";
 "inbox.week" = "Week %d";

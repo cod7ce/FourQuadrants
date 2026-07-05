@@ -158,7 +158,7 @@ private struct MainArea: View {
             case .overview:
                 QuadrantGridView(selectedTask: $selectedTask, weekStart: $weekStart)
             case .thisWeek:
-                listArea(.all)
+                WeekAgendaView(selectedTask: $selectedTask, weekStart: $weekStart)
             case .calendar:
                 listArea(.scheduled)
             case .tag(let name):

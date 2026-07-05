@@ -74,7 +74,7 @@ struct QuadrantGridView: View {
 
 // MARK: - 周头部：导航 + 本周完成进度
 
-private struct WeekHeaderBar: View {
+struct WeekHeaderBar: View {
     @Binding var weekStart: Date
     let tasks: [TaskItem]
 
@@ -128,7 +128,7 @@ private struct WeekHeaderBar: View {
     }
 }
 
-private struct ThinProgressBar: View {
+struct ThinProgressBar: View {
     let ratio: Double
     let color: Color
 
