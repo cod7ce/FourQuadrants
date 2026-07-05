@@ -49,7 +49,8 @@ struct InboxView: View {
             Circle().fill(task.quadrant.color).frame(width: 7, height: 7).padding(.top, 6)
             VStack(alignment: .leading, spacing: 2) {
                 Text(task.title.isEmpty ? L("task.default.title") : task.title)
-                    .appFont(.body).lineLimit(1)
+                    .appFont(.body)
+                    .fixedSize(horizontal: false, vertical: true)
                 metaLine(task)
             }
             Spacer(minLength: 0)

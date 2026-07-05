@@ -197,7 +197,7 @@ private struct AgendaRow: View {
     private var linkActive: Bool { optionHeld && !task.urls.isEmpty }
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(alignment: .top, spacing: 10) {
             Button { toggle() } label: {
                 Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
                     .imageScale(.large)
@@ -205,10 +205,11 @@ private struct AgendaRow: View {
             }
             .buttonStyle(.plain)
 
-            Circle().fill(task.quadrant.color).frame(width: 8, height: 8)
+            Circle().fill(task.quadrant.color).frame(width: 8, height: 8).padding(.top, 6)
 
             Text(task.title.isEmpty ? L("task.default.title") : task.title)
-                .appFont(.body).lineLimit(1)
+                .appFont(.body)
+                .fixedSize(horizontal: false, vertical: true)
                 .strikethrough(task.isCompleted)
                 .underline(linkActive)
                 .foregroundStyle(linkActive ? Color.accentColor

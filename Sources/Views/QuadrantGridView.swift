@@ -277,7 +277,7 @@ private struct OverviewTaskRow: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text(task.title.isEmpty ? L("task.default.title") : task.title)
                     .appFont(.body)
-                    .lineLimit(1)
+                    .fixedSize(horizontal: false, vertical: true)
                     .strikethrough(task.isCompleted)
                     .underline(linkActive)
                     .foregroundStyle(linkActive ? Color.accentColor
@@ -358,7 +358,7 @@ private struct OverviewSubtaskRow: View {
     private var linkActive: Bool { optionHeld && !sub.urls.isEmpty }
 
     var body: some View {
-        HStack(spacing: OverviewTaskRow.gap) {
+        HStack(alignment: .top, spacing: OverviewTaskRow.gap) {
             Button { toggle() } label: {
                 Image(systemName: sub.isCompleted ? "checkmark.circle.fill" : "circle")
                     .imageScale(.medium)
@@ -367,7 +367,7 @@ private struct OverviewSubtaskRow: View {
             .buttonStyle(.plain)
             Text(sub.title.isEmpty ? L("task.default.title") : sub.title)
                 .appFont(.callout)
-                .lineLimit(1)
+                .fixedSize(horizontal: false, vertical: true)
                 .strikethrough(sub.isCompleted)
                 .underline(linkActive)
                 .foregroundStyle(linkActive ? Color.accentColor
