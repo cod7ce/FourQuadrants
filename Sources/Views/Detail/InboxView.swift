@@ -15,12 +15,8 @@ struct InboxView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text(L("inbox.subtitle"))
-                .font(.caption).foregroundStyle(.secondary)
-                .padding(.horizontal, 16).padding(.bottom, 12)
-
             quickAddRow
-                .padding(.horizontal, 16).padding(.bottom, 8)
+                .padding(.horizontal, 16).padding(.top, 4).padding(.bottom, 8)
 
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 2) {
@@ -52,18 +48,28 @@ struct InboxView: View {
         HStack(alignment: .top, spacing: 9) {
             Circle().fill(task.quadrant.color).frame(width: 7, height: 7).padding(.top, 6)
             VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: 6) {
-                    Text(task.title.isEmpty ? L("task.default.title") : task.title)
-                        .appFont(.body).lineLimit(1)
-                    ForEach(task.tagList) { TagChip(tag: $0) }
-                }
-                Text(subtitle(task)).appFont(.caption2).foregroundStyle(.tertiary)
+                Text(task.title.isEmpty ? L("task.default.title") : task.title)
+                    .appFont(.body).lineLimit(1)
+                metaLine(task)
             }
             Spacer(minLength: 0)
         }
         .padding(.horizontal, 6).padding(.vertical, 4)
         .contentShape(Rectangle())
         .draggable(TaskTransfer(taskUUID: task.taskUUID))
+    }
+
+    /// 周·象限描述，后面追加标签（标签色纯文本）。
+    private func metaLine(_ task: TaskItem) -> some View {
+        HStack(spacing: 4) {
+            Text(subtitle(task))
+            ForEach(task.tagList) { tag in
+                Text("· \(tag.name)")
+            }
+        }
+        .appFont(.caption2)
+        .foregroundStyle(.tertiary)
+        .lineLimit(1)
     }
 
     private func subtitle(_ task: TaskItem) -> String {
