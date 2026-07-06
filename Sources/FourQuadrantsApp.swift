@@ -54,7 +54,7 @@ struct FourQuadrantsApp: App {
     /// 优先创建 CloudKit 同步存储；若不可用（无 iCloud 账号 / 缺少权限 / 本地开发），
     /// 回退到本地存储，保证 app 始终可运行。
     static func makeContainer() -> ModelContainer {
-        let schema = Schema([TaskItem.self, Tag.self, WeekNote.self])
+        let schema = Schema([TaskItem.self, Tag.self, WeekNote.self, TaskNote.self])
         let cloudConfig = ModelConfiguration("FourQuadrants",
                                              schema: schema,
                                              cloudKitDatabase: .automatic)

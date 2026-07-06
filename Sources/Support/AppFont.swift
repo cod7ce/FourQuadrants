@@ -25,6 +25,15 @@ enum AppFont {
         #endif
     }
 
+    /// 文本样式的大写字母高度（用于图标与首行文字的视觉居中对齐）。
+    static func capHeight(_ style: Font.TextStyle, scale: CGFloat) -> CGFloat {
+        #if os(macOS)
+        return NSFont.preferredFont(forTextStyle: nsStyle(style)).capHeight * scale
+        #else
+        return UIFont.preferredFont(forTextStyle: uiStyle(style)).capHeight * scale
+        #endif
+    }
+
     static func defaultWeight(_ style: Font.TextStyle) -> Font.Weight {
         switch style {
         case .headline: return .semibold
@@ -100,5 +109,13 @@ extension View {
                  monospacedDigit: Bool = false) -> some View {
         modifier(AppFontModifier(style: style, weight: weight,
                                  monospaced: monospaced, monospacedDigit: monospacedDigit))
+    }
+
+    /// 在 `HStack(alignment: .firstTextBaseline)` 中，让图标与首行 body 文字视觉居中对齐。
+    /// 用 ~0.42em（而非拉丁 capHeight 的一半）作为基线上方的视觉中心，更贴合中文字形。
+    func alignedToFirstLine(scale: CGFloat) -> some View {
+        alignmentGuide(.firstTextBaseline) { d in
+            d[VerticalAlignment.center] + AppFont.baseSize(.body) * scale * 0.42
+        }
     }
 }

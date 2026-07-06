@@ -40,6 +40,10 @@ final class TaskItem {
     @Relationship(inverse: \Tag.tasks)
     var tags: [Tag]? = []
 
+    /// 进度点评（多条，按时间倒序看最近一条）。
+    @Relationship(deleteRule: .cascade, inverse: \TaskNote.task)
+    var progressNotes: [TaskNote]? = []
+
     /// 详细内容：富文本（RTFD，内嵌粘贴的图片），可直接编辑、图文混排。
     @Attribute(.externalStorage) var richContent: Data?
 
@@ -93,6 +97,14 @@ extension TaskItem {
     var tagList: [Tag] {
         (tags ?? []).sorted { $0.name < $1.name }
     }
+
+    /// 进度点评，按时间倒序（最近的在前）。
+    var sortedNotes: [TaskNote] {
+        (progressNotes ?? []).sorted { $0.createdAt > $1.createdAt }
+    }
+
+    /// 最近一条点评（列表里显示这条）。
+    var latestNote: TaskNote? { sortedNotes.first }
 
     var urls: [URL] {
         links.compactMap { URL(string: $0) }

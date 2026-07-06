@@ -166,7 +166,7 @@ private struct QuadrantCard: View {
                 emptyState
             } else {
                 ThinProgressBar(ratio: ratio, color: quadrant.color)
-                VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: 16) {
                     ForEach(active) { row($0, siblings: active) }
                     if !completed.isEmpty {
                         Text(String(format: L("grid.completedCount"), completed.count))
@@ -237,6 +237,7 @@ private struct OverviewTaskRow: View {
     @Environment(\.modelContext) private var context
     @Environment(\.openURL) private var openURL
     @Environment(\.optionHeld) private var optionHeld
+    @Environment(\.fontScale) private var fontScale
     @Bindable var task: TaskItem
     var isSelected: Bool = false
     var siblings: [TaskItem] = []
@@ -272,17 +273,16 @@ private struct OverviewTaskRow: View {
     }
 
     private var parentRow: some View {
-        HStack(alignment: .top, spacing: Self.gap) {
+        HStack(alignment: .firstTextBaseline, spacing: Self.gap) {
             completionToggle
+                .alignedToFirstLine(scale: fontScale)
             VStack(alignment: .leading, spacing: 3) {
-                Text(task.title.isEmpty ? L("task.default.title") : task.title)
-                    .appFont(.body)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .strikethrough(task.isCompleted)
-                    .underline(linkActive)
-                    .foregroundStyle(linkActive ? Color.accentColor
-                                     : (task.isCompleted ? .secondary : .primary))
-                if !task.isCompleted { metaLine }
+                TaggedTitleText(task: task,
+                                strikethrough: task.isCompleted,
+                                underline: linkActive,
+                                color: linkActive ? .accentColor
+                                    : (task.isCompleted ? .secondary : .primary))
+                if !task.isCompleted { TaskMetaLine(task: task) }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             Spacer(minLength: 0)
@@ -316,26 +316,6 @@ private struct OverviewTaskRow: View {
         }
         .buttonStyle(.plain)
         .frame(width: Self.checkboxWidth)
-    }
-
-    @ViewBuilder
-    private var metaLine: some View {
-        let hasKey = !(task.issueKey ?? "").isEmpty
-        if hasKey || !task.tagList.isEmpty || !subs.isEmpty {
-            HStack(spacing: 5) {
-                if let key = task.issueKey, !key.isEmpty { Text(key) }
-                if !task.tagList.isEmpty {
-                    if hasKey { Text("·") }
-                    ForEach(task.tagList) { TagChip(tag: $0) }
-                }
-                if !subs.isEmpty {
-                    Text("·")
-                    Text("\(subs.filter(\.isCompleted).count)/\(subs.count)")
-                }
-            }
-            .appFont(.caption2)
-            .foregroundStyle(.secondary)
-        }
     }
 
     private func toggle() {

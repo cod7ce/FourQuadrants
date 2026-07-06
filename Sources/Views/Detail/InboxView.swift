@@ -5,6 +5,7 @@ import SwiftData
 struct InboxView: View {
     let weekStart: Date
     @Environment(\.modelContext) private var context
+    @Environment(\.fontScale) private var fontScale
     @Query(sort: \TaskItem.createdAt, order: .reverse) private var allTasks: [TaskItem]
     @State private var quickAdd = ""
 
@@ -19,7 +20,7 @@ struct InboxView: View {
                 .padding(.horizontal, 16).padding(.top, 4).padding(.bottom, 8)
 
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 2) {
+                LazyVStack(alignment: .leading, spacing: 10) {
                     ForEach(items) { row($0) }
                 }
                 .padding(.horizontal, 10).padding(.vertical, 6)
@@ -45,39 +46,18 @@ struct InboxView: View {
     }
 
     private func row(_ task: TaskItem) -> some View {
-        HStack(alignment: .top, spacing: 9) {
-            Circle().fill(task.quadrant.color).frame(width: 7, height: 7).padding(.top, 6)
+        HStack(alignment: .firstTextBaseline, spacing: 9) {
+            Circle().fill(task.quadrant.color).frame(width: 7, height: 7)
+                .alignedToFirstLine(scale: fontScale)
             VStack(alignment: .leading, spacing: 2) {
-                Text(task.title.isEmpty ? L("task.default.title") : task.title)
-                    .appFont(.body)
-                    .fixedSize(horizontal: false, vertical: true)
-                metaLine(task)
+                TaggedTitleText(task: task)
+                TaskMetaLine(task: task)
             }
             Spacer(minLength: 0)
         }
         .padding(.horizontal, 6).padding(.vertical, 4)
         .contentShape(Rectangle())
         .draggable(TaskTransfer(taskUUID: task.taskUUID))
-    }
-
-    /// 周·象限描述，后面追加标签（标签色纯文本）。
-    private func metaLine(_ task: TaskItem) -> some View {
-        HStack(spacing: 4) {
-            Text(subtitle(task))
-            ForEach(task.tagList) { tag in
-                Text("· \(tag.name)")
-            }
-        }
-        .appFont(.caption2)
-        .foregroundStyle(.tertiary)
-        .lineLimit(1)
-    }
-
-    private func subtitle(_ task: TaskItem) -> String {
-        let wk = Week.isCurrent(task.weekStart)
-            ? L("week.current.short")
-            : String(format: L("inbox.week"), Week.calendar.component(.weekOfYear, from: task.weekStart))
-        return "\(wk) · \(task.quadrant.title)"
     }
 
     private func add() {

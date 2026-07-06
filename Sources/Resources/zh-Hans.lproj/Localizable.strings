@@ -118,7 +118,7 @@
 "settings.language.en" = "英文";
 "settings.language.note" = "切换后界面立即更新";
 "settings.parse.section" = "粘贴解析规则";
-"settings.parse.builtin" = "智能识别（默认）";
+"settings.parse.builtin" = "智能识别 ONES 工单（默认）";
 "settings.parse.builtin.desc" = "自动识别工单号、链接与标题";
 "settings.parse.hint" = "自定义正则规则优先；都不匹配时回退到默认";
 "settings.parse.addRule" = "添加正则规则";
@@ -217,11 +217,14 @@
 "editor.due" = "截止日期";
 "editor.due.today" = "今天";
 "editor.due.tomorrow" = "明天";
+"editor.due.thisWeek" = "本周";
 "editor.due.nextMon" = "下周一";
 "editor.remind" = "提醒";
 "editor.remind.add" = "添加提醒";
 "editor.tags" = "标签";
 "editor.tag.new" = "新建标签";
+"editor.notes" = "进展";
+"editor.note.add" = "添加一条进展点评…";
 "editor.delete" = "删除任务";
 "editor.autosave" = "改动自动保存";
 "editor.done" = "完成";

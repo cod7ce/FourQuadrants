@@ -13,6 +13,7 @@ struct TaskEditor: View {
     @State private var rich = RichContentStore()
     @State private var newSubtask = ""
     @State private var newLink = ""
+    @State private var newNote = ""
     @State private var newTagName = ""
     @State private var showNewTag = false
     @State private var showReminderPicker = false
@@ -86,10 +87,41 @@ struct TaskEditor: View {
                         .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 10))
                 }
 
+                notesBlock
+
                 if !isSub { subtasksBlock }
                 linksBlock
             }
             .padding(20)
+        }
+    }
+
+    private var notesBlock: some View {
+        let notes = task.sortedNotes
+        return VStack(alignment: .leading, spacing: 8) {
+            Text(L("editor.notes")).font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
+            ForEach(notes) { note in
+                HStack(alignment: .top, spacing: 8) {
+                    Circle().fill(Color.secondary.opacity(0.4)).frame(width: 5, height: 5).padding(.top, 6)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(note.text).fixedSize(horizontal: false, vertical: true)
+                        Text(note.createdAt.formatted(.dateTime.month().day().hour().minute().locale(.app)))
+                            .font(.caption2).foregroundStyle(.tertiary)
+                    }
+                    Spacer(minLength: 0)
+                    Button { context.delete(note) } label: {
+                        Image(systemName: "xmark").font(.caption2).foregroundStyle(.tertiary)
+                    }.buttonStyle(.plain)
+                }
+            }
+            HStack(spacing: 10) {
+                Image(systemName: "text.bubble").foregroundStyle(.secondary)
+                TextField(L("editor.note.add"), text: $newNote, axis: .vertical)
+                    .textFieldStyle(.plain)
+                    .lineLimit(1...3)
+                    .onSubmit(addNote)
+            }
+            .padding(.top, 2)
         }
     }
 
@@ -229,9 +261,10 @@ struct TaskEditor: View {
                     task.dueDate = nil
                 }
             }
-            HStack(spacing: 8) {
+            FlowLayout(spacing: 8) {
                 quickDate(L("editor.due.today"), Week.calendar.startOfDay(for: .now))
                 quickDate(L("editor.due.tomorrow"), Week.calendar.date(byAdding: .day, value: 1, to: Week.calendar.startOfDay(for: .now))!)
+                quickDate(L("editor.due.thisWeek"), thisFriday())
                 quickDate(L("editor.due.nextMon"), nextMonday())
             }
         }
@@ -353,6 +386,10 @@ struct TaskEditor: View {
     // MARK: - Actions
 
     private func commit() {
+        // 关闭时把还没回车提交的输入一并保存，避免「填了没回车就点完成」导致丢失。
+        addNote()
+        addSubtask()
+        addLink()
         if isNew, isEmptyTask {
             context.delete(task)
             try? context.save()
@@ -366,6 +403,7 @@ struct TaskEditor: View {
     private var isEmptyTask: Bool {
         task.title.trimmingCharacters(in: .whitespaces).isEmpty
             && task.sortedSubtasks.isEmpty && task.links.isEmpty
+            && task.sortedNotes.isEmpty
             && (task.issueKey ?? "").isEmpty && rich.attributed.length == 0
     }
 
@@ -411,6 +449,15 @@ struct TaskEditor: View {
         newLink = ""
     }
 
+    private func addNote() {
+        let text = newNote.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return }
+        let note = TaskNote(text: text)
+        note.task = task
+        context.insert(note)
+        newNote = ""
+    }
+
     // MARK: - Date helpers
 
     private func dateText(_ d: Date) -> String {
@@ -420,6 +467,10 @@ struct TaskEditor: View {
     private func dateTimeText(_ d: Date) -> String {
         let f = DateFormatter(); f.locale = .app; f.dateFormat = "M/d HH:mm"
         return f.string(from: d)
+    }
+    /// 本周（当前周）的周五。
+    private func thisFriday() -> Date {
+        Week.calendar.date(byAdding: .day, value: 4, to: Week.currentStart) ?? Week.currentStart
     }
     private func nextMonday() -> Date {
         let cal = Week.calendar

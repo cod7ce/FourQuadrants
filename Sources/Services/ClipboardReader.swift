@@ -9,7 +9,7 @@ import UIKit
 enum ClipboardReader {
 
     /// 返回（解析结果, 新的 changeCount）。
-    /// 仅当剪贴板内容相对 `lastChange` 有变化、且解析出链接或工单号时才返回非 nil。
+    /// 仅当剪贴板内容相对 `lastChange` 有变化、且解析出「工单号」时才返回非 nil。
     @MainActor
     static func candidate(since lastChange: Int) async -> (ParsedTaskInput, Int)? {
         #if os(macOS)
@@ -33,7 +33,8 @@ enum ClipboardReader {
 
     private static func parsed(from raw: String, change: Int) -> (ParsedTaskInput, Int)? {
         let result = ParseEngine.parse(raw)
-        guard !result.links.isEmpty || result.issueKey != nil else { return nil }
+        // 仅当解析出「工单号」时才提示，避免任意链接都触发。
+        guard result.issueKey != nil else { return nil }
         return (result, change)
     }
 }

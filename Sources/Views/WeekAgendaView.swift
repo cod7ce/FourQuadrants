@@ -140,12 +140,14 @@ private struct DaySection: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 10) {
             header
-            ForEach(tasks) { task in
-                AgendaRow(task: task,
-                          isSelected: selectedTask?.persistentModelID == task.persistentModelID,
-                          onSelect: { selectedTask = task })
+            VStack(alignment: .leading, spacing: 14) {
+                ForEach(tasks) { task in
+                    AgendaRow(task: task,
+                              isSelected: selectedTask?.persistentModelID == task.persistentModelID,
+                              onSelect: { selectedTask = task })
+                }
             }
         }
         .padding(.vertical, 10)
@@ -187,6 +189,7 @@ private struct AgendaRow: View {
     @Environment(\.modelContext) private var context
     @Environment(\.openURL) private var openURL
     @Environment(\.optionHeld) private var optionHeld
+    @Environment(\.fontScale) private var fontScale
     @Bindable var task: TaskItem
     var overdue: Bool = false
     var isSelected: Bool = false
@@ -197,27 +200,28 @@ private struct AgendaRow: View {
     private var linkActive: Bool { optionHeld && !task.urls.isEmpty }
 
     var body: some View {
-        HStack(alignment: .top, spacing: 10) {
+        HStack(alignment: .firstTextBaseline, spacing: 10) {
             Button { toggle() } label: {
                 Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
                     .imageScale(.large)
                     .foregroundStyle(task.isCompleted ? Color.green : Color.secondary.opacity(0.6))
             }
             .buttonStyle(.plain)
+            .alignedToFirstLine(scale: fontScale)
 
-            Circle().fill(task.quadrant.color).frame(width: 8, height: 8).padding(.top, 6)
+            Circle().fill(task.quadrant.color).frame(width: 8, height: 8)
+                .alignedToFirstLine(scale: fontScale)
 
-            Text(task.title.isEmpty ? L("task.default.title") : task.title)
-                .appFont(.body)
-                .fixedSize(horizontal: false, vertical: true)
-                .strikethrough(task.isCompleted)
-                .underline(linkActive)
-                .foregroundStyle(linkActive ? Color.accentColor
-                                 : (task.isCompleted ? .secondary : .primary))
+            VStack(alignment: .leading, spacing: 2) {
+                TaggedTitleText(task: task,
+                                strikethrough: task.isCompleted,
+                                underline: linkActive,
+                                color: linkActive ? .accentColor
+                                    : (task.isCompleted ? .secondary : .primary))
+                if !task.isCompleted { TaskMetaLine(task: task) }
+            }
 
             Spacer(minLength: 8)
-
-            ForEach(task.tagList) { TagChip(tag: $0) }
 
             if !subs.isEmpty {
                 Text("\(subs.filter(\.isCompleted).count)/\(subs.count)")

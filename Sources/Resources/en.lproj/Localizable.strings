@@ -118,7 +118,7 @@
 "settings.language.en" = "English";
 "settings.language.note" = "Applies immediately";
 "settings.parse.section" = "Clipboard parsing rules";
-"settings.parse.builtin" = "Smart detection (default)";
+"settings.parse.builtin" = "Detect ONES tickets (default)";
 "settings.parse.builtin.desc" = "Auto-detect ticket, link and title";
 "settings.parse.hint" = "Custom regex rules take priority; falls back to default";
 "settings.parse.addRule" = "Add regex rule";
@@ -217,11 +217,14 @@
 "editor.due" = "Due date";
 "editor.due.today" = "Today";
 "editor.due.tomorrow" = "Tomorrow";
+"editor.due.thisWeek" = "This week";
 "editor.due.nextMon" = "Next Mon";
 "editor.remind" = "Reminder";
 "editor.remind.add" = "Add reminder";
 "editor.tags" = "Tags";
 "editor.tag.new" = "New tag";
+"editor.notes" = "Progress";
+"editor.note.add" = "Add a progress note…";
 "editor.delete" = "Delete task";
 "editor.autosave" = "Changes saved automatically";
 "editor.done" = "Done";

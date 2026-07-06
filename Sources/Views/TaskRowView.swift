@@ -17,22 +17,12 @@ struct TaskRowView: View {
                 CompletionToggle(isCompleted: task.isCompleted) { toggle(task) }
 
                 VStack(alignment: .leading, spacing: 3) {
-                    HStack(spacing: 6) {
-                        if let key = task.issueKey {
-                            IssueKeyBadge(key: key, url: task.urls.first)
-                        }
-                        Text(task.title.isEmpty ? L("task.default.title") : task.title)
-                            .appFont(.body)
-                            .strikethrough(task.isCompleted)
-                            .underline(linkActive)
-                            .foregroundStyle(linkActive ? Color.accentColor : (task.isCompleted ? .secondary : .primary))
-                    }
+                    TaggedTitleText(task: task,
+                                    strikethrough: task.isCompleted,
+                                    underline: linkActive,
+                                    color: linkActive ? .accentColor : (task.isCompleted ? .secondary : .primary))
+                    TaskMetaLine(task: task)
                     metaLine
-                    if !task.tagList.isEmpty {
-                        HStack(spacing: 4) {
-                            ForEach(task.tagList) { TagChip(tag: $0) }
-                        }
-                    }
                 }
 
                 Spacer(minLength: 6)
