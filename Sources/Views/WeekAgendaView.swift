@@ -20,17 +20,24 @@ struct WeekAgendaView: View {
         (0..<7).compactMap { Week.calendar.date(byAdding: .day, value: $0, to: weekStart) }
     }
 
-    /// 本周有截止日期的顶层任务。
-    private var weekDated: [TaskItem] {
+    /// 任务在议程上归属的日期：已完成用「完成日」，未完成用「截止日」。
+    /// 于是完成的任务会落到实际完成那天，而截止日仍原样保留。
+    private func agendaDate(_ t: TaskItem) -> Date? {
+        t.isCompleted ? (t.completedAt ?? t.dueDate) : t.dueDate
+    }
+
+    /// 本周议程里的任务（含子任务；未完成按截止日、已完成按完成日落在本周）。
+    /// 子任务有自己的截止日，也按它自己的日期出现在对应那天。
+    private var weekTasks: [TaskItem] {
         allTasks.filter { t in
-            guard t.parent == nil, let due = t.dueDate else { return false }
-            return due >= weekStart && due < weekEnd
+            guard let d = agendaDate(t) else { return false }
+            return d >= weekStart && d < weekEnd
         }
     }
 
     /// 逾期：本周内、截止日在今天之前、且未完成。
     private var overdue: [TaskItem] {
-        weekDated.filter { t in
+        weekTasks.filter { t in
             guard !t.isCompleted, let due = t.dueDate else { return false }
             return Week.calendar.startOfDay(for: due) < todayStart
         }
@@ -38,15 +45,15 @@ struct WeekAgendaView: View {
 
     private func tasks(on day: Date) -> [TaskItem] {
         let overdueIDs = Set(overdue.map(\.taskUUID))
-        return weekDated.filter { t in
-            guard let due = t.dueDate else { return false }
-            return Week.calendar.isDate(due, inSameDayAs: day) && !overdueIDs.contains(t.taskUUID)
+        return weekTasks.filter { t in
+            guard let d = agendaDate(t) else { return false }
+            return Week.calendar.isDate(d, inSameDayAs: day) && !overdueIDs.contains(t.taskUUID)
         }
     }
 
     var body: some View {
         VStack(spacing: 0) {
-            WeekHeaderBar(weekStart: $weekStart, tasks: weekDated)
+            WeekHeaderBar(weekStart: $weekStart, tasks: weekTasks)
                 .padding(.horizontal, 24)
                 .padding(.top, 18)
                 .padding(.bottom, 14)
@@ -71,10 +78,10 @@ struct WeekAgendaView: View {
             ToolbarItem {
                 Menu {
                     Button(L("menu.exportMd.file")) {
-                        MarkdownExporter.exportToFile(weekStart: weekStart, weekTasks: weekDated)
+                        MarkdownExporter.exportToFile(weekStart: weekStart, weekTasks: weekTasks)
                     }
                     Button(L("menu.exportMd.clipboard")) {
-                        MarkdownExporter.copyToPasteboard(weekStart: weekStart, weekTasks: weekDated)
+                        MarkdownExporter.copyToPasteboard(weekStart: weekStart, weekTasks: weekTasks)
                     }
                 } label: {
                     Label(L("menu.exportMd"), systemImage: "square.and.arrow.up")
@@ -218,6 +225,15 @@ private struct AgendaRow: View {
                                 underline: linkActive,
                                 color: linkActive ? .accentColor
                                     : (task.isCompleted ? .secondary : .primary))
+                if let parent = task.parent {
+                    HStack(spacing: 3) {
+                        Image(systemName: "arrow.turn.down.right").imageScale(.small)
+                        Text(parent.title.isEmpty ? L("task.default.title") : parent.title)
+                    }
+                    .appFont(.caption2)
+                    .foregroundStyle(.tertiary)
+                    .lineLimit(1)
+                }
                 if !task.isCompleted { TaskMetaLine(task: task) }
             }
 
