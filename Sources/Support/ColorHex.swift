@@ -22,6 +22,21 @@ extension Color {
         #endif
     }()
 
+    /// 统一的「淡背景」token：卡片 / 周末格子 / 分区等次级表面的浅色填充。
+    static let appFill: Color = {
+        #if os(macOS)
+        return Color(nsColor: NSColor(name: nil) { appearance in
+            let dark = appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+            return dark ? NSColor(white: 1, alpha: 0.05) : NSColor(white: 0, alpha: 0.035)
+        })
+        #else
+        return Color(uiColor: UIColor { trait in
+            trait.userInterfaceStyle == .dark
+                ? UIColor(white: 1, alpha: 0.05) : UIColor(white: 0, alpha: 0.035)
+        })
+        #endif
+    }()
+
     /// 从 "#RRGGBB" 解析颜色。
     init?(hex: String) {
         var s = hex.trimmingCharacters(in: .whitespacesAndNewlines)

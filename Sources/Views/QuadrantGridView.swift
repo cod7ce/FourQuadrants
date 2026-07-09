@@ -259,14 +259,25 @@ private struct OverviewTaskRow: View {
                 ForEach(subs) { sub in OverviewSubtaskRow(sub: sub) }
             }
         }
+        // 落放提示：整行淡高亮 = 嵌套为子任务；顶部细线 = 插到该任务前重排。
+        .background {
+            if dropTargeted {
+                RoundedRectangle(cornerRadius: 8).fill(Color.accentColor.opacity(0.10))
+                    .padding(.horizontal, -6).padding(.vertical, -3)
+            }
+        }
         .overlay(alignment: .top) {
             if dropTargeted {
                 Capsule().fill(Color.accentColor).frame(height: 2).padding(.horizontal, -4).offset(y: -5)
             }
         }
-        .dropDestination(for: TaskTransfer.self) { items, _ in
+        .dropDestination(for: TaskTransfer.self) { items, location in
             for it in items {
-                TaskMutations.reorder(draggedUUID: it.taskUUID, before: task, ordered: siblings, in: context)
+                if location.y < 12 {   // 顶部细条 → 重排到该任务前（可跨层级）
+                    TaskMutations.reorder(draggedUUID: it.taskUUID, before: task, ordered: siblings, in: context)
+                } else {               // 行主体 → 嵌套为该任务的子任务（含无子任务的父）
+                    TaskMutations.makeChild(uuid: it.taskUUID, of: task, in: context)
+                }
             }
             return !items.isEmpty
         } isTargeted: { dropTargeted = $0 }

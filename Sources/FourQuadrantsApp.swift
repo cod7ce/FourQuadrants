@@ -8,7 +8,7 @@ import RichTextKit
 struct FourQuadrantsApp: App {
     let container: ModelContainer
     @AppStorage(FontScale.key) private var fontIndex = FontScale.defaultIndex
-    @AppStorage("notesPanelCollapsed") private var notesCollapsed = false
+    @AppStorage("showNotes") private var showNotes = false
 
     init() {
         container = Self.makeContainer()
@@ -32,10 +32,8 @@ struct FourQuadrantsApp: App {
                 Button(L("sidebar.calendar")) { navigate(.calendar) }
                     .keyboardShortcut("3", modifiers: .command)
                 Divider()
-                Button(L("menu.toggleNotes")) {
-                    withAnimation(.easeInOut(duration: 0.15)) { notesCollapsed.toggle() }
-                }
-                .keyboardShortcut("/", modifiers: .command)
+                Button(L("menu.toggleNotes")) { showNotes.toggle() }
+                    .keyboardShortcut("/", modifiers: .command)
                 Divider()
                 Button(L("menu.fontIncrease")) { fontIndex = FontScale.clamp(fontIndex + 1) }
                     .keyboardShortcut("+", modifiers: .command)

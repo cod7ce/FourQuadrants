@@ -228,7 +228,9 @@
 "editor.delete" = "删除任务";
 "editor.autosave" = "改动自动保存";
 "editor.done" = "完成";
-"inbox.title" = "待安排";
+"inbox.title" = "收集箱";
+"inbox.badge" = "%d 待安排";
+"inbox.hint" = "拖到某天设日期 · 拖到象限限定优先级";
 "inbox.subtitle" = "还没有日期 · 拖到某天来安排";
 
 /* 本周议程 */
@@ -247,7 +249,7 @@
 "cal.month" = "月";
 "cal.doneCount" = "%d 已完成";
 "cal.inboxFooter" = "无日期 · 待安排 %d";
-"inbox.quickAdd" = "快速添加到收集箱";
+"inbox.quickAdd" = "快速添加任务…";
 "inbox.count" = "共 %d 项待安排";
 "inbox.week" = "第 %d 周";
 "week.current.short" = "本周";

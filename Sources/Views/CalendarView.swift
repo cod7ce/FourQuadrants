@@ -159,6 +159,7 @@ struct CalendarView: View {
 // MARK: - 日历格子
 
 private struct CalendarCell: View {
+    @Environment(\.modelContext) private var context
     let day: Date
     let inMonth: Bool
     let isToday: Bool
@@ -166,14 +167,15 @@ private struct CalendarCell: View {
     let isWeekend: Bool
     let tasks: [TaskItem]
     let onTap: () -> Void
+    @State private var dropTargeted = false
 
     private var dayNumber: String { "\(Week.calendar.component(.day, from: day))" }
-    private var dots: [TaskItem] { Array(tasks.prefix(7)) }
+    private var dots: [TaskItem] { Array(tasks.prefix(12)) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
             numberView
-            HStack(spacing: 4) {
+            FlowLayout(spacing: 4) {
                 ForEach(dots) { t in
                     Circle().fill(t.quadrant.color).frame(width: 6, height: 6)
                 }
@@ -182,22 +184,27 @@ private struct CalendarCell: View {
         }
         .padding(6)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(cellBackground)
+        .clipped()
+        .background(dropTargeted ? Color.accentColor.opacity(0.15) : cellBackground)
         .overlay {
             Rectangle().strokeBorder(Color(nsColor: .separatorColor).opacity(0.4), lineWidth: 0.5)
         }
         .overlay {
-            if isSelected {
+            if isSelected || dropTargeted {
                 Rectangle().strokeBorder(Color.accentColor.opacity(0.5), lineWidth: 1.5)
             }
         }
         .contentShape(Rectangle())
         .onTapGesture(perform: onTap)
+        .dropDestination(for: TaskTransfer.self) { drops, _ in
+            for it in drops { TaskMutations.schedule(uuid: it.taskUUID, onDay: day, in: context) }
+            return !drops.isEmpty
+        } isTargeted: { dropTargeted = $0 }
     }
 
     private var cellBackground: Color {
         if isSelected { return Color.accentColor.opacity(0.08) }
-        if isWeekend { return Color.secondary.opacity(0.06) }   // 周末淡背景
+        if isWeekend { return Color.appFill }                  // 周末淡背景（统一 token）
         return .clear
     }
 

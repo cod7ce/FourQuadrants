@@ -229,6 +229,8 @@
 "editor.autosave" = "Changes saved automatically";
 "editor.done" = "Done";
 "inbox.title" = "Inbox";
+"inbox.badge" = "%d to schedule";
+"inbox.hint" = "Drag onto a day to set a date · onto a quadrant to prioritize";
 "inbox.subtitle" = "No date yet · drag onto a day";
 
 /* Week agenda */
@@ -247,7 +249,7 @@
 "cal.month" = "Month";
 "cal.doneCount" = "%d done";
 "cal.inboxFooter" = "No date · Inbox %d";
-"inbox.quickAdd" = "Quick add to inbox";
+"inbox.quickAdd" = "Quick add a task…";
 "inbox.count" = "%d to schedule";
 "inbox.week" = "Week %d";
 "week.current.short" = "This week";

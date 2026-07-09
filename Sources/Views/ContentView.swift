@@ -36,9 +36,7 @@ struct ContentView: View {
     @State private var sidebar: SidebarItem? = .overview
     @State private var selectedTask: TaskItem?
     @State private var selectedWeek = Week.currentStart
-    @AppStorage("notesPanelCollapsed") private var notesCollapsed = false
-    @AppStorage("notesPanelWidth") private var notesWidth = 380.0
-    @AppStorage("rightPanelMode") private var rightMode = RightPanelMode.notes
+    @AppStorage("showNotes") private var showNotes = false
 
     /// 玻璃材质的「实心」程度：0 = 全玻璃，1 = 全实心。改这个数一步步看效果。
     static let glassTint: Double = 0.95
@@ -60,21 +58,30 @@ struct ContentView: View {
             SidebarView(selection: $sidebar)
             #endif
         } detail: {
-            // 笔记作为右侧真实列（非浮层）：与内容直接相邻，无间隔；布局稳定不抖。
-            HStack(spacing: 0) {
+            // 收集箱作为底部条，三视图共用；笔记走标题栏悬浮弹窗。
+            VStack(spacing: 0) {
                 MainArea(sidebar: sidebar ?? .overview,
                          selectedTask: $selectedTask,
                          weekStart: $selectedWeek)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                if !notesCollapsed {
-                    RightPanel(weekStart: selectedWeek, mode: rightMode, width: $notesWidth)
-                }
-                RightRail(mode: $rightMode, collapsed: $notesCollapsed)   // 常驻图标栏
+                InboxBar(weekStart: selectedWeek)
             }
             #if os(macOS)
             // 标题栏下方分隔线：仅在内容区（不含侧边栏）
             .overlay(alignment: .top) {
                 Rectangle().fill(Color(nsColor: .separatorColor)).frame(height: 0.5)
+            }
+            .toolbar {
+                ToolbarItem {
+                    Button { showNotes.toggle() } label: {
+                        Image(systemName: "note.text")
+                            .foregroundStyle(showNotes ? Color.accentColor : .secondary)
+                    }
+                    .help(L("notes.title"))
+                    .popover(isPresented: $showNotes, arrowEdge: .top) {
+                        NotesPopover(weekStart: selectedWeek, isPresented: $showNotes)
+                    }
+                }
             }
             #endif
         }

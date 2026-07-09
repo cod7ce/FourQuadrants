@@ -52,26 +52,49 @@ enum TaskMutations {
     }
 
     /// 把 `draggedUUID` 拖到 `target` 之前，并对该同级组重排 sortOrder。
-    /// `ordered` 是目标所在同级组当前的显示顺序。跨象限拖入会一并归入目标象限。
+    /// 会按目标行的层级自动改父级，支持跨层级拖拽：
+    /// - 拖到某父任务下的子任务前 → 成为该父的子任务（顶层任务下沉、或换到别的父下）
+    /// - 拖到某顶层任务前 → 成为顶层任务（子任务提升为独立任务，并归入目标象限/周）
     @MainActor
     static func reorder(draggedUUID: String, before target: TaskItem,
                         ordered: [TaskItem], in context: ModelContext) {
         guard draggedUUID != target.taskUUID,
               let dragged = task(uuid: draggedUUID, in: context) else { return }
-        // 让被拖任务归入目标所在的组（子任务→同一父；顶层→目标象限）
-        if let parent = target.parent {
-            guard dragged.parent != nil else { return }   // 顶层任务不通过此路径变成子任务
-            dragged.parent = parent
-            dragged.weekStart = parent.weekStart
+
+        if let newParent = target.parent {
+            // 目标是子任务 → 被拖任务归到 target 的父下
+            guard newParent.taskUUID != dragged.taskUUID else { return }   // 不能挂到自己名下
+            guard dragged.sortedSubtasks.isEmpty else { return }           // 保持单层：有子任务的不下沉
+            dragged.parent = newParent
+            dragged.weekStart = newParent.weekStart
         } else {
-            guard dragged.parent == nil else { return }   // 子任务不通过此路径变成顶层
+            // 目标是顶层任务 → 被拖任务成为/保持顶层，并归入目标象限与周
+            dragged.parent = nil
             dragged.move(to: target.quadrant)
-            dragged.weekStart = target.weekStart          // 跨周拖入时一并归到目标周
+            dragged.weekStart = target.weekStart
         }
+
         var arr = ordered.filter { $0.taskUUID != draggedUUID }
         guard let idx = arr.firstIndex(where: { $0.taskUUID == target.taskUUID }) else { return }
         arr.insert(dragged, at: idx)
         for (i, t) in arr.enumerated() { t.sortOrder = Double(i) }
         try? context.save()
+        Task { await NotificationManager.shared.reschedule(for: dragged) }
+    }
+
+    /// 把任务挂到 `newParent` 下成为其子任务（用于拖到父任务主体上，含没有子任务的父）。
+    /// 保持单层：`newParent` 必须是顶层任务，且被拖任务自身不能带子任务。
+    @MainActor
+    static func makeChild(uuid: String, of newParent: TaskItem, in context: ModelContext) {
+        guard let dragged = task(uuid: uuid, in: context),
+              dragged.taskUUID != newParent.taskUUID,
+              newParent.parent == nil,
+              dragged.sortedSubtasks.isEmpty else { return }
+        guard dragged.parent?.taskUUID != newParent.taskUUID else { return }   // 已是它的子任务
+        dragged.parent = newParent
+        dragged.weekStart = newParent.weekStart
+        dragged.sortOrder = (newParent.sortedSubtasks.map(\.sortOrder).max() ?? -1) + 1
+        try? context.save()
+        Task { await NotificationManager.shared.reschedule(for: dragged) }
     }
 }
