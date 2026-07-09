@@ -1,6 +1,27 @@
 import SwiftUI
+#if os(macOS)
+import AppKit
+#else
+import UIKit
+#endif
 
 extension Color {
+    /// 略柔化的主文本色：比系统 `.primary` 更耐看（对比略低、不那么死黑 / 死白）。
+    /// 作为根级默认前景色注入后，`.secondary` / `.tertiary` 会自动派生出柔和层级。
+    static let appLabel: Color = {
+        #if os(macOS)
+        return Color(nsColor: NSColor(name: nil) { appearance in
+            let dark = appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+            return dark ? NSColor(white: 0.92, alpha: 1) : NSColor(white: 0.20, alpha: 1)
+        })
+        #else
+        return Color(uiColor: UIColor { trait in
+            trait.userInterfaceStyle == .dark
+                ? UIColor(white: 0.92, alpha: 1) : UIColor(white: 0.20, alpha: 1)
+        })
+        #endif
+    }()
+
     /// 从 "#RRGGBB" 解析颜色。
     init?(hex: String) {
         var s = hex.trimmingCharacters(in: .whitespacesAndNewlines)

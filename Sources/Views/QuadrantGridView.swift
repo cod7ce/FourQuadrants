@@ -281,7 +281,7 @@ private struct OverviewTaskRow: View {
                                 strikethrough: task.isCompleted,
                                 underline: linkActive,
                                 color: linkActive ? .accentColor
-                                    : (task.isCompleted ? .secondary : .primary))
+                                    : (task.isCompleted ? .secondary : Color.appLabel))
                 if !task.isCompleted { TaskMetaLine(task: task) }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -351,7 +351,7 @@ private struct OverviewSubtaskRow: View {
                 .strikethrough(sub.isCompleted)
                 .underline(linkActive)
                 .foregroundStyle(linkActive ? Color.accentColor
-                                 : (sub.isCompleted ? .secondary : .primary))
+                                 : (sub.isCompleted ? .secondary : Color.appLabel))
             Spacer(minLength: 6)
             DueDateLabel(task: sub)
         }

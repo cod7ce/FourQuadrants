@@ -82,6 +82,7 @@ struct ContentView: View {
         }
         .background(WindowTranslucency())                   // 窗口非不透明，透出桌面
         #endif
+        .foregroundStyle(Color.appLabel)                                 // 全局柔化主文本色
         .environment(\.locale, .app)
         .environment(\.optionHeld, optionHeld)                           // 按住 ⌥ 提示可点链接
         .environment(\.fontScale, FontScale.scale(fontIndex))            // ⌘+ / ⌘- 调整字号
@@ -160,7 +161,7 @@ private struct MainArea: View {
             case .thisWeek:
                 WeekAgendaView(selectedTask: $selectedTask, weekStart: $weekStart)
             case .calendar:
-                listArea(.scheduled)
+                CalendarView(selectedTask: $selectedTask, weekStart: $weekStart)
             case .tag(let name):
                 listArea(.tag(name))
             }

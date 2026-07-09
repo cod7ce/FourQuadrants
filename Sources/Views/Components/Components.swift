@@ -85,7 +85,7 @@ struct TaggedTitleText: View {
     let task: TaskItem
     var strikethrough: Bool = false
     var underline: Bool = false
-    var color: Color = .primary
+    var color: Color = .appLabel
 
     var body: some View {
         titleText()

@@ -20,7 +20,7 @@ struct TaskRowView: View {
                     TaggedTitleText(task: task,
                                     strikethrough: task.isCompleted,
                                     underline: linkActive,
-                                    color: linkActive ? .accentColor : (task.isCompleted ? .secondary : .primary))
+                                    color: linkActive ? .accentColor : (task.isCompleted ? .secondary : Color.appLabel))
                     TaskMetaLine(task: task)
                     metaLine
                 }
@@ -97,7 +97,7 @@ private struct SubtaskEditableRow: View {
                 .appFont(.callout)
                 .strikethrough(sub.isCompleted)
                 .underline(linkActive)
-                .foregroundStyle(linkActive ? Color.accentColor : (sub.isCompleted ? .secondary : .primary))
+                .foregroundStyle(linkActive ? Color.accentColor : (sub.isCompleted ? .secondary : Color.appLabel))
             Spacer(minLength: 6)
             DueDateLabel(task: sub)
         }

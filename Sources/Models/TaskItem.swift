@@ -106,6 +106,9 @@ extension TaskItem {
     /// 最近一条点评（列表里显示这条）。
     var latestNote: TaskNote? { sortedNotes.first }
 
+    /// 议程 / 日历里归属的日期：已完成用「完成日」，未完成用「截止日」。
+    var agendaDate: Date? { isCompleted ? (completedAt ?? dueDate) : dueDate }
+
     var urls: [URL] {
         links.compactMap { URL(string: $0) }
     }

@@ -239,6 +239,14 @@
 "agenda.overdue" = "Overdue %d";
 "agenda.originalDue" = "Due %@";
 "agenda.today" = "Today";
+
+/* Calendar */
+"cal.yearMonth" = "%1$d-%2$02d";
+"cal.colorByQuadrant" = "Color by quadrant";
+"cal.week" = "Week";
+"cal.month" = "Month";
+"cal.doneCount" = "%d done";
+"cal.inboxFooter" = "No date · Inbox %d";
 "inbox.quickAdd" = "Quick add to inbox";
 "inbox.count" = "%d to schedule";
 "inbox.week" = "Week %d";

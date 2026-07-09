@@ -140,7 +140,7 @@ struct TaskEditor: View {
                     CompletionToggle(isCompleted: sub.isCompleted) { sub.toggleCompleted() }
                     Text(sub.title.isEmpty ? L("task.default.title") : sub.title)
                         .strikethrough(sub.isCompleted)
-                        .foregroundStyle(sub.isCompleted ? .secondary : .primary)
+                        .foregroundStyle(sub.isCompleted ? .secondary : Color.appLabel)
                     Spacer(minLength: 0)
                     Button { context.delete(sub) } label: {
                         Image(systemName: "xmark").font(.caption2).foregroundStyle(.tertiary)

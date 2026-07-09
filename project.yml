@@ -9,7 +9,7 @@ options:
 settings:
   base:
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "0.6.1"
+    MARKETING_VERSION: "0.7.0"
     SWIFT_STRICT_CONCURRENCY: minimal
     # 本地临时签名（Sign to Run Locally）：无需开发团队即可在本机运行
     CODE_SIGN_STYLE: Manual

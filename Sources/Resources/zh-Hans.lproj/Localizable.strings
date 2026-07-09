@@ -239,6 +239,14 @@
 "agenda.overdue" = "逾期 %d";
 "agenda.originalDue" = "原定 %@";
 "agenda.today" = "今天";
+
+/* 日历 */
+"cal.yearMonth" = "%1$d 年 %2$d 月";
+"cal.colorByQuadrant" = "按象限着色";
+"cal.week" = "周";
+"cal.month" = "月";
+"cal.doneCount" = "%d 已完成";
+"cal.inboxFooter" = "无日期 · 待安排 %d";
 "inbox.quickAdd" = "快速添加到收集箱";
 "inbox.count" = "共 %d 项待安排";
 "inbox.week" = "第 %d 周";

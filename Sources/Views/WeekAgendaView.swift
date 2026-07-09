@@ -175,7 +175,7 @@ private struct DaySection: View {
         HStack(spacing: 8) {
             Text(day.formatted(.dateTime.weekday(.abbreviated).locale(.app)))
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(isToday ? Color.accentColor : .primary)
+                .foregroundStyle(isToday ? Color.accentColor : Color.appLabel)
             Text(day.formatted(.dateTime.month().day().locale(.app)))
                 .font(.subheadline).foregroundStyle(.secondary)
             if isToday {
@@ -224,7 +224,7 @@ private struct AgendaRow: View {
                                 strikethrough: task.isCompleted,
                                 underline: linkActive,
                                 color: linkActive ? .accentColor
-                                    : (task.isCompleted ? .secondary : .primary))
+                                    : (task.isCompleted ? .secondary : Color.appLabel))
                 if let parent = task.parent {
                     HStack(spacing: 3) {
                         Image(systemName: "arrow.turn.down.right").imageScale(.small)
