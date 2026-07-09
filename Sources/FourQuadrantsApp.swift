@@ -8,7 +8,6 @@ import RichTextKit
 struct FourQuadrantsApp: App {
     let container: ModelContainer
     @AppStorage(FontScale.key) private var fontIndex = FontScale.defaultIndex
-    @AppStorage("showNotes") private var showNotes = false
 
     init() {
         container = Self.makeContainer()
@@ -32,8 +31,10 @@ struct FourQuadrantsApp: App {
                 Button(L("sidebar.calendar")) { navigate(.calendar) }
                     .keyboardShortcut("3", modifiers: .command)
                 Divider()
-                Button(L("menu.toggleNotes")) { showNotes.toggle() }
-                    .keyboardShortcut("/", modifiers: .command)
+                Button(L("menu.toggleNotes")) {
+                    NotificationCenter.default.post(name: .openNotes, object: nil)
+                }
+                .keyboardShortcut("/", modifiers: .command)
                 Divider()
                 Button(L("menu.fontIncrease")) { fontIndex = FontScale.clamp(fontIndex + 1) }
                     .keyboardShortcut("+", modifiers: .command)
@@ -44,6 +45,18 @@ struct FourQuadrantsApp: App {
                 Divider()
             }
         }
+        #endif
+
+        #if os(macOS)
+        // 笔记独立窗口：不遮挡内容，可自由摆放与缩放。
+        Window(L("notes.title"), id: "notes") {
+            NotesWindow()
+                .environment(\.locale, .app)
+                .environment(\.fontScale, FontScale.scale(fontIndex))
+                .environment(\.font, AppFont.font(.body, scale: FontScale.scale(fontIndex)))
+        }
+        .modelContainer(container)
+        .defaultSize(width: 820, height: 620)   // 默认宽度容纳整条格式工具栏
         #endif
 
         #if os(macOS)

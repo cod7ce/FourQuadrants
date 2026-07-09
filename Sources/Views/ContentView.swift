@@ -14,6 +14,8 @@ enum SidebarItem: Hashable {
 extension Notification.Name {
     /// 菜单快捷键请求切换主视图（object 为目标 SidebarItem）。
     static let navigateSidebar = Notification.Name("navigateSidebar")
+    /// 菜单快捷键请求打开笔记窗口。
+    static let openNotes = Notification.Name("openNotes")
 }
 
 struct ContentView: View {
@@ -36,7 +38,10 @@ struct ContentView: View {
     @State private var sidebar: SidebarItem? = .overview
     @State private var selectedTask: TaskItem?
     @State private var selectedWeek = Week.currentStart
-    @AppStorage("showNotes") private var showNotes = false
+    @AppStorage("notesWeekStamp") private var notesWeekStamp: Double = 0
+    #if os(macOS)
+    @Environment(\.openWindow) private var openWindow
+    #endif
 
     /// 玻璃材质的「实心」程度：0 = 全玻璃，1 = 全实心。改这个数一步步看效果。
     static let glassTint: Double = 0.95
@@ -73,14 +78,10 @@ struct ContentView: View {
             }
             .toolbar {
                 ToolbarItem {
-                    Button { showNotes.toggle() } label: {
-                        Image(systemName: "note.text")
-                            .foregroundStyle(showNotes ? Color.accentColor : .secondary)
+                    Button { openWindow(id: "notes") } label: {
+                        Image(systemName: "note.text").foregroundStyle(.secondary)
                     }
                     .help(L("notes.title"))
-                    .popover(isPresented: $showNotes, arrowEdge: .top) {
-                        NotesPopover(weekStart: selectedWeek, isPresented: $showNotes)
-                    }
                 }
             }
             #endif
@@ -104,9 +105,18 @@ struct ContentView: View {
         .sheet(isPresented: $showSettings) { SettingsView() }
         #endif
         .task { await checkClipboard() }
+        // 把所选周共享给独立的笔记窗口
+        .onChange(of: selectedWeek, initial: true) { _, w in
+            notesWeekStamp = w.timeIntervalSinceReferenceDate
+        }
         .onReceive(NotificationCenter.default.publisher(for: .navigateSidebar)) { note in
             if let item = note.object as? SidebarItem { sidebar = item }
         }
+        #if os(macOS)
+        .onReceive(NotificationCenter.default.publisher(for: .openNotes)) { _ in
+            openWindow(id: "notes")
+        }
+        #endif
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { Task { await checkClipboard() } }
         }
