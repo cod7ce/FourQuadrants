@@ -25,6 +25,13 @@ struct FourQuadrantsApp: App {
             SidebarCommands()
             RichTextCommand.FormatMenu()   // 备忘编辑器的 ⌘B/⌘I/⌘U 等格式菜单与快捷键
             CommandGroup(after: .sidebar) {
+                Button(L("sidebar.overview")) { navigate(.overview) }
+                    .keyboardShortcut("1", modifiers: .command)
+                Button(L("sidebar.thisWeek")) { navigate(.thisWeek) }
+                    .keyboardShortcut("2", modifiers: .command)
+                Button(L("sidebar.calendar")) { navigate(.calendar) }
+                    .keyboardShortcut("3", modifiers: .command)
+                Divider()
                 Button(L("menu.toggleNotes")) {
                     withAnimation(.easeInOut(duration: 0.15)) { notesCollapsed.toggle() }
                 }
@@ -50,6 +57,13 @@ struct FourQuadrantsApp: App {
         .modelContainer(container)   // 设置窗口也需要容器（标签管理用到 @Query/保存）
         #endif
     }
+
+    #if os(macOS)
+    /// 菜单快捷键切换主视图。
+    private func navigate(_ item: SidebarItem) {
+        NotificationCenter.default.post(name: .navigateSidebar, object: item)
+    }
+    #endif
 
     /// 优先创建 CloudKit 同步存储；若不可用（无 iCloud 账号 / 缺少权限 / 本地开发），
     /// 回退到本地存储，保证 app 始终可运行。

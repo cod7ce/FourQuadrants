@@ -11,6 +11,11 @@ enum SidebarItem: Hashable {
     case tag(String)      // 按标签名，直接在侧边栏展开
 }
 
+extension Notification.Name {
+    /// 菜单快捷键请求切换主视图（object 为目标 SidebarItem）。
+    static let navigateSidebar = Notification.Name("navigateSidebar")
+}
+
 struct ContentView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.scenePhase) private var scenePhase
@@ -92,6 +97,9 @@ struct ContentView: View {
         .sheet(isPresented: $showSettings) { SettingsView() }
         #endif
         .task { await checkClipboard() }
+        .onReceive(NotificationCenter.default.publisher(for: .navigateSidebar)) { note in
+            if let item = note.object as? SidebarItem { sidebar = item }
+        }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { Task { await checkClipboard() } }
         }
