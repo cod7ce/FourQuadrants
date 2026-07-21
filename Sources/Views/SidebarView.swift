@@ -24,50 +24,43 @@ struct SidebarView: View {
             // 顶部 Logo（四色小田字，呼应四象限）
             HStack(spacing: 10) {
                 AppLogoMark().frame(width: 26, height: 26)
-                Text(L("app.title")).font(.title3.bold())
+                Text(L("app.title")).appFont(.title3, weight: .bold)
             }
             .padding(.horizontal, 18)
             .padding(.top, 14)
             .padding(.bottom, 10)
 
-            List(selection: $selection) {
-                row(.overview, L("sidebar.overview"), "square.grid.2x2")
-                row(.thisWeek, L("sidebar.thisWeek"), "calendar")
-                row(.calendar, L("sidebar.calendar"), "clock")
+            // 自绘紧凑侧栏（不用 .sidebar 列表，行高完全可控）
+            ScrollView {
+                VStack(alignment: .leading, spacing: 2) {
+                    navRow(.overview, L("sidebar.overview"), "square.grid.2x2")
+                    navRow(.thisWeek, L("sidebar.thisWeek"), "calendar")
+                    navRow(.calendar, L("sidebar.calendar"), "clock")
 
-                Section {
-                    ForEach(tags) { tag in
-                        HStack(spacing: 10) {
-                            Circle().fill(tag.color).frame(width: 10, height: 10)
-                            Text(tag.name)
-                            Spacer(minLength: 6)
-                            Text("\(taskCount(tag))")
-                                .foregroundStyle(.secondary)
-                                .monospacedDigit()
-                        }
-                        .tag(SidebarItem.tag(tag.name))
-                    }
+                    Text(L("sidebar.tags"))
+                        .appFont(.caption).foregroundStyle(.secondary)
+                        .padding(.horizontal, 10).padding(.top, 12).padding(.bottom, 2)
+
+                    ForEach(tags) { tag in tagRow(tag) }
 
                     Button { beginNewTag() } label: {
                         Label(L("editor.tag.new"), systemImage: "plus")
-                            .foregroundStyle(.secondary)
+                            .appFont(.callout).foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 10).frame(height: Self.rowHeight)
                     }
                     .buttonStyle(.plain)
-                } header: {
-                    Text(L("sidebar.tags"))
                 }
+                .padding(.horizontal, 8).padding(.top, 4)
             }
-            #if os(macOS)
-            .listStyle(.sidebar)
-            .scrollContentBackground(.hidden)
-            #endif
+            .frame(maxHeight: .infinity)
             .alert(L("editor.tag.new"), isPresented: $showNewTag) {
                 TextField(L("editor.tag.new"), text: $newTagName)
                 Button(L("action.add")) { addTag() }
                 Button(L("action.cancel"), role: .cancel) { }
             }
 
-            Divider().padding(.horizontal, 12)
+            // Divider().padding(.horizontal, 12)
 
             // 底部：保存状态 + 设置
             VStack(alignment: .leading, spacing: 4) {
@@ -75,7 +68,7 @@ struct SidebarView: View {
                     Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
                     Text(L("sidebar.savedLocal")).foregroundStyle(.secondary)
                 }
-                .font(.caption)
+                .appFont(.caption)
                 .padding(.horizontal, 8).padding(.vertical, 4)
 
                 settingsButton
@@ -85,8 +78,40 @@ struct SidebarView: View {
         }
     }
 
-    private func row(_ item: SidebarItem, _ title: String, _ symbol: String) -> some View {
-        Label(title, systemImage: symbol).tag(item)
+    /// 侧栏行的固定高度（自绘，完全可控）。
+    private static let rowHeight: CGFloat = 30
+
+    private func navRow(_ item: SidebarItem, _ title: String, _ symbol: String) -> some View {
+        rowButton(item) {
+            Label(title, systemImage: symbol).appFont(.callout)
+        }
+    }
+
+    private func tagRow(_ tag: Tag) -> some View {
+        rowButton(.tag(tag.name)) {
+            HStack(spacing: 10) {
+                Circle().fill(tag.color).frame(width: 10, height: 10)
+                Text(tag.name).appFont(.callout)
+                Spacer(minLength: 6)
+                Text("\(taskCount(tag))")
+                    .appFont(.callout).foregroundStyle(.secondary).monospacedDigit()
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func rowButton(_ item: SidebarItem, @ViewBuilder _ label: () -> some View) -> some View {
+        let selected = selection == item
+        Button { selection = item } label: {
+            label()
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 10)
+                .frame(height: Self.rowHeight)
+                .background(selected ? Color.accentColor.opacity(0.15) : .clear,
+                            in: RoundedRectangle(cornerRadius: 7))
+                .foregroundStyle(selected ? Color.accentColor : Color.appLabel)
+        }
+        .buttonStyle(.plain)
     }
 
     private func beginNewTag() {

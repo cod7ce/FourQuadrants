@@ -27,7 +27,7 @@ struct InboxBar: View {
         HStack(spacing: 12) {
             title
             Spacer(minLength: 8)
-            Text(L("inbox.hint")).font(.caption).foregroundStyle(.tertiary)
+            Text(L("inbox.hint")).appFont(.caption).foregroundStyle(.tertiary)
             chevron
         }
         .padding(.horizontal, 16).padding(.vertical, 10)
@@ -59,9 +59,9 @@ struct InboxBar: View {
     private var title: some View {
         HStack(spacing: 8) {
             Image(systemName: "tray").foregroundStyle(.secondary)
-            Text(L("inbox.title")).font(.subheadline.weight(.semibold))
+            Text(L("inbox.title")).appFont(.subheadline, weight: .semibold)
             Text(String(format: L("inbox.badge"), items.count))
-                .font(.caption2).monospacedDigit()
+                .appFont(.caption2, monospacedDigit: true)
                 .padding(.horizontal, 7).padding(.vertical, 2)
                 .background(Color.secondary.opacity(0.15), in: Capsule())
                 .foregroundStyle(.secondary)
@@ -79,13 +79,13 @@ struct InboxBar: View {
 
     private var quickAddCard: some View {
         HStack(spacing: 6) {
-            Image(systemName: "plus").font(.caption).foregroundStyle(.secondary)
+            Image(systemName: "plus").appFont(.caption).foregroundStyle(.secondary)
             TextField(L("inbox.quickAdd"), text: $quickAdd)
                 .textFieldStyle(.plain)
                 .onSubmit(add)
         }
         .padding(10)
-        .frame(width: 190, height: 74, alignment: .topLeading)
+        .frame(width: 190, height: 96, alignment: .topLeading)
         .overlay(RoundedRectangle(cornerRadius: 10)
             .strokeBorder(Color.secondary.opacity(0.3), style: StrokeStyle(lineWidth: 1, dash: [4])))
     }
@@ -98,12 +98,12 @@ struct InboxBar: View {
                 Spacer(minLength: 0)
             }
             Text(task.title.isEmpty ? L("task.default.title") : task.title)
-                .appFont(.callout).lineLimit(2)
+                .appFont(.callout).lineLimit(3)
                 .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
         }
         .padding(10)
-        .frame(width: 190, height: 74, alignment: .topLeading)
+        .frame(width: 190, height: 96, alignment: .topLeading)
         .background(RoundedRectangle(cornerRadius: 10).fill(Color(nsColor: .windowBackgroundColor)))
         .overlay(RoundedRectangle(cornerRadius: 10)
             .strokeBorder(Color(nsColor: .separatorColor).opacity(0.4), lineWidth: 0.5))

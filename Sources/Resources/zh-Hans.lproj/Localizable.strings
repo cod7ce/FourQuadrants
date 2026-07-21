@@ -117,6 +117,9 @@
 "settings.language.zh" = "简体中文";
 "settings.language.en" = "英文";
 "settings.language.note" = "切换后界面立即更新";
+"settings.font.section" = "字体";
+"settings.font.system" = "系统默认";
+"settings.font.note" = "选择已安装的字体，全局生效；独立笔记窗口也会应用。";
 "settings.parse.section" = "粘贴解析规则";
 "settings.parse.builtin" = "智能识别 ONES 工单（默认）";
 "settings.parse.builtin.desc" = "自动识别工单号、链接与标题";
@@ -135,6 +138,10 @@
 "settings.rule.testPlaceholder" = "粘贴一段文本测试";
 "settings.rule.noMatch" = "未匹配";
 "settings.rule.delete" = "删除规则";
+"settings.rule.tag" = "自动标签";
+"settings.rule.tag.none" = "无标签";
+"settings.rule.tag.placeholder" = "标签名（留空则不打标签）";
+"settings.rule.tag.note" = "命中该规则时，生成的任务会自动带上此标签；标签不存在会自动创建。";
 
 /* 显示 */
 "settings.display.section" = "显示";

@@ -88,9 +88,7 @@ struct WeekAgendaView: View {
                 }
             }
             #endif
-            ToolbarItem {
-                Button { newTask = makeTask() } label: { Label(L("action.create"), systemImage: "plus") }
-            }
+            NotesAddToolbar { newTask = makeTask() }
         }
         .sheet(item: $newTask) { TaskEditor(task: $0, isNew: true) }
     }
@@ -100,7 +98,7 @@ struct WeekAgendaView: View {
             HStack(spacing: 6) {
                 Image(systemName: "exclamationmark.triangle.fill")
                 Text(String(format: L("agenda.overdue"), overdue.count))
-                    .font(.subheadline.weight(.semibold))
+                    .appFont(.subheadline, weight: .semibold)
             }
             .foregroundStyle(.red)
 
@@ -174,18 +172,18 @@ private struct DaySection: View {
     private var header: some View {
         HStack(spacing: 8) {
             Text(day.formatted(.dateTime.weekday(.abbreviated).locale(.app)))
-                .font(.subheadline.weight(.semibold))
+                .appFont(.subheadline, weight: .semibold)
                 .foregroundStyle(isToday ? Color.accentColor : Color.appLabel)
             Text(day.formatted(.dateTime.month().day().locale(.app)))
-                .font(.subheadline).foregroundStyle(.secondary)
+                .appFont(.subheadline).foregroundStyle(.secondary)
             if isToday {
                 Text(L("agenda.today"))
-                    .font(.caption2.weight(.semibold)).foregroundStyle(.white)
+                    .appFont(.caption2, weight: .semibold).foregroundStyle(.white)
                     .padding(.horizontal, 7).padding(.vertical, 2)
                     .background(Color.accentColor, in: Capsule())
             }
             Spacer()
-            Text(summary).font(.caption).foregroundStyle(.secondary)
+            Text(summary).appFont(.caption).foregroundStyle(.secondary)
         }
     }
 }

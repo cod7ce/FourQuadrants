@@ -81,6 +81,7 @@ struct TaskMetaLine: View {
 /// 因此换行后的行会自然与标签左缘对齐（真正的内联绕排，中文无空格也适用）。
 struct TaggedTitleText: View {
     @Environment(\.fontScale) private var scale
+    @Environment(\.appFontName) private var appFontName
     @Environment(\.displayScale) private var displayScale
     let task: TaskItem
     var strikethrough: Bool = false
@@ -89,7 +90,7 @@ struct TaggedTitleText: View {
 
     var body: some View {
         titleText()
-            .font(AppFont.font(.body, scale: scale))
+            .font(AppFont.font(.body, scale: scale, name: appFontName))
             .foregroundStyle(color)
             .fixedSize(horizontal: false, vertical: true)
     }
@@ -109,7 +110,9 @@ struct TaggedTitleText: View {
 
     /// 把一个标签 chip 渲染成内联图片。
     @MainActor private func chipImage(_ tag: Tag) -> Image? {
-        let renderer = ImageRenderer(content: TagChip(tag: tag).environment(\.fontScale, scale))
+        let renderer = ImageRenderer(content: TagChip(tag: tag)
+            .environment(\.fontScale, scale)
+            .environment(\.appFontName, appFontName))
         renderer.scale = displayScale
         #if os(macOS)
         if let img = renderer.nsImage { return Image(nsImage: img) }

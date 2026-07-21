@@ -4,6 +4,8 @@ struct ParsedTaskInput: Equatable {
     var issueKey: String?
     var title: String
     var links: [String]
+    /// 命中的规则要自动打上的标签名（内置识别为 nil）。
+    var tagName: String? = nil
 
     var isEmpty: Bool { issueKey == nil && title.isEmpty && links.isEmpty }
 }

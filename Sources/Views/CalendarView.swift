@@ -53,11 +53,7 @@ struct CalendarView: View {
                 .frame(width: 320)
         }
         .navigationTitle(L("sidebar.calendar"))
-        .toolbar {
-            ToolbarItem {
-                Button { newTask = makeTask() } label: { Label(L("action.create"), systemImage: "plus") }
-            }
-        }
+        .toolbar { NotesAddToolbar { newTask = makeTask() } }
         .sheet(item: $newTask) { TaskEditor(task: $0, isNew: true) }
     }
 
@@ -74,7 +70,7 @@ struct CalendarView: View {
     private var header: some View {
         HStack(spacing: 12) {
             navButton("chevron.left") { step(-1) }
-            Text(monthTitle).font(.title2.bold())
+            Text(monthTitle).appFont(.title2, weight: .bold)
             navButton("chevron.right") { step(1) }
             Spacer()
         }
@@ -83,7 +79,7 @@ struct CalendarView: View {
     private var weekdayHeader: some View {
         HStack(spacing: 0) {
             ForEach(Array(weekdaySymbols.enumerated()), id: \.offset) { _, s in
-                Text(s).font(.caption).foregroundStyle(.secondary)
+                Text(s).appFont(.caption).foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity)
             }
         }
@@ -116,7 +112,7 @@ struct CalendarView: View {
             ForEach(Quadrant.allCases) { q in
                 HStack(spacing: 5) {
                     Circle().fill(q.color).frame(width: 7, height: 7)
-                    Text(q.title).font(.caption2).foregroundStyle(.secondary)
+                    Text(q.title).appFont(.caption2).foregroundStyle(.secondary)
                 }
             }
             Spacer()
@@ -211,12 +207,12 @@ private struct CalendarCell: View {
     @ViewBuilder private var numberView: some View {
         if isToday {
             Text(dayNumber)
-                .font(.callout.weight(.semibold)).foregroundStyle(.white)
+                .appFont(.callout, weight: .semibold).foregroundStyle(.white)
                 .frame(width: 24, height: 24)
                 .background(Circle().fill(Color.accentColor))
         } else {
             Text(dayNumber)
-                .font(.callout)
+                .appFont(.callout)
                 .foregroundStyle(Color.appLabel)
                 .opacity(inMonth ? 1 : 0.35)
                 .frame(width: 24, height: 24, alignment: .center)
@@ -246,7 +242,7 @@ private struct CalDayPanel: View {
                     ForEach(active) { row($0) }
                     if !done.isEmpty {
                         Text(String(format: L("grid.completedCount"), done.count))
-                            .font(.caption).foregroundStyle(.secondary)
+                            .appFont(.caption).foregroundStyle(.secondary)
                             .padding(.top, 4)
                         ForEach(done) { row($0) }
                     }
@@ -259,7 +255,7 @@ private struct CalDayPanel: View {
                 Text(String(format: L("cal.inboxFooter"), inboxCount))
                 Spacer()
             }
-            .font(.caption).foregroundStyle(.secondary)
+            .appFont(.caption).foregroundStyle(.secondary)
             .padding(.horizontal, 16).padding(.vertical, 10)
         }
         .frame(maxHeight: .infinity)
@@ -269,16 +265,16 @@ private struct CalDayPanel: View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 8) {
                 Text(day.formatted(.dateTime.month().day().weekday(.wide).locale(.app)))
-                    .font(.headline)
+                    .appFont(.headline)
                 if isToday {
                     Text(L("agenda.today"))
-                        .font(.caption2.weight(.semibold)).foregroundStyle(.white)
+                        .appFont(.caption2, weight: .semibold).foregroundStyle(.white)
                         .padding(.horizontal, 7).padding(.vertical, 2)
                         .background(Color.accentColor, in: Capsule())
                 }
                 Spacer()
             }
-            Text(summary).font(.caption).foregroundStyle(.secondary)
+            Text(summary).appFont(.caption).foregroundStyle(.secondary)
         }
         .padding(.horizontal, 16).padding(.top, 14).padding(.bottom, 12)
     }

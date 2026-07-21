@@ -1,12 +1,53 @@
 import SwiftUI
 import SwiftData
+#if os(macOS)
+import AppKit
+#else
+import UIKit
+#endif
 
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var context
     @Query(sort: \Tag.name) private var tags: [Tag]
     @AppStorage(LocalizationConfig.storageKey) private var language = AppLanguage.zhHans.rawValue
+    @AppStorage(AppFontSetting.key) private var appFontName = ""
+    @AppStorage(ParseRuleStore.builtinTagKey) private var builtinTag = ""
     @State private var rules: [ParseRule] = ParseRuleStore.load()
+
+    /// 行内快速切换「自动标签」的下拉菜单。
+    @ViewBuilder
+    private func tagMenu(_ selection: Binding<String>) -> some View {
+        Menu {
+            Button(L("settings.rule.tag.none")) { selection.wrappedValue = "" }
+            if !tags.isEmpty { Divider() }
+            ForEach(tags) { t in
+                Button {
+                    selection.wrappedValue = t.name
+                } label: {
+                    Label(t.name, systemImage: selection.wrappedValue == t.name ? "checkmark" : "tag")
+                }
+            }
+        } label: {
+            HStack(spacing: 3) {
+                Text(selection.wrappedValue.isEmpty ? L("settings.rule.tag.none") : selection.wrappedValue)
+                    .appFont(.caption)
+                    .foregroundStyle(selection.wrappedValue.isEmpty ? .secondary : .primary)
+                Image(systemName: "chevron.up.chevron.down").imageScale(.small).foregroundStyle(.secondary)
+            }
+        }
+        .menuStyle(.button)
+        .buttonStyle(.borderless)
+        .fixedSize()
+    }
+
+    private var fontFamilies: [String] {
+        #if os(macOS)
+        return NSFontManager.shared.availableFontFamilies.sorted()
+        #else
+        return UIFont.familyNames.sorted()
+        #endif
+    }
 
     var body: some View {
         NavigationStack {
@@ -19,6 +60,19 @@ struct SettingsView: View {
                     }
                     Text(L("settings.language.note"))
                         .appFont(.caption).foregroundStyle(.secondary)
+                }
+
+                Section {
+                    Picker(L("settings.font.section"), selection: $appFontName) {
+                        Text(L("settings.font.system")).tag("")
+                        ForEach(fontFamilies, id: \.self) { fam in
+                            Text(fam).font(.custom(fam, size: 13)).tag(fam)
+                        }
+                    }
+                    Text(L("settings.font.note"))
+                        .appFont(.caption).foregroundStyle(.secondary)
+                } header: {
+                    Text(L("settings.font.section"))
                 }
 
                 Section {
@@ -39,24 +93,39 @@ struct SettingsView: View {
                 }
 
                 Section {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(L("settings.parse.builtin"))
-                        Text(L("settings.parse.builtin.desc"))
-                            .appFont(.caption).foregroundStyle(.secondary)
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(L("settings.parse.builtin"))
+                            Text(L("settings.parse.builtin.desc"))
+                                .appFont(.caption).foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        tagMenu($builtinTag)
                     }
                     ForEach($rules) { $rule in
-                        NavigationLink {
-                            RuleEditorView(rule: $rule)
-                        } label: {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(rule.name.isEmpty ? L("settings.rule.new") : rule.name)
-                                if !rule.pattern.isEmpty {
-                                    Text(rule.pattern)
-                                        .appFont(.caption, monospaced: true)
-                                        .foregroundStyle(.secondary)
-                                        .lineLimit(1)
+                        HStack {
+                            NavigationLink {
+                                RuleEditorView(rule: $rule)
+                            } label: {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(rule.name.isEmpty ? L("settings.rule.new") : rule.name)
+                                    if !rule.pattern.isEmpty {
+                                        Text(rule.pattern)
+                                            .appFont(.caption, monospaced: true)
+                                            .foregroundStyle(.secondary)
+                                            .lineLimit(1)
+                                    }
                                 }
+                                .frame(maxWidth: .infinity, alignment: .leading)
                             }
+                            tagMenu($rule.tagName)
+                            Button(role: .destructive) {
+                                rules.removeAll { $0.id == rule.id }
+                            } label: {
+                                Image(systemName: "trash").foregroundStyle(.red)
+                            }
+                            .buttonStyle(.borderless)
+                            .help(L("settings.rule.delete"))
                         }
                     }
                     .onDelete { rules.remove(atOffsets: $0) }
@@ -128,6 +197,14 @@ private struct RuleEditorView: View {
         Form {
             Section(L("settings.rule.name")) {
                 TextField(L("settings.rule.name"), text: $rule.name)
+            }
+            Section {
+                TextField(L("settings.rule.tag.placeholder"), text: $rule.tagName)
+                    .autocorrectionDisabled()
+            } header: {
+                Text(L("settings.rule.tag"))
+            } footer: {
+                Text(L("settings.rule.tag.note"))
             }
             Section(L("settings.rule.section.regex")) {
                 TextField(L("settings.rule.pattern"), text: $rule.pattern, axis: .vertical)

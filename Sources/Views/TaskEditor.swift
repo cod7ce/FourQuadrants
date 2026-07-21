@@ -51,7 +51,7 @@ struct TaskEditor: View {
             VStack(alignment: .leading, spacing: 4) {
                 TextField(L("editor.title.placeholder"), text: $task.title, axis: .vertical)
                     .textFieldStyle(.plain)
-                    .font(.title2.bold())
+                    .appFont(.title2, weight: .bold)
                     .lineLimit(1...3)
                 HStack(spacing: 6) {
                     TextField(L("editor.issueKey.placeholder"), text: Binding($task.issueKey))
@@ -61,7 +61,7 @@ struct TaskEditor: View {
                     Text("·")
                     Text(L("editor.created") + " " + task.createdAt.formatted(.dateTime.month().day().locale(.app)))
                 }
-                .font(.caption)
+                .appFont(.caption)
                 .foregroundStyle(.secondary)
             }
 
@@ -99,18 +99,18 @@ struct TaskEditor: View {
     private var notesBlock: some View {
         let notes = task.sortedNotes
         return VStack(alignment: .leading, spacing: 8) {
-            Text(L("editor.notes")).font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
+            Text(L("editor.notes")).appFont(.subheadline, weight: .semibold).foregroundStyle(.secondary)
             ForEach(notes) { note in
                 HStack(alignment: .top, spacing: 8) {
                     Circle().fill(Color.secondary.opacity(0.4)).frame(width: 5, height: 5).padding(.top, 6)
                     VStack(alignment: .leading, spacing: 1) {
                         Text(note.text).fixedSize(horizontal: false, vertical: true)
                         Text(note.createdAt.formatted(.dateTime.month().day().hour().minute().locale(.app)))
-                            .font(.caption2).foregroundStyle(.tertiary)
+                            .appFont(.caption2).foregroundStyle(.tertiary)
                     }
                     Spacer(minLength: 0)
                     Button { context.delete(note) } label: {
-                        Image(systemName: "xmark").font(.caption2).foregroundStyle(.tertiary)
+                        Image(systemName: "xmark").appFont(.caption2).foregroundStyle(.tertiary)
                     }.buttonStyle(.plain)
                 }
             }
@@ -129,10 +129,10 @@ struct TaskEditor: View {
         let subs = task.sortedSubtasks
         return VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text(L("editor.subtasks")).font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
+                Text(L("editor.subtasks")).appFont(.subheadline, weight: .semibold).foregroundStyle(.secondary)
                 Spacer()
                 Text("\(subs.filter(\.isCompleted).count) / \(subs.count)")
-                    .font(.caption).monospacedDigit().foregroundStyle(.secondary)
+                    .appFont(.caption, monospacedDigit: true).foregroundStyle(.secondary)
             }
             Divider()
             ForEach(subs) { sub in
@@ -143,7 +143,7 @@ struct TaskEditor: View {
                         .foregroundStyle(sub.isCompleted ? .secondary : Color.appLabel)
                     Spacer(minLength: 0)
                     Button { context.delete(sub) } label: {
-                        Image(systemName: "xmark").font(.caption2).foregroundStyle(.tertiary)
+                        Image(systemName: "xmark").appFont(.caption2).foregroundStyle(.tertiary)
                     }.buttonStyle(.plain)
                 }
                 .contentShape(Rectangle())
@@ -167,13 +167,13 @@ struct TaskEditor: View {
 
     private var linksBlock: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(L("editor.links")).font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
+            Text(L("editor.links")).appFont(.subheadline, weight: .semibold).foregroundStyle(.secondary)
             ForEach(task.links, id: \.self) { link in
                 HStack {
                     LinkRow(urlString: link)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     Button { task.links.removeAll { $0 == link } } label: {
-                        Image(systemName: "xmark").font(.caption2).foregroundStyle(.tertiary)
+                        Image(systemName: "xmark").appFont(.caption2).foregroundStyle(.tertiary)
                     }.buttonStyle(.plain)
                 }
             }
@@ -222,7 +222,7 @@ struct TaskEditor: View {
     }
 
     private func colHeader(_ t: String) -> some View {
-        Text(t).font(.caption).foregroundStyle(.secondary).frame(maxWidth: .infinity)
+        Text(t).appFont(.caption).foregroundStyle(.secondary).frame(maxWidth: .infinity)
     }
     private func rowHeader(_ t: String) -> some View {
         VStack(spacing: 1) {
@@ -230,15 +230,15 @@ struct TaskEditor: View {
                 Text(String(ch))
             }
         }
-        .font(.caption2).foregroundStyle(.secondary).frame(width: 16)
+        .appFont(.caption2).foregroundStyle(.secondary).frame(width: 16)
     }
 
     private func qCard(_ q: Quadrant) -> some View {
         let selected = task.quadrant == q
         return Button { task.move(to: q) } label: {
             VStack(alignment: .leading, spacing: 2) {
-                Text(q.title).font(.subheadline.weight(.semibold)).foregroundStyle(q.color)
-                Text(q.actionHint).font(.caption2).foregroundStyle(.secondary)
+                Text(q.title).appFont(.subheadline, weight: .semibold).foregroundStyle(q.color)
+                Text(q.actionHint).appFont(.caption2).foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity, minHeight: 52, alignment: .topLeading)
             .padding(10)
@@ -246,7 +246,7 @@ struct TaskEditor: View {
             .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(q.color, lineWidth: selected ? 2 : 0))
             .overlay(alignment: .topTrailing) {
                 if selected {
-                    Image(systemName: "checkmark").font(.caption.weight(.bold))
+                    Image(systemName: "checkmark").appFont(.caption, weight: .bold)
                         .foregroundStyle(q.color).padding(6)
                 }
             }
@@ -272,7 +272,7 @@ struct TaskEditor: View {
 
     private func quickDate(_ label: String, _ date: Date) -> some View {
         Button { task.dueDate = date } label: {
-            Text(label).font(.caption)
+            Text(label).appFont(.caption)
                 .padding(.horizontal, 12).padding(.vertical, 6)
                 .overlay(Capsule().strokeBorder(Color.secondary.opacity(0.4), style: StrokeStyle(lineWidth: 1, dash: [3])))
         }
@@ -309,7 +309,7 @@ struct TaskEditor: View {
                 Button { toggleTag(tag) } label: {
                     HStack(spacing: 5) {
                         if on { Circle().fill(tag.color).frame(width: 6, height: 6) }
-                        Text(tag.name).font(.caption)
+                        Text(tag.name).appFont(.caption)
                     }
                     .padding(.horizontal, 12).padding(.vertical, 6)
                     .foregroundStyle(on ? tag.color : .secondary)
@@ -346,7 +346,7 @@ struct TaskEditor: View {
 
             Spacer()
 
-            Text(L("editor.autosave")).font(.caption).foregroundStyle(.secondary)
+            Text(L("editor.autosave")).appFont(.caption).foregroundStyle(.secondary)
             Button(L("editor.done")) { dismiss() }
                 .buttonStyle(.borderedProminent)
         }
@@ -357,16 +357,16 @@ struct TaskEditor: View {
 
     private func section(_ title: String, @ViewBuilder _ content: () -> some View) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(title).font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
+            Text(title).appFont(.subheadline, weight: .semibold).foregroundStyle(.secondary)
             content()
         }
     }
 
     private func pill(icon: String, text: String, tint: Color, onClear: @escaping () -> Void) -> some View {
         HStack(spacing: 6) {
-            Image(systemName: icon).font(.caption)
-            Text(text).font(.caption)
-            Button(action: onClear) { Image(systemName: "xmark").font(.caption2) }.buttonStyle(.plain)
+            Image(systemName: icon).appFont(.caption)
+            Text(text).appFont(.caption)
+            Button(action: onClear) { Image(systemName: "xmark").appFont(.caption2) }.buttonStyle(.plain)
         }
         .padding(.horizontal, 12).padding(.vertical, 6)
         .foregroundStyle(tint)
@@ -375,8 +375,8 @@ struct TaskEditor: View {
 
     private func dashedPill(icon: String, text: String) -> some View {
         HStack(spacing: 6) {
-            Image(systemName: icon).font(.caption)
-            Text(text).font(.caption)
+            Image(systemName: icon).appFont(.caption)
+            Text(text).appFont(.caption)
         }
         .foregroundStyle(.secondary)
         .padding(.horizontal, 12).padding(.vertical, 6)

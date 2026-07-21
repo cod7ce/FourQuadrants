@@ -43,9 +43,7 @@ struct QuadrantGridView: View {
                 }
             }
             #endif
-            ToolbarItem {
-                Button { newTask = makeTask() } label: { Label(L("action.create"), systemImage: "plus") }
-            }
+            NotesAddToolbar { newTask = makeTask() }
         }
         .sheet(item: $newTask) { TaskEditor(task: $0, isNew: true) }
     }
@@ -94,12 +92,12 @@ struct WeekHeaderBar: View {
             HStack(spacing: 12) {
                 navButton("chevron.left") { weekStart = Week.shift(weekStart, by: -1) }
                 VStack(alignment: .center, spacing: 2) {
-                    Text(Week.yearWeekLabel(weekStart)).font(.title3.bold())
+                    Text(Week.yearWeekLabel(weekStart)).appFont(.title3, weight: .bold)
                     HStack(spacing: 6) {
                         Text(Week.label(weekStart)).foregroundStyle(.secondary)
                         weekMarkView
                     }
-                    .font(.caption)
+                    .appFont(.caption)
                 }
                 navButton("chevron.right") { weekStart = Week.shift(weekStart, by: 1) }
             }
@@ -107,11 +105,11 @@ struct WeekHeaderBar: View {
             Spacer()
 
             HStack(spacing: 10) {
-                Text(L("overview.weekProgress")).font(.caption).foregroundStyle(.secondary)
+                Text(L("overview.weekProgress")).appFont(.caption).foregroundStyle(.secondary)
                 ThinProgressBar(ratio: total == 0 ? 0 : Double(done) / Double(total), color: .green)
                     .frame(width: 140)
                 Text("\(done) / \(total)")
-                    .font(.subheadline.weight(.semibold)).monospacedDigit()
+                    .appFont(.subheadline, weight: .semibold).monospacedDigit()
             }
         }
     }
@@ -170,7 +168,7 @@ private struct QuadrantCard: View {
                     ForEach(active) { row($0, siblings: active) }
                     if !completed.isEmpty {
                         Text(String(format: L("grid.completedCount"), completed.count))
-                            .font(.caption).foregroundStyle(.secondary)
+                            .appFont(.caption).foregroundStyle(.secondary)
                             .padding(.top, 2)
                         ForEach(completed) { row($0, siblings: completed) }
                     }
@@ -201,21 +199,21 @@ private struct QuadrantCard: View {
                 .frame(width: 28, height: 28)
                 .background(quadrant.color, in: RoundedRectangle(cornerRadius: 8))
             VStack(alignment: .leading, spacing: 1) {
-                Text(quadrant.title).font(.headline).foregroundStyle(quadrant.color)
-                Text(quadrant.actionHint).font(.caption).foregroundStyle(.secondary)
+                Text(quadrant.title).appFont(.headline).foregroundStyle(quadrant.color)
+                Text(quadrant.actionHint).appFont(.caption).foregroundStyle(.secondary)
             }
             Spacer()
             Text("\(completed.count) / \(tasks.count)")
-                .font(.subheadline.weight(.semibold)).monospacedDigit()
+                .appFont(.subheadline, weight: .semibold).monospacedDigit()
                 .foregroundStyle(quadrant.color)
         }
     }
 
     private var emptyState: some View {
         VStack(spacing: 6) {
-            Image(systemName: "sparkles").font(.title3).foregroundStyle(.secondary)
-            Text(L("grid.clean.title")).font(.callout).foregroundStyle(.secondary)
-            Text(L("grid.clean.subtitle")).font(.caption).foregroundStyle(.tertiary)
+            Image(systemName: "sparkles").appFont(.title3).foregroundStyle(.secondary)
+            Text(L("grid.clean.title")).appFont(.callout).foregroundStyle(.secondary)
+            Text(L("grid.clean.subtitle")).appFont(.caption).foregroundStyle(.tertiary)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 24)

@@ -7,12 +7,23 @@ import UIKit
 
 /// 文字缩放比例环境值（由根视图按字号档位注入）。
 private struct FontScaleKey: EnvironmentKey { static let defaultValue: CGFloat = 1 }
+/// 全局字体族名环境值（空 = 系统默认；由设置注入）。
+private struct AppFontNameKey: EnvironmentKey { static let defaultValue: String = "" }
 
 extension EnvironmentValues {
     var fontScale: CGFloat {
         get { self[FontScaleKey.self] }
         set { self[FontScaleKey.self] = newValue }
     }
+    var appFontName: String {
+        get { self[AppFontNameKey.self] }
+        set { self[AppFontNameKey.self] = newValue }
+    }
+}
+
+/// 字体设置的存储键。
+enum AppFontSetting {
+    static let key = "appFontName"
 }
 
 enum AppFont {
@@ -41,12 +52,20 @@ enum AppFont {
         }
     }
 
-    /// 按比例缩放后的字体。
+    /// 按比例缩放后的字体。`name` 非空时用自定义字体族，否则用系统字体。
     static func font(_ style: Font.TextStyle, scale: CGFloat,
                      weight: Font.Weight? = nil,
-                     monospaced: Bool = false, monospacedDigit: Bool = false) -> Font {
-        var f = Font.system(size: baseSize(style) * scale, weight: weight ?? defaultWeight(style))
-        if monospaced { f = f.monospaced() }
+                     monospaced: Bool = false, monospacedDigit: Bool = false,
+                     name: String = "") -> Font {
+        let size = baseSize(style) * scale
+        let w = weight ?? defaultWeight(style)
+        var f: Font
+        if name.isEmpty {
+            f = Font.system(size: size, weight: w)
+            if monospaced { f = f.monospaced() }
+        } else {
+            f = Font.custom(name, size: size).weight(w)
+        }
         if monospacedDigit { f = f.monospacedDigit() }
         return f
     }
@@ -90,6 +109,7 @@ enum AppFont {
 
 private struct AppFontModifier: ViewModifier {
     @Environment(\.fontScale) private var scale
+    @Environment(\.appFontName) private var name
     let style: Font.TextStyle
     let weight: Font.Weight?
     let monospaced: Bool
@@ -97,7 +117,8 @@ private struct AppFontModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         content.font(AppFont.font(style, scale: scale, weight: weight,
-                                  monospaced: monospaced, monospacedDigit: monospacedDigit))
+                                  monospaced: monospaced, monospacedDigit: monospacedDigit,
+                                  name: name))
     }
 }
 

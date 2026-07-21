@@ -8,6 +8,7 @@ import RichTextKit
 struct FourQuadrantsApp: App {
     let container: ModelContainer
     @AppStorage(FontScale.key) private var fontIndex = FontScale.defaultIndex
+    @AppStorage(AppFontSetting.key) private var appFontName = ""
 
     init() {
         container = Self.makeContainer()
@@ -53,7 +54,8 @@ struct FourQuadrantsApp: App {
             NotesWindow()
                 .environment(\.locale, .app)
                 .environment(\.fontScale, FontScale.scale(fontIndex))
-                .environment(\.font, AppFont.font(.body, scale: FontScale.scale(fontIndex)))
+                .environment(\.appFontName, appFontName)
+                .environment(\.font, AppFont.font(.body, scale: FontScale.scale(fontIndex), name: appFontName))
         }
         .modelContainer(container)
         .defaultSize(width: 820, height: 620)   // 默认宽度容纳整条格式工具栏

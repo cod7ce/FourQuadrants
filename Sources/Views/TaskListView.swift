@@ -60,9 +60,7 @@ struct TaskListView: View {
             }
         }
         .toolbar {
-            ToolbarItem {
-                Button { newTask = makeTask() } label: { Label(L("action.create"), systemImage: "plus") }
-            }
+            NotesAddToolbar { newTask = makeTask() }
             #if os(iOS)
             ToolbarItem(placement: .topBarTrailing) { EditButton() }
             #endif

@@ -23,6 +23,7 @@ struct ContentView: View {
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage(LocalizationConfig.storageKey) private var language = AppLanguage.zhHans.rawValue
     @AppStorage(FontScale.key) private var fontIndex = FontScale.defaultIndex
+    @AppStorage(AppFontSetting.key) private var appFontName = ""
     #if os(macOS)
     @StateObject private var modifiers = ModifierWatcher()
     #endif
@@ -76,14 +77,6 @@ struct ContentView: View {
             .overlay(alignment: .top) {
                 Rectangle().fill(Color(nsColor: .separatorColor)).frame(height: 0.5)
             }
-            .toolbar {
-                ToolbarItem {
-                    Button { openWindow(id: "notes") } label: {
-                        Image(systemName: "note.text").foregroundStyle(.secondary)
-                    }
-                    .help(L("notes.title"))
-                }
-            }
             #endif
         }
         #if os(macOS)
@@ -99,7 +92,8 @@ struct ContentView: View {
         .environment(\.locale, .app)
         .environment(\.optionHeld, optionHeld)                           // 按住 ⌥ 提示可点链接
         .environment(\.fontScale, FontScale.scale(fontIndex))            // ⌘+ / ⌘- 调整字号
-        .environment(\.font, AppFont.font(.body, scale: FontScale.scale(fontIndex)))
+        .environment(\.appFontName, appFontName)                         // 全局字体（设置里选）
+        .environment(\.font, AppFont.font(.body, scale: FontScale.scale(fontIndex), name: appFontName))
         .id(language)   // 切换语言时整体重建，立即生效
         #if os(iOS)
         .sheet(isPresented: $showSettings) { SettingsView() }
@@ -160,8 +154,22 @@ struct ContentView: View {
                             issueKey: parsed.issueKey,
                             weekStart: selectedWeek)
         context.insert(task)
+        if let name = parsed.tagName?.trimmingCharacters(in: .whitespaces), !name.isEmpty {
+            task.tags = [tag(named: name)]
+        }
         try? context.save()
         clipboardCandidate = nil
+    }
+
+    /// 按名称取标签，没有就新建一个（用于规则自动打标签）。
+    private func tag(named name: String) -> Tag {
+        var descriptor = FetchDescriptor<Tag>(predicate: #Predicate { $0.name == name })
+        descriptor.fetchLimit = 1
+        if let existing = try? context.fetch(descriptor).first { return existing }
+        let count = (try? context.fetchCount(FetchDescriptor<Tag>())) ?? 0
+        let t = Tag(name: name, colorHex: TagPalette.hexes[count % TagPalette.hexes.count])
+        context.insert(t)
+        return t
     }
 
     private func previewText(_ p: ParsedTaskInput) -> String {

@@ -8,11 +8,15 @@ struct ParseRule: Codable, Identifiable, Hashable {
     var issueGroup: Int = 0   // 0 表示无
     var titleGroup: Int = 0
     var linkGroup: Int = 0
+    /// 命中该规则时，自动给生成的任务打上这个标签（空 = 不打）。
+    var tagName: String = ""
 }
 
 /// 规则持久化（存于 UserDefaults）。
 enum ParseRuleStore {
     static let key = "parseRules"
+    /// 内置「智能识别（默认）」规则的自动标签存储键。
+    static let builtinTagKey = "builtinParseTagName"
 
     static func load() -> [ParseRule] {
         guard let data = UserDefaults.standard.data(forKey: key),
@@ -37,7 +41,12 @@ enum ParseEngine {
                 return result
             }
         }
-        return TaskInputParser.parse(text)
+        // 回退到内置识别，套用内置规则的自动标签（如已配置）。
+        var result = TaskInputParser.parse(text)
+        let builtinTag = (UserDefaults.standard.string(forKey: ParseRuleStore.builtinTagKey) ?? "")
+            .trimmingCharacters(in: .whitespaces)
+        if result.tagName == nil, !builtinTag.isEmpty { result.tagName = builtinTag }
+        return result
     }
 
     static func apply(_ rule: ParseRule, to text: String) -> ParsedTaskInput? {
@@ -61,6 +70,7 @@ enum ParseEngine {
         let link = group(rule.linkGroup)
         return ParsedTaskInput(issueKey: issue,
                                title: title,
-                               links: link.map { [$0] } ?? [])
+                               links: link.map { [$0] } ?? [],
+                               tagName: rule.tagName.isEmpty ? nil : rule.tagName)
     }
 }
