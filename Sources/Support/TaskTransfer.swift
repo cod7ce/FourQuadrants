@@ -82,6 +82,75 @@ enum TaskMutations {
         Task { await NotificationManager.shared.reschedule(for: dragged) }
     }
 
+    /// 更早周里、未完成的顶层任务（用于「整理到本周」）。
+    @MainActor
+    static func carryForwardSources(into target: Date, in context: ModelContext) -> [TaskItem] {
+        let week = Week.start(of: target)
+        let all = (try? context.fetch(FetchDescriptor<TaskItem>())) ?? []
+        return all.filter {
+            $0.parent == nil && !$0.isCompleted && Week.start(of: $0.weekStart) < week
+        }
+    }
+
+    /// 整理时对单个任务采取的动作（也用于确认框逐行展示）。
+    enum CarryAction { case move, copyParent, complete }
+
+    /// 判定某个历史未完成任务会怎么处理：
+    /// 无子任务 → 移动；有未完成子任务 → 复制父+移动子+原件完成；子任务全完成 → 标记完成。
+    static func carryAction(for t: TaskItem) -> CarryAction {
+        let subs = t.sortedSubtasks
+        if subs.isEmpty { return .move }
+        if subs.contains(where: { !$0.isCompleted }) { return .copyParent }
+        return .complete
+    }
+
+    /// 把选中的历史未完成任务整理到目标周（规则见 `carryAction`）。返回处理数量。
+    @MainActor
+    @discardableResult
+    static func carryForward(_ tasks: [TaskItem], into target: Date, in context: ModelContext) -> Int {
+        let week = Week.start(of: target)
+        for t in tasks {
+            switch carryAction(for: t) {
+            case .move:
+                // 无子任务：整条移动到目标周，作为新一周的待办重新开始。
+                t.weekStart = week
+                t.dueDate = nil
+                t.remindAt = nil
+            case .copyParent:
+                // 有未完成子任务：复制父任务到目标周，未完成子任务移动到副本下，原件标记完成。
+                let copy = TaskItem(title: t.title,
+                                    notes: t.notes,
+                                    isUrgent: t.isUrgent,
+                                    isImportant: t.isImportant,
+                                    links: t.links,
+                                    issueKey: t.issueKey,
+                                    sortOrder: t.sortOrder,
+                                    weekStart: week)
+                copy.tags = t.tags
+                copy.richContent = t.richContent
+                context.insert(copy)
+                for sub in t.sortedSubtasks where !sub.isCompleted {
+                    sub.parent = copy
+                    sub.weekStart = week
+                    sub.dueDate = nil
+                    sub.remindAt = nil
+                }
+                completeInPlace(t)
+            case .complete:
+                // 子任务全部完成：父任务标记完成。
+                completeInPlace(t)
+            }
+        }
+        try? context.save()
+        return tasks.count
+    }
+
+    private static func completeInPlace(_ t: TaskItem) {
+        guard !t.isCompleted else { return }
+        t.isCompleted = true
+        t.completedAt = .now
+    }
+
     /// 把任务挂到 `newParent` 下成为其子任务（用于拖到父任务主体上，含没有子任务的父）。
     /// 保持单层：`newParent` 必须是顶层任务，且被拖任务自身不能带子任务。
     @MainActor

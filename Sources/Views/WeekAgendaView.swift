@@ -90,6 +90,7 @@ struct WeekAgendaView: View {
             #endif
             NotesAddToolbar { newTask = makeTask() }
         }
+        .carryForwardToolbar(week: weekStart)
         .sheet(item: $newTask) { TaskEditor(task: $0, isNew: true) }
     }
 

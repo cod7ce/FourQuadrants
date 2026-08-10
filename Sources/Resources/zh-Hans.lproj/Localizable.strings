@@ -249,6 +249,35 @@
 "agenda.originalDue" = "原定 %@";
 "agenda.today" = "今天";
 
+/* 整理未完成任务 */
+"carry.title" = "整理未完成";
+"carry.help" = "把更早周里未完成的任务整理到本周";
+"carry.confirm" = "整理 %d 项";
+"carry.empty" = "没有更早的未完成任务可整理。";
+"carry.sheet.title" = "整理未完成到「%@」";
+"carry.sheet.subtitle" = "无子任务→移动；有未完成子任务→复制父任务、子任务搬来、原件标记完成；子任务全完成→原件标记完成。";
+"carry.act.move" = "移动";
+"carry.act.copy" = "复制·原件完成";
+"carry.act.done" = "标记完成";
+"carry.subCount" = "%d 个子任务未完成";
+"carry.selectAll" = "全选";
+"carry.deselectAll" = "取消全选";
+"carry.selectedCount" = "已选 %d";
+"carry.header" = "整理未完成任务到%@";
+"carry.weekShort" = "第 %d 周";
+"carry.earlier" = "更早";
+"carry.remaining" = "还有 %d 项未完成";
+"carry.move.name" = "直接移动到%@";
+"carry.move.desc" = "没有子任务，整条搬过来";
+"carry.copy.name" = "复制到%@，原件标记完成";
+"carry.copy.desc" = "含未完成子任务，保留原周记录";
+"carry.complete.name" = "标记完成";
+"carry.complete.desc" = "子任务已全部完成";
+"carry.button" = "整理 %1$d 项到%2$@";
+"carry.word.move" = "移动";
+"carry.word.copy" = "复制";
+"carry.word.done" = "完成";
+
 /* 日历 */
 "cal.yearMonth" = "%1$d 年 %2$d 月";
 "cal.colorByQuadrant" = "按象限着色";

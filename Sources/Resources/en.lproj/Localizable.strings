@@ -249,6 +249,35 @@
 "agenda.originalDue" = "Due %@";
 "agenda.today" = "Today";
 
+/* Carry forward unfinished tasks */
+"carry.title" = "Carry forward";
+"carry.help" = "Bring earlier unfinished tasks into this week";
+"carry.confirm" = "Carry %d";
+"carry.empty" = "No earlier unfinished tasks to carry.";
+"carry.sheet.title" = "Carry forward into “%@”";
+"carry.sheet.subtitle" = "No subtasks → move; has unfinished subtasks → copy parent, move subtasks, complete the original; all subtasks done → complete the original.";
+"carry.act.move" = "Move";
+"carry.act.copy" = "Copy · orig. done";
+"carry.act.done" = "Complete";
+"carry.header" = "Carry unfinished into %@";
+"carry.weekShort" = "Week %d";
+"carry.earlier" = "Earlier";
+"carry.remaining" = "%d still unfinished";
+"carry.move.name" = "Move into %@";
+"carry.move.desc" = "No subtasks — move the whole task";
+"carry.copy.name" = "Copy into %@, complete original";
+"carry.copy.desc" = "Has unfinished subtasks; keeps the original week's record";
+"carry.complete.name" = "Mark complete";
+"carry.complete.desc" = "All subtasks already done";
+"carry.button" = "Carry %1$d into %2$@";
+"carry.word.move" = "move";
+"carry.word.copy" = "copy";
+"carry.word.done" = "done";
+"carry.subCount" = "%d unfinished subtask(s)";
+"carry.selectAll" = "Select all";
+"carry.deselectAll" = "Deselect all";
+"carry.selectedCount" = "%d selected";
+
 /* Calendar */
 "cal.yearMonth" = "%1$d-%2$02d";
 "cal.colorByQuadrant" = "Color by quadrant";
