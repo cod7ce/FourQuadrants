@@ -33,9 +33,9 @@ struct SidebarView: View {
             // 自绘紧凑侧栏（不用 .sidebar 列表，行高完全可控）
             ScrollView {
                 VStack(alignment: .leading, spacing: 2) {
-                    navRow(.overview, L("sidebar.overview"), "square.grid.2x2")
-                    navRow(.thisWeek, L("sidebar.thisWeek"), "calendar")
-                    navRow(.calendar, L("sidebar.calendar"), "clock")
+                    navRow(.overview, L("sidebar.overview"), .overview)
+                    navRow(.thisWeek, L("sidebar.thisWeek"), .thisWeek)
+                    navRow(.calendar, L("sidebar.calendar"), .calendar)
 
                     Text(L("sidebar.tags"))
                         .appFont(.caption).foregroundStyle(.secondary)
@@ -81,9 +81,12 @@ struct SidebarView: View {
     /// 侧栏行的固定高度（自绘，完全可控）。
     private static let rowHeight: CGFloat = 30
 
-    private func navRow(_ item: SidebarItem, _ title: String, _ symbol: String) -> some View {
+    private func navRow(_ item: SidebarItem, _ title: String, _ icon: AppIcon) -> some View {
         rowButton(item) {
-            Label(title, systemImage: symbol).appFont(.callout)
+            HStack(spacing: 9) {
+                AppIconView(icon: icon, size: 17)
+                Text(title).appFont(.callout)
+            }
         }
     }
 
@@ -127,17 +130,24 @@ struct SidebarView: View {
         try? context.save()
     }
 
+    private var settingsLabel: some View {
+        HStack(spacing: 8) {
+            AppIconView(icon: .settings, size: 16)
+            Text(L("settings.title")).appFont(.callout)
+        }
+    }
+
     @ViewBuilder
     private var settingsButton: some View {
         #if os(macOS)
         SettingsLink {
-            Label(L("settings.title"), systemImage: "gearshape")
+            settingsLabel
         }
         .buttonStyle(.plain)
         .padding(.horizontal, 8).padding(.vertical, 4)
         #else
         Button { onSettings() } label: {
-            Label(L("settings.title"), systemImage: "gearshape")
+            settingsLabel
         }
         .buttonStyle(.plain)
         .padding(.horizontal, 8).padding(.vertical, 4)

@@ -53,7 +53,7 @@ struct CalendarView: View {
                 .frame(width: 320)
         }
         .navigationTitle(L("sidebar.calendar"))
-        .toolbar { NotesAddToolbar { newTask = makeTask() } }
+        .notesToolbar { newTask = makeTask() }
         .sheet(item: $newTask) { TaskEditor(task: $0, isNew: true) }
     }
 

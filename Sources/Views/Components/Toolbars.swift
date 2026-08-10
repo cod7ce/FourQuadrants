@@ -1,32 +1,119 @@
 import SwiftUI
 import SwiftData
 
-/// 「整理未完成」按钮：打开可预览、可勾选的弹窗，把选中的历史未完成任务整理到 `week`。
-struct CarryForwardToolbar: ViewModifier {
+/// 标题栏工具组（总览 / 本周）：整理 · 分享 · 笔记 → 分隔线 → 主色实心「+」。
+struct MainToolbar: ViewModifier {
     let week: Date
-    @State private var show = false
+    let weekTasks: [TaskItem]
+    let onAdd: () -> Void
+    @Environment(\.openWindow) private var openWindow
+    @State private var showCarry = false
+    @State private var showExport = false
 
     func body(content: Content) -> some View {
         content
             .toolbar {
-                ToolbarItem {
-                    Button { show = true } label: {
-                        Image(systemName: "calendar")
-                            .overlay(alignment: .bottom) {
-                                Image(systemName: "arrow.right")
-                                    .font(.system(size: 7, weight: .heavy))
-                                    .padding(.bottom, 1.5)
-                            }
+                ToolbarItem(placement: .primaryAction) {
+                    HStack(spacing: 10) {
+                        ToolIconButton(icon: .carry, help: L("carry.help")) { showCarry = true }
+                        ToolIconButton(icon: .share, help: L("menu.exportMd")) { showExport = true }
+                        ToolIconButton(icon: .notes, help: L("notes.title")) { openWindow(id: "notes") }
+                        ToolbarDivider().padding(.horizontal, -1)
+                        NewTaskButton(action: onAdd)
                     }
-                    .help(L("carry.help"))
+                    .padding(.horizontal, 8)
                 }
             }
-            .sheet(isPresented: $show) { CarryForwardSheet(week: week) }
+            .sheet(isPresented: $showCarry) { CarryForwardSheet(week: week) }
+            .confirmationDialog(L("menu.exportMd"), isPresented: $showExport, titleVisibility: .visible) {
+                Button(L("menu.exportMd.file")) {
+                    MarkdownExporter.exportToFile(weekStart: week, weekTasks: weekTasks)
+                }
+                Button(L("menu.exportMd.clipboard")) {
+                    MarkdownExporter.copyToPasteboard(weekStart: week, weekTasks: weekTasks)
+                }
+                Button(L("action.cancel"), role: .cancel) {}
+            }
     }
 }
 
 extension View {
-    func carryForwardToolbar(week: Date) -> some View { modifier(CarryForwardToolbar(week: week)) }
+    func mainToolbar(week: Date, weekTasks: [TaskItem], onAdd: @escaping () -> Void) -> some View {
+        modifier(MainToolbar(week: week, weekTasks: weekTasks, onAdd: onAdd))
+    }
+}
+
+/// 标题栏工具组（日历 / 列表）：笔记 → 分隔线 → 主色实心「+」。
+struct NotesToolbar: ViewModifier {
+    let onAdd: () -> Void
+    #if os(macOS)
+    @Environment(\.openWindow) private var openWindow
+    #endif
+
+    func body(content: Content) -> some View {
+        content.toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                HStack(spacing: 10) {
+                    #if os(macOS)
+                    ToolIconButton(icon: .notes, help: L("notes.title")) { openWindow(id: "notes") }
+                    ToolbarDivider().padding(.horizontal, -1)
+                    #endif
+                    NewTaskButton(action: onAdd)
+                }
+                .padding(.horizontal, 8)
+            }
+        }
+    }
+}
+
+extension View {
+    func notesToolbar(onAdd: @escaping () -> Void) -> some View { modifier(NotesToolbar(onAdd: onAdd)) }
+}
+
+/// 顶部工具图标按钮：图标居中于 32pt 可点区域，hover 淡底反馈。
+struct ToolIconButton: View {
+    let icon: AppIcon
+    let help: String
+    let action: () -> Void
+    @State private var hovering = false
+
+    var body: some View {
+        Button(action: action) {
+            AppIconView(icon: icon, size: 18)
+                .foregroundStyle(.secondary)
+                .frame(width: 32, height: 32)
+                .background(hovering ? Color.secondary.opacity(0.12) : .clear,
+                            in: RoundedRectangle(cornerRadius: 7))
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering = $0 }
+        .help(help)
+    }
+}
+
+/// 顶栏细竖分隔线（工具与「+」之间分组）。
+struct ToolbarDivider: View {
+    var body: some View {
+        Rectangle().fill(Color.secondary.opacity(0.25)).frame(width: 1, height: 16)
+    }
+}
+
+/// 新建任务：主色实心圆角按钮。
+struct NewTaskButton: View {
+    let action: () -> Void
+    var body: some View {
+        Button(action: action) {
+            AppIconView(icon: .new, size: 13)
+                .foregroundStyle(.white)
+                .frame(width: 22, height: 22)
+                .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 6))
+                .frame(width: 34, height: 34)      // 更大点击区
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .help(L("action.create"))
+    }
 }
 
 /// 整理未完成：按来源周分组列出历史未完成任务，勾选后整理到目标周（默认全选）。
@@ -225,27 +312,5 @@ private struct CarryForwardSheet: View {
         if d > 0 { parts.append("\(d) " + L("carry.word.done")) }
         let head = String(format: L("carry.selectedCount"), selected.count)
         return parts.isEmpty ? head : head + " · " + parts.joined(separator: " / ")
-    }
-}
-
-/// 主视图右上角固定成一组：笔记 + 新建任务（顺序与「日历」一致）。
-struct NotesAddToolbar: ToolbarContent {
-    #if os(macOS)
-    @Environment(\.openWindow) private var openWindow
-    #endif
-    let onAdd: () -> Void
-
-    var body: some ToolbarContent {
-        ToolbarItemGroup {
-            #if os(macOS)
-            Button { openWindow(id: "notes") } label: {
-                Image(systemName: "note.text").foregroundStyle(.secondary)
-            }
-            .help(L("notes.title"))
-            #endif
-            Button(action: onAdd) {
-                Label(L("action.create"), systemImage: "plus")
-            }
-        }
     }
 }

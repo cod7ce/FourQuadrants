@@ -58,7 +58,7 @@ struct InboxBar: View {
 
     private var title: some View {
         HStack(spacing: 8) {
-            Image(systemName: "tray").foregroundStyle(.secondary)
+            AppIconView(icon: .inbox, size: 16).foregroundStyle(.secondary)
             Text(L("inbox.title")).appFont(.subheadline, weight: .semibold)
             Text(String(format: L("inbox.badge"), items.count))
                 .appFont(.caption2, monospacedDigit: true)

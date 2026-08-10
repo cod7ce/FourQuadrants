@@ -59,12 +59,12 @@ struct TaskListView: View {
                 ContentUnavailableView(emptyText, systemImage: scope.symbol)
             }
         }
+        .notesToolbar { newTask = makeTask() }
+        #if os(iOS)
         .toolbar {
-            NotesAddToolbar { newTask = makeTask() }
-            #if os(iOS)
             ToolbarItem(placement: .topBarTrailing) { EditButton() }
-            #endif
         }
+        #endif
         .sheet(item: $newTask) { TaskEditor(task: $0, isNew: true) }
         .dropDestination(for: TaskTransfer.self) { items, _ in
             guard case .quadrant(let q) = scope else { return false }

@@ -73,24 +73,7 @@ struct WeekAgendaView: View {
             }
         }
         .navigationTitle(L("sidebar.thisWeek"))
-        .toolbar {
-            #if os(macOS)
-            ToolbarItem {
-                Menu {
-                    Button(L("menu.exportMd.file")) {
-                        MarkdownExporter.exportToFile(weekStart: weekStart, weekTasks: weekTasks)
-                    }
-                    Button(L("menu.exportMd.clipboard")) {
-                        MarkdownExporter.copyToPasteboard(weekStart: weekStart, weekTasks: weekTasks)
-                    }
-                } label: {
-                    Label(L("menu.exportMd"), systemImage: "square.and.arrow.up")
-                }
-            }
-            #endif
-            NotesAddToolbar { newTask = makeTask() }
-        }
-        .carryForwardToolbar(week: weekStart)
+        .mainToolbar(week: weekStart, weekTasks: weekTasks) { newTask = makeTask() }
         .sheet(item: $newTask) { TaskEditor(task: $0, isNew: true) }
     }
 
