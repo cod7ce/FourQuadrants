@@ -9,11 +9,39 @@ import UIKit
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var context
-    @Query(sort: \Tag.name) private var tags: [Tag]
+    @Query(sort: [SortDescriptor(\Tag.sortOrder), SortDescriptor(\Tag.name)]) private var tags: [Tag]
+    @Query private var allTasks: [TaskItem]
     @AppStorage(LocalizationConfig.storageKey) private var language = AppLanguage.zhHans.rawValue
     @AppStorage(AppFontSetting.key) private var appFontName = ""
     @AppStorage(ParseRuleStore.builtinTagKey) private var builtinTag = ""
     @State private var rules: [ParseRule] = ParseRuleStore.load()
+    @State private var editingTag: Tag?
+    @State private var editingIsNew = false
+
+    private func taskCount(_ tag: Tag) -> Int {
+        allTasks.filter { $0.parent == nil && $0.tagList.contains { $0.name == tag.name } }.count
+    }
+
+    private func beginNewTag() {
+        let t = Tag(name: "",
+                    colorHex: TagPalette.hexes[tags.count % TagPalette.hexes.count],
+                    sortOrder: (tags.map(\.sortOrder).max() ?? 0) + 1)
+        context.insert(t)
+        editingIsNew = true
+        editingTag = t
+    }
+
+    private func moveTags(_ from: IndexSet, _ to: Int) {
+        var arr = tags
+        arr.move(fromOffsets: from, toOffset: to)
+        for (i, t) in arr.enumerated() { t.sortOrder = Double(i) }
+        try? context.save()
+    }
+
+    private func deleteTags(_ offsets: IndexSet) {
+        for i in offsets { context.delete(tags[i]) }
+        try? context.save()
+    }
 
     /// 行内快速切换「自动标签」的下拉菜单。
     @ViewBuilder
@@ -80,14 +108,23 @@ struct SettingsView: View {
                         Text(L("settings.tags.empty"))
                             .appFont(.caption).foregroundStyle(.secondary)
                     } else {
-                        ForEach(tags) { tag in TagEditRow(tag: tag) }
-                            .onDelete { offsets in
-                                for i in offsets { context.delete(tags[i]) }
-                                try? context.save()
+                        ForEach(tags) { tag in
+                            TagListRow(tag: tag, count: taskCount(tag)) {
+                                editingIsNew = false; editingTag = tag
                             }
+                        }
+                        .onMove(perform: moveTags)
+                        .onDelete(perform: deleteTags)
+                    }
+                    Button { beginNewTag() } label: {
+                        Label(L("editor.tag.new"), systemImage: "plus")
                     }
                 } header: {
-                    Text(L("settings.tags.section"))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(L("settings.tags.section")).appFont(.headline)
+                        Text(L("settings.tags.subtitle")).appFont(.caption).foregroundStyle(.secondary)
+                    }
+                    .textCase(nil)
                 } footer: {
                     Text(L("settings.tags.note")).appFont(.caption)
                 }
@@ -144,6 +181,9 @@ struct SettingsView: View {
             .formStyle(.grouped)
             .navigationTitle(L("settings.title"))
             .onChange(of: rules) { _, new in ParseRuleStore.save(new) }
+            .sheet(item: $editingTag) { tag in
+                TagEditorSheet(tag: tag, isNew: editingIsNew)
+            }
             #if os(iOS)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
@@ -158,35 +198,120 @@ struct SettingsView: View {
     }
 }
 
-/// 标签管理行：改名（文本框）、换色（调色板圆点）、右侧实时预览。
-private struct TagEditRow: View {
-    @Environment(\.modelContext) private var context
+/// 标签列表行：圆点 · 名称 · 右侧任务数；点击打开编辑弹窗（拖拽手柄由 List 悬停提供）。
+private struct TagListRow: View {
     @Bindable var tag: Tag
+    let count: Int
+    let onEdit: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                TextField(L("settings.tags.name"), text: $tag.name)
-                    .onChange(of: tag.name) { _, _ in save() }
-                Spacer()
-                TagChip(tag: tag)   // 实时预览
+        Button(action: onEdit) {
+            HStack(spacing: 12) {
+                Circle().fill(tag.color).frame(width: 16, height: 16)
+                Text(tag.name.isEmpty ? L("detail.title.untitled") : tag.name)
+                    .foregroundStyle(Color.appLabel)
+                Spacer(minLength: 8)
+                Text(String(format: L("settings.tags.count"), count))
+                    .appFont(.caption).foregroundStyle(.secondary)
             }
-            HStack(spacing: 8) {
-                ForEach(TagPalette.hexes, id: \.self) { hex in
-                    Circle()
-                        .fill(Color(hex: hex) ?? .blue)
-                        .frame(width: 18, height: 18)
-                        .overlay(Circle().strokeBorder(Color.primary,
-                                                       lineWidth: tag.colorHex == hex ? 2 : 0))
-                        .contentShape(Circle())
-                        .onTapGesture { tag.colorHex = hex; save() }
-                }
-            }
+            .contentShape(Rectangle())
         }
-        .padding(.vertical, 2)
+        .buttonStyle(.plain)
+    }
+}
+
+/// 标签编辑弹窗：名称 + 常用颜色网格 + 预览 + 删除/完成。
+struct TagEditorSheet: View {
+    @Environment(\.modelContext) private var context
+    @Environment(\.dismiss) private var dismiss
+    @Bindable var tag: Tag
+    let isNew: Bool
+    @State private var removed = false
+
+    private var displayName: String {
+        tag.name.isEmpty ? L("detail.title.untitled") : tag.name
     }
 
-    private func save() { try? context.save() }
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text(isNew ? L("editor.tag.new") : L("settings.tags.edit"))
+                .appFont(.headline)
+
+            HStack(spacing: 10) {
+                Circle().fill(tag.color).frame(width: 14, height: 14)
+                TextField(L("settings.tags.name"), text: $tag.name)
+                    .textFieldStyle(.plain)
+            }
+            .padding(.horizontal, 12).padding(.vertical, 10)
+            .background(Color.appFill, in: RoundedRectangle(cornerRadius: 8))
+            .overlay(RoundedRectangle(cornerRadius: 8)
+                .strokeBorder(Color.secondary.opacity(0.25)))
+
+            Text(L("settings.tags.color"))
+                .appFont(.subheadline, weight: .semibold).foregroundStyle(.secondary)
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 5), spacing: 14) {
+                ForEach(TagPalette.hexes, id: \.self) { swatch($0) }
+            }
+
+            HStack(spacing: 10) {
+                Text(L("settings.tags.preview")).appFont(.caption).foregroundStyle(.secondary)
+                TagChip(tag: tag)
+                Text(displayName)
+                    .appFont(.caption2)
+                    .padding(.horizontal, 8).padding(.vertical, 3)
+                    .overlay(Capsule().strokeBorder(tag.color))
+                    .foregroundStyle(tag.color)
+            }
+
+            Divider()
+
+            HStack {
+                Button(role: .destructive) { deleteTag() } label: {
+                    Text(L("settings.tags.delete"))
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.red)
+                Spacer()
+                Button(L("settings.done")) { dismiss() }
+                    .buttonStyle(.borderedProminent)
+            }
+        }
+        .padding(20)
+        .frame(width: 380)
+        .onDisappear {
+            // 关闭时若名称为空则丢弃（新建取消或清空名称）
+            if !removed, tag.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                context.delete(tag)
+            }
+            try? context.save()
+        }
+    }
+
+    private func swatch(_ hex: String) -> some View {
+        let selected = tag.colorHex == hex
+        return Button {
+            tag.colorHex = hex
+        } label: {
+            Circle().fill(Color(hex: hex) ?? .blue)
+                .frame(width: 34, height: 34)
+                .overlay {
+                    if selected {
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 14, weight: .bold)).foregroundStyle(.white)
+                    }
+                }
+                .overlay(Circle().strokeBorder(Color.accentColor, lineWidth: selected ? 2 : 0)
+                    .padding(-3))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func deleteTag() {
+        removed = true
+        context.delete(tag)
+        try? context.save()
+        dismiss()
+    }
 }
 
 private struct RuleEditorView: View {

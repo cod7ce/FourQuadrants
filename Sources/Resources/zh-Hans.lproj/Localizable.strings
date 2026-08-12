@@ -147,8 +147,14 @@
 "settings.display.section" = "显示";
 "settings.tags.section" = "标签";
 "settings.tags.name" = "标签名称";
-"settings.tags.empty" = "暂无标签。在新建任务时可创建标签。";
-"settings.tags.note" = "修改名称与颜色会应用到所有使用该标签的任务；左滑可删除。";
+"settings.tags.empty" = "暂无标签。点「新建标签」创建。";
+"settings.tags.subtitle" = "用于给任务分组、筛选";
+"settings.tags.count" = "%d 个任务";
+"settings.tags.edit" = "编辑标签";
+"settings.tags.color" = "颜色";
+"settings.tags.preview" = "预览";
+"settings.tags.delete" = "删除标签";
+"settings.tags.note" = "改名或改色会应用到所有使用该标签的任务";
 "settings.showCompleted" = "显示已完成任务";
 
 /* 菜单 */

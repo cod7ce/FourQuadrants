@@ -52,6 +52,7 @@ extension Color {
 
 /// 预设标签配色。
 enum TagPalette {
-    static let hexes = ["#1E88E5", "#E53935", "#43A047", "#FB8C00",
-                        "#8E24AA", "#00897B", "#F4511E", "#3949AB"]
+    /// 常用标签色（2×5 网格）。
+    static let hexes = ["#1E88E5", "#E53935", "#43A047", "#FB8C00", "#8E24AA",
+                        "#00897B", "#F4511E", "#3949AB", "#D81B60", "#8D6E63"]
 }

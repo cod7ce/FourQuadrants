@@ -29,12 +29,12 @@ final class ModifierWatcher: ObservableObject {
         // 失焦时复位（此时松开的事件发生在别的 App，本监听器收不到）
         observers.append(nc.addObserver(forName: NSApplication.didResignActiveNotification,
                                         object: nil, queue: .main) { [weak self] _ in
-            self?.option = false
+            MainActor.assumeIsolated { self?.option = false }
         })
         // 重新激活时按当前实际修饰键同步
         observers.append(nc.addObserver(forName: NSApplication.didBecomeActiveNotification,
                                         object: nil, queue: .main) { [weak self] _ in
-            self?.option = NSEvent.modifierFlags.contains(.option)
+            MainActor.assumeIsolated { self?.option = NSEvent.modifierFlags.contains(.option) }
         })
     }
 

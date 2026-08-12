@@ -96,23 +96,21 @@ struct TaggedTitleText: View {
     }
 
     @MainActor private func titleText() -> Text {
-        var prefix = Text("")
-        for tag in task.tagList {
-            if let img = chipImage(tag) {
-                prefix = prefix + Text(img).baselineOffset(-3) + Text(" ")
-            }
-        }
         var title = Text(task.title.isEmpty ? L("task.default.title") : task.title)
         if strikethrough { title = title.strikethrough() }
         if underline { title = title.underline() }
-        return prefix + title
+        // 标签整体渲染成一张内联图片；用 baselineOffset 让 chip 垂直居中对齐标题文字。
+        guard let chips = chipsImage() else { return title }
+        return Text(chips).baselineOffset(-3) + Text("  ") + title
     }
 
-    /// 把一个标签 chip 渲染成内联图片。
-    @MainActor private func chipImage(_ tag: Tag) -> Image? {
-        let renderer = ImageRenderer(content: TagChip(tag: tag)
-            .environment(\.fontScale, scale)
-            .environment(\.appFontName, appFontName))
+    /// 把该任务的所有标签 chip 渲染成一张内联图片。
+    @MainActor private func chipsImage() -> Image? {
+        guard !task.tagList.isEmpty else { return nil }
+        let renderer = ImageRenderer(content:
+            HStack(spacing: 4) { ForEach(task.tagList) { TagChip(tag: $0) } }
+                .environment(\.fontScale, scale)
+                .environment(\.appFontName, appFontName))
         renderer.scale = displayScale
         #if os(macOS)
         if let img = renderer.nsImage { return Image(nsImage: img) }

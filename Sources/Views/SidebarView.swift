@@ -6,8 +6,7 @@ struct SidebarView: View {
     @Binding var selection: SidebarItem?
     @Query(sort: \Tag.name) private var tags: [Tag]
     @Query private var allTasks: [TaskItem]
-    @State private var showNewTag = false
-    @State private var newTagName = ""
+    @State private var editingTag: Tag?
     #if os(iOS)
     var onSettings: () -> Void = {}
     #endif
@@ -54,10 +53,8 @@ struct SidebarView: View {
                 .padding(.horizontal, 8).padding(.top, 4)
             }
             .frame(maxHeight: .infinity)
-            .alert(L("editor.tag.new"), isPresented: $showNewTag) {
-                TextField(L("editor.tag.new"), text: $newTagName)
-                Button(L("action.add")) { addTag() }
-                Button(L("action.cancel"), role: .cancel) { }
+            .sheet(item: $editingTag) { tag in
+                TagEditorSheet(tag: tag, isNew: true)
             }
 
             // Divider().padding(.horizontal, 12)
@@ -118,16 +115,11 @@ struct SidebarView: View {
     }
 
     private func beginNewTag() {
-        newTagName = ""
-        showNewTag = true
-    }
-
-    private func addTag() {
-        let name = newTagName.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !name.isEmpty else { return }
-        let hex = TagPalette.hexes[tags.count % TagPalette.hexes.count]
-        context.insert(Tag(name: name, colorHex: hex))
-        try? context.save()
+        let t = Tag(name: "",
+                    colorHex: TagPalette.hexes[tags.count % TagPalette.hexes.count],
+                    sortOrder: (tags.map(\.sortOrder).max() ?? 0) + 1)
+        context.insert(t)
+        editingTag = t
     }
 
     private var settingsLabel: some View {
