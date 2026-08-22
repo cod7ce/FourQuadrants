@@ -302,9 +302,7 @@ private struct CalDayRow: View {
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
             Button { toggle() } label: {
-                Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
-                    .imageScale(.large)
-                    .foregroundStyle(task.isCompleted ? Color.green : Color.secondary.opacity(0.6))
+                TaskCheckbox(isCompleted: task.isCompleted)
             }
             .buttonStyle(.plain)
             .alignedToFirstLine(scale: fontScale)

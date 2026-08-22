@@ -24,6 +24,8 @@ struct ContentView: View {
     @AppStorage(LocalizationConfig.storageKey) private var language = AppLanguage.zhHans.rawValue
     @AppStorage(FontScale.key) private var fontIndex = FontScale.defaultIndex
     @AppStorage(AppFontSetting.key) private var appFontName = ""
+    @AppStorage(ThemeManager.key) private var themeIDRaw = ThemeID.system.rawValue
+    private var theme: AppTheme { AppTheme.theme(for: ThemeID(rawValue: themeIDRaw) ?? .system) }
     #if os(macOS)
     @StateObject private var modifiers = ModifierWatcher()
     #endif
@@ -66,11 +68,17 @@ struct ContentView: View {
         } detail: {
             // 收集箱作为底部条，三视图共用；笔记走标题栏悬浮弹窗。
             VStack(spacing: 0) {
+                if theme.showBreadcrumb {
+                    BreadcrumbBar(sidebar: sidebar ?? .overview)
+                }
                 MainArea(sidebar: sidebar ?? .overview,
                          selectedTask: $selectedTask,
                          weekStart: $selectedWeek)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 InboxBar(weekStart: selectedWeek)
+                if theme.showStatusBar {
+                    StatusBar(sidebar: sidebar ?? .overview, weekStart: selectedWeek)
+                }
             }
             #if os(macOS)
             // 标题栏下方分隔线：仅在内容区（不含侧边栏）
@@ -80,21 +88,31 @@ struct ContentView: View {
             #endif
         }
         #if os(macOS)
-        // 玻璃材质背景。glassTint 为「实心」旋钮：0 = 全玻璃，1 = 全实心（一步步调它看效果）。
         .background {
-            VisualEffectView()
-                .overlay(Color(nsColor: .windowBackgroundColor).opacity(Self.glassTint))
-                .ignoresSafeArea()
+            if theme.chrome == .solid {
+                VisualEffectView()                                       // 终端：模糊材质…
+                    .overlay(theme.background)                           // …叠半透近黑罩，桌面柔光透出
+                    .ignoresSafeArea()
+            } else {
+                VisualEffectView()                                       // 默认玻璃材质
+                    .overlay(Color(nsColor: .windowBackgroundColor).opacity(Self.glassTint))
+                    .ignoresSafeArea()
+            }
         }
         .background(WindowTranslucency())                   // 窗口非不透明，透出桌面
         #endif
-        .foregroundStyle(Color.appLabel)                                 // 全局柔化主文本色
+        .tint(theme.id == .system ? nil : theme.accent)                  // 主题强调色（默认沿用系统）
+        .preferredColorScheme(theme.forcedDark ? .dark : nil)            // 终端强制深色，与系统解耦
+        .environment(\.theme, theme)
+        .foregroundStyle(Color.appLabel)                                 // 主文本色（跟随主题）
         .environment(\.locale, .app)
         .environment(\.optionHeld, optionHeld)                           // 按住 ⌥ 提示可点链接
         .environment(\.fontScale, FontScale.scale(fontIndex))            // ⌘+ / ⌘- 调整字号
         .environment(\.appFontName, appFontName)                         // 全局字体（设置里选）
-        .environment(\.font, AppFont.font(.body, scale: FontScale.scale(fontIndex), name: appFontName))
-        .id(language)   // 切换语言时整体重建，立即生效
+        .environment(\.font, AppFont.font(.body, scale: FontScale.scale(fontIndex),
+                                          name: theme.usesCustomFont ? appFontName : "",
+                                          design: theme.fontDesign))
+        .id("\(language)-\(themeIDRaw)")   // 切换语言/主题时整体重建，立即生效
         #if os(iOS)
         .sheet(isPresented: $showSettings) { SettingsView() }
         #endif

@@ -55,12 +55,5 @@ enum Quadrant: Int, CaseIterable, Identifiable, Hashable {
         }
     }
 
-    var color: Color {
-        switch self {
-        case .urgentImportant: return .red
-        case .important:       return .blue
-        case .urgent:          return .orange
-        case .neither:         return .secondary
-        }
-    }
+    var color: Color { ThemeManager.current.quadrant(self) }
 }

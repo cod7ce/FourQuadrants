@@ -32,7 +32,7 @@ struct InboxBar: View {
         }
         .padding(.horizontal, 16).padding(.vertical, 10)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(nsColor: .windowBackgroundColor))
+        .background(Color.appSurface)
     }
 
     private var collapsedBar: some View { headerRow }
@@ -104,7 +104,7 @@ struct InboxBar: View {
         }
         .padding(10)
         .frame(width: 190, height: 96, alignment: .topLeading)
-        .background(RoundedRectangle(cornerRadius: 10).fill(Color(nsColor: .windowBackgroundColor)))
+        .background(RoundedRectangle(cornerRadius: 10).fill(Color.appSurface))
         .overlay(RoundedRectangle(cornerRadius: 10)
             .strokeBorder(Color(nsColor: .separatorColor).opacity(0.4), lineWidth: 0.5))
         .draggable(TaskTransfer(taskUUID: task.taskUUID))

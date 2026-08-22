@@ -130,6 +130,7 @@ struct ThinProgressBar: View {
 
 private struct QuadrantCard: View {
     @Environment(\.modelContext) private var context
+    @Environment(\.theme) private var theme
     let quadrant: Quadrant
     let tasks: [TaskItem]          // 该象限全部任务（含已完成）
     let weekStart: Date
@@ -161,18 +162,40 @@ private struct QuadrantCard: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, minHeight: 200, maxHeight: .infinity, alignment: .topLeading)
-        .background(quadrant.color.opacity(isTargeted ? 0.18 : 0.08),
-                    in: RoundedRectangle(cornerRadius: 16))
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .strokeBorder(quadrant.color.opacity(isTargeted ? 0.7 : 0), lineWidth: 1.5)
-        )
+        .background(cardBackground)
+        .overlay(cardBorder)
         .dropDestination(for: TaskTransfer.self) { items, _ in
             for item in items {
                 TaskMutations.schedule(uuid: item.taskUUID, to: quadrant, week: weekStart, in: context)
             }
             return !items.isEmpty
         } isTargeted: { isTargeted = $0 }
+    }
+
+    @ViewBuilder private var cardBackground: some View {
+        if theme.cardStyle == .panel {
+            ZStack(alignment: .leading) {
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(isTargeted ? quadrant.color.opacity(0.12) : theme.surface)
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(quadrant.color).frame(width: 3)
+                    .padding(.vertical, 10)
+            }
+        } else {
+            RoundedRectangle(cornerRadius: 16)
+                .fill(quadrant.color.opacity(isTargeted ? 0.18 : 0.08))
+        }
+    }
+
+    @ViewBuilder private var cardBorder: some View {
+        if theme.cardStyle == .panel {
+            RoundedRectangle(cornerRadius: 10)
+                .strokeBorder(isTargeted ? quadrant.color.opacity(0.7)
+                              : theme.label.opacity(0.08), lineWidth: 1)
+        } else {
+            RoundedRectangle(cornerRadius: 16)
+                .strokeBorder(quadrant.color.opacity(isTargeted ? 0.7 : 0), lineWidth: 1.5)
+        }
     }
 
     private var header: some View {
@@ -187,20 +210,30 @@ private struct QuadrantCard: View {
                 Text(quadrant.actionHint).appFont(.caption).foregroundStyle(.secondary)
             }
             Spacer()
-            Text("\(completed.count) / \(tasks.count)")
-                .appFont(.subheadline, weight: .semibold).monospacedDigit()
+            Text(theme.cardStyle == .panel
+                 ? "[\(completed.count)/\(tasks.count)]"
+                 : "\(completed.count) / \(tasks.count)")
+                .appFont(.subheadline, weight: .semibold, monospaced: theme.cardStyle == .panel)
+                .monospacedDigit()
                 .foregroundStyle(quadrant.color)
         }
     }
 
-    private var emptyState: some View {
-        VStack(spacing: 6) {
-            Image(systemName: "sparkles").appFont(.title3).foregroundStyle(.secondary)
-            Text(L("grid.clean.title")).appFont(.callout).foregroundStyle(.secondary)
-            Text(L("grid.clean.subtitle")).appFont(.caption).foregroundStyle(.tertiary)
+    @ViewBuilder private var emptyState: some View {
+        if theme.emptyState == .comment {
+            Text("// \(L("grid.clean.title"))")
+                .appFont(.callout, monospaced: true).foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical, 20)
+        } else {
+            VStack(spacing: 6) {
+                Image(systemName: "sparkles").appFont(.title3).foregroundStyle(.secondary)
+                Text(L("grid.clean.title")).appFont(.callout).foregroundStyle(.secondary)
+                Text(L("grid.clean.subtitle")).appFont(.caption).foregroundStyle(.tertiary)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 24)
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 24)
     }
 
     @ViewBuilder
@@ -303,12 +336,10 @@ private struct OverviewTaskRow: View {
 
     private var completionToggle: some View {
         Button { toggle() } label: {
-            Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
-                .imageScale(.large)
-                .foregroundStyle(task.isCompleted ? Color.green : Color.secondary.opacity(0.6))
+            TaskCheckbox(isCompleted: task.isCompleted)
         }
         .buttonStyle(.plain)
-        .frame(width: Self.checkboxWidth)
+        .frame(minWidth: Self.checkboxWidth)
     }
 
     private func toggle() {
@@ -324,6 +355,7 @@ private struct OverviewSubtaskRow: View {
     @Environment(\.modelContext) private var context
     @Environment(\.openURL) private var openURL
     @Environment(\.optionHeld) private var optionHeld
+    @Environment(\.theme) private var theme
     @Bindable var sub: TaskItem
     @State private var showPopover = false
     @State private var dropTargeted = false
@@ -332,10 +364,11 @@ private struct OverviewSubtaskRow: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: OverviewTaskRow.gap) {
+            if theme.subtask == .tree {
+                Text("└─").appFont(.callout, monospaced: true).foregroundStyle(.tertiary)
+            }
             Button { toggle() } label: {
-                Image(systemName: sub.isCompleted ? "checkmark.circle.fill" : "circle")
-                    .imageScale(.medium)
-                    .foregroundStyle(sub.isCompleted ? Color.green : Color.secondary.opacity(0.6))
+                TaskCheckbox(isCompleted: sub.isCompleted, size: 16)
             }
             .buttonStyle(.plain)
             Text(sub.title.isEmpty ? L("task.default.title") : sub.title)
@@ -348,7 +381,7 @@ private struct OverviewSubtaskRow: View {
             Spacer(minLength: 6)
             DueDateLabel(task: sub)
         }
-        .padding(.leading, OverviewTaskRow.checkboxWidth + OverviewTaskRow.gap)
+        .padding(.leading, theme.subtask == .tree ? 10 : OverviewTaskRow.checkboxWidth + OverviewTaskRow.gap)
         .contentShape(Rectangle())
         #if os(macOS)
         .highPriorityGesture(

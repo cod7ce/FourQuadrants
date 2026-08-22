@@ -3,6 +3,7 @@ import SwiftData
 
 struct SidebarView: View {
     @Environment(\.modelContext) private var context
+    @Environment(\.theme) private var theme
     @Binding var selection: SidebarItem?
     @Query(sort: \Tag.name) private var tags: [Tag]
     @Query private var allTasks: [TaskItem]
@@ -72,6 +73,17 @@ struct SidebarView: View {
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 10)
+        }
+        .background(sidebarBackground.ignoresSafeArea())
+    }
+
+    /// 侧栏底色：默认沿用系统 sidebar 材质（透明）；终端主题铺一层半透深色，
+    /// 比主区略透（露出侧栏材质的一点明度），避免死黑。
+    @ViewBuilder private var sidebarBackground: some View {
+        if theme.chrome == .solid {
+            Color(red: 0.02, green: 0.018, blue: 0.04, opacity: 0.55)
+        } else {
+            Color.clear
         }
     }
 

@@ -24,14 +24,40 @@ struct IssueKeyBadge: View {
 }
 
 struct TagChip: View {
+    @Environment(\.theme) private var theme
     let tag: Tag
     var body: some View {
-        Text(tag.name)
-            .appFont(.caption2)
-            .padding(.horizontal, 6)
-            .padding(.vertical, 2)
-            .background(tag.color.opacity(0.18), in: Capsule())
-            .foregroundStyle(tag.color)
+        if theme.tag == .hash {
+            Text("#\(tag.name)").appFont(.caption2).foregroundStyle(tag.color)
+        } else {
+            Text(tag.name)
+                .appFont(.caption2)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 2)
+                .background(tag.color.opacity(0.18), in: Capsule())
+                .foregroundStyle(tag.color)
+        }
+    }
+}
+
+/// 勾选框：默认圆形；终端主题用方括号 `[ ]` / `[✓]`。
+struct TaskCheckbox: View {
+    @Environment(\.theme) private var theme
+    let isCompleted: Bool
+    var size: CGFloat = 18
+
+    var body: some View {
+        if theme.checkbox == .bracket {
+            Text(isCompleted ? "[✓]" : "[ ]")
+                .appFont(.callout, monospaced: true)
+                .lineLimit(1)
+                .fixedSize()
+                .foregroundStyle(isCompleted ? theme.accent : Color.secondary)
+        } else {
+            Image(systemName: isCompleted ? "checkmark.circle.fill" : "circle")
+                .font(.system(size: size))
+                .foregroundStyle(isCompleted ? Color.green : Color.secondary.opacity(0.6))
+        }
     }
 }
 
@@ -80,6 +106,7 @@ struct TaskMetaLine: View {
 /// 标题行：标签 chip 以「内联图片」的形式排在标题前，整体作为一段文本换行。
 /// 因此换行后的行会自然与标签左缘对齐（真正的内联绕排，中文无空格也适用）。
 struct TaggedTitleText: View {
+    @Environment(\.theme) private var theme
     @Environment(\.fontScale) private var scale
     @Environment(\.appFontName) private var appFontName
     @Environment(\.displayScale) private var displayScale
@@ -96,10 +123,25 @@ struct TaggedTitleText: View {
     }
 
     @MainActor private func titleText() -> Text {
-        var title = Text(task.title.isEmpty ? L("task.default.title") : task.title)
+        let titleStr = task.title.isEmpty ? L("task.default.title") : task.title
+        // 终端主题：#标签 以彩色文字内联（AttributedString，无图片、无拼接）。
+        if theme.tag == .hash {
+            var s = AttributedString()
+            for tag in task.tagList {
+                var run = AttributedString("#\(tag.name) ")
+                run.foregroundColor = tag.color
+                s += run
+            }
+            var t = AttributedString(titleStr)
+            if strikethrough { t.strikethroughStyle = .single }
+            if underline { t.underlineStyle = .single }
+            s += t
+            return Text(s)
+        }
+        // 默认主题：标签 chip 渲染成内联图片，baselineOffset 对齐标题。
+        var title = Text(titleStr)
         if strikethrough { title = title.strikethrough() }
         if underline { title = title.underline() }
-        // 标签整体渲染成一张内联图片；用 baselineOffset 让 chip 垂直居中对齐标题文字。
         guard let chips = chipsImage() else { return title }
         return Text(chips).baselineOffset(-3) + Text("  ") + title
     }
@@ -126,9 +168,7 @@ struct CompletionToggle: View {
     let action: () -> Void
     var body: some View {
         Button(action: action) {
-            Image(systemName: isCompleted ? "checkmark.circle.fill" : "circle")
-                .imageScale(.large)
-                .foregroundStyle(isCompleted ? Color.accentColor : Color.secondary)
+            TaskCheckbox(isCompleted: isCompleted)
         }
         .buttonStyle(.plain)
     }

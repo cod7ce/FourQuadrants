@@ -13,6 +13,7 @@ struct SettingsView: View {
     @Query private var allTasks: [TaskItem]
     @AppStorage(LocalizationConfig.storageKey) private var language = AppLanguage.zhHans.rawValue
     @AppStorage(AppFontSetting.key) private var appFontName = ""
+    @AppStorage(ThemeManager.key) private var themeIDRaw = ThemeID.system.rawValue
     @AppStorage(ParseRuleStore.builtinTagKey) private var builtinTag = ""
     @State private var rules: [ParseRule] = ParseRuleStore.load()
     @State private var editingTag: Tag?
@@ -77,31 +78,40 @@ struct SettingsView: View {
         #endif
     }
 
+    @ViewBuilder private var appearanceSections: some View {
+        Section(L("settings.language.section")) {
+            Picker(L("settings.language.section"), selection: $language) {
+                ForEach(AppLanguage.allCases) { lang in
+                    Text(L(lang.titleKey)).tag(lang.rawValue)
+                }
+            }
+            Text(L("settings.language.note")).appFont(.caption).foregroundStyle(.secondary)
+        }
+        Section {
+            Picker(L("settings.theme.section"), selection: $themeIDRaw) {
+                ForEach(ThemeID.allCases) { t in Text(L(t.titleKey)).tag(t.rawValue) }
+            }
+            Text(L("settings.theme.note")).appFont(.caption).foregroundStyle(.secondary)
+        } header: {
+            Text(L("settings.theme.section"))
+        }
+        Section {
+            Picker(L("settings.font.section"), selection: $appFontName) {
+                Text(L("settings.font.system")).tag("")
+                ForEach(fontFamilies, id: \.self) { fam in
+                    Text(fam).font(.custom(fam, size: 13)).tag(fam)
+                }
+            }
+            Text(L("settings.font.note")).appFont(.caption).foregroundStyle(.secondary)
+        } header: {
+            Text(L("settings.font.section"))
+        }
+    }
+
     var body: some View {
         NavigationStack {
             Form {
-                Section(L("settings.language.section")) {
-                    Picker(L("settings.language.section"), selection: $language) {
-                        ForEach(AppLanguage.allCases) { lang in
-                            Text(L(lang.titleKey)).tag(lang.rawValue)
-                        }
-                    }
-                    Text(L("settings.language.note"))
-                        .appFont(.caption).foregroundStyle(.secondary)
-                }
-
-                Section {
-                    Picker(L("settings.font.section"), selection: $appFontName) {
-                        Text(L("settings.font.system")).tag("")
-                        ForEach(fontFamilies, id: \.self) { fam in
-                            Text(fam).font(.custom(fam, size: 13)).tag(fam)
-                        }
-                    }
-                    Text(L("settings.font.note"))
-                        .appFont(.caption).foregroundStyle(.secondary)
-                } header: {
-                    Text(L("settings.font.section"))
-                }
+                appearanceSections
 
                 Section {
                     if tags.isEmpty {

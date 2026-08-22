@@ -56,11 +56,13 @@ enum AppFont {
     static func font(_ style: Font.TextStyle, scale: CGFloat,
                      weight: Font.Weight? = nil,
                      monospaced: Bool = false, monospacedDigit: Bool = false,
-                     name: String = "") -> Font {
+                     name: String = "", design: ThemeFontDesign = .system) -> Font {
         let size = baseSize(style) * scale
         let w = weight ?? defaultWeight(style)
         var f: Font
-        if name.isEmpty {
+        if design == .monospaced {
+            f = Font.system(size: size, weight: w, design: .monospaced)   // 主题强制等宽
+        } else if name.isEmpty {
             f = Font.system(size: size, weight: w)
             if monospaced { f = f.monospaced() }
         } else {
@@ -116,9 +118,11 @@ private struct AppFontModifier: ViewModifier {
     let monospacedDigit: Bool
 
     func body(content: Content) -> some View {
+        let theme = ThemeManager.current
         content.font(AppFont.font(style, scale: scale, weight: weight,
                                   monospaced: monospaced, monospacedDigit: monospacedDigit,
-                                  name: name))
+                                  name: theme.usesCustomFont ? name : "",
+                                  design: theme.fontDesign))
     }
 }
 

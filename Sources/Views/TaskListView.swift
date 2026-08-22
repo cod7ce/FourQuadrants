@@ -52,6 +52,7 @@ struct TaskListView: View {
             }
             .onMove(perform: reorder)
         }
+        .scrollContentBackground(.hidden)          // 透出主题半透窗体，避免 List 不透明黑底
         .navigationTitle(scope.title)
         .searchable(text: $search, prompt: L("list.search.prompt"))
         .overlay {

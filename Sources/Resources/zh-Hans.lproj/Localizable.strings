@@ -117,6 +117,12 @@
 "settings.language.zh" = "简体中文";
 "settings.language.en" = "英文";
 "settings.language.note" = "切换后界面立即更新";
+"settings.theme.section" = "主题";
+"settings.theme.system" = "默认（跟随系统）";
+"settings.theme.terminal" = "终端";
+"settings.theme.note" = "终端主题为独立深色（等宽字、方括号勾选、状态栏），不受系统明暗影响。";
+"theme.system" = "默认（跟随系统）";
+"theme.terminal" = "终端";
 "settings.font.section" = "字体";
 "settings.font.system" = "系统默认";
 "settings.font.note" = "选择已安装的字体，全局生效；独立笔记窗口也会应用。";

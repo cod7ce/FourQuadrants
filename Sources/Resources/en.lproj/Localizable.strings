@@ -117,6 +117,12 @@
 "settings.language.zh" = "Chinese (Simplified)";
 "settings.language.en" = "English";
 "settings.language.note" = "Applies immediately";
+"settings.theme.section" = "Theme";
+"settings.theme.system" = "Default (follows system)";
+"settings.theme.terminal" = "Terminal";
+"settings.theme.note" = "Terminal is a standalone dark theme (mono font, bracket checkboxes, status bar), independent of system appearance.";
+"theme.system" = "Default (follows system)";
+"theme.terminal" = "Terminal";
 "settings.font.section" = "Font";
 "settings.font.system" = "System default";
 "settings.font.note" = "Pick an installed font; applies app-wide, including the notes window.";

@@ -6,36 +6,14 @@ import UIKit
 #endif
 
 extension Color {
-    /// 略柔化的主文本色：比系统 `.primary` 更耐看（对比略低、不那么死黑 / 死白）。
-    /// 作为根级默认前景色注入后，`.secondary` / `.tertiary` 会自动派生出柔和层级。
-    static let appLabel: Color = {
-        #if os(macOS)
-        return Color(nsColor: NSColor(name: nil) { appearance in
-            let dark = appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
-            return dark ? NSColor(white: 0.92, alpha: 1) : NSColor(white: 0.20, alpha: 1)
-        })
-        #else
-        return Color(uiColor: UIColor { trait in
-            trait.userInterfaceStyle == .dark
-                ? UIColor(white: 0.92, alpha: 1) : UIColor(white: 0.20, alpha: 1)
-        })
-        #endif
-    }()
+    /// 主文本色（取自当前主题；切主题时整树刷新以重新求值）。
+    static var appLabel: Color { ThemeManager.current.label }
 
-    /// 统一的「淡背景」token：卡片 / 周末格子 / 分区等次级表面的浅色填充。
-    static let appFill: Color = {
-        #if os(macOS)
-        return Color(nsColor: NSColor(name: nil) { appearance in
-            let dark = appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
-            return dark ? NSColor(white: 1, alpha: 0.05) : NSColor(white: 0, alpha: 0.035)
-        })
-        #else
-        return Color(uiColor: UIColor { trait in
-            trait.userInterfaceStyle == .dark
-                ? UIColor(white: 1, alpha: 0.05) : UIColor(white: 0, alpha: 0.035)
-        })
-        #endif
-    }()
+    /// 次级表面填充色（取自当前主题）。
+    static var appFill: Color { ThemeManager.current.surfaceAlt }
+
+    /// 面板/容器表面色（取自当前主题；默认=窗口底色，终端=半透深板）。
+    static var appSurface: Color { ThemeManager.current.surface }
 
     /// 从 "#RRGGBB" 解析颜色。
     init?(hex: String) {
