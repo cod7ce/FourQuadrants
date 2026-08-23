@@ -101,13 +101,18 @@ extension AppTheme {
         q3: Color(hex: "#FFB454") ?? .orange,
         q4: Color(hex: "#8A90B8") ?? .gray,
         fontDesign: .monospaced, usesCustomFont: false,
-        checkbox: .bracket, tag: .hash, subtask: .tree, emptyState: .comment,
+        checkbox: .bracket, tag: .hash, subtask: .indent, emptyState: .comment,
         cardStyle: .panel, chrome: .solid, showBreadcrumb: true, showStatusBar: true
     )
 
     static func theme(for id: ThemeID) -> AppTheme {
         switch id { case .system: return .system; case .terminal: return .terminal }
     }
+}
+
+/// 收集箱底栏可见性开关（设置里可关）。
+enum InboxVisibility {
+    static let key = "showInbox"
 }
 
 /// 全局取当前主题（供非 View 上下文的语义色访问；切主题时整树刷新以重新求值）。

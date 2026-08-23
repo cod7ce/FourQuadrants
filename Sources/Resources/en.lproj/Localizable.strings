@@ -121,6 +121,7 @@
 "settings.theme.system" = "Default (follows system)";
 "settings.theme.terminal" = "Terminal";
 "settings.theme.note" = "Terminal is a standalone dark theme (mono font, bracket checkboxes, status bar), independent of system appearance.";
+"settings.inbox.show" = "Show Inbox";
 "theme.system" = "Default (follows system)";
 "theme.terminal" = "Terminal";
 "settings.font.section" = "Font";

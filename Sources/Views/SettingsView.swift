@@ -14,6 +14,7 @@ struct SettingsView: View {
     @AppStorage(LocalizationConfig.storageKey) private var language = AppLanguage.zhHans.rawValue
     @AppStorage(AppFontSetting.key) private var appFontName = ""
     @AppStorage(ThemeManager.key) private var themeIDRaw = ThemeID.system.rawValue
+    @AppStorage(InboxVisibility.key) private var showInbox = true
     @AppStorage(ParseRuleStore.builtinTagKey) private var builtinTag = ""
     @State private var rules: [ParseRule] = ParseRuleStore.load()
     @State private var editingTag: Tag?
@@ -92,6 +93,7 @@ struct SettingsView: View {
                 ForEach(ThemeID.allCases) { t in Text(L(t.titleKey)).tag(t.rawValue) }
             }
             Text(L("settings.theme.note")).appFont(.caption).foregroundStyle(.secondary)
+            Toggle(L("settings.inbox.show"), isOn: $showInbox)
         } header: {
             Text(L("settings.theme.section"))
         }

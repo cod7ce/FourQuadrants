@@ -25,6 +25,7 @@ struct ContentView: View {
     @AppStorage(FontScale.key) private var fontIndex = FontScale.defaultIndex
     @AppStorage(AppFontSetting.key) private var appFontName = ""
     @AppStorage(ThemeManager.key) private var themeIDRaw = ThemeID.system.rawValue
+    @AppStorage(InboxVisibility.key) private var showInbox = true
     private var theme: AppTheme { AppTheme.theme(for: ThemeID(rawValue: themeIDRaw) ?? .system) }
     #if os(macOS)
     @StateObject private var modifiers = ModifierWatcher()
@@ -75,7 +76,9 @@ struct ContentView: View {
                          selectedTask: $selectedTask,
                          weekStart: $selectedWeek)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                InboxBar(weekStart: selectedWeek)
+                if showInbox {
+                    InboxBar(weekStart: selectedWeek)
+                }
                 if theme.showStatusBar {
                     StatusBar(sidebar: sidebar ?? .overview, weekStart: selectedWeek)
                 }

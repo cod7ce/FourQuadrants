@@ -271,7 +271,12 @@ private struct OverviewTaskRow: View {
             parentRow
             // 父任务下列出子任务（未完成的父任务才展开，保持已完成区紧凑）
             if !task.isCompleted {
-                ForEach(subs) { sub in OverviewSubtaskRow(sub: sub) }
+                // 子任务用更紧的行距，让树形竖干（├/└）连成一条线，不出现断点
+                VStack(alignment: .leading, spacing: 3) {
+                    ForEach(Array(subs.enumerated()), id: \.element.persistentModelID) { idx, sub in
+                        OverviewSubtaskRow(sub: sub, isLast: idx == subs.count - 1)
+                    }
+                }
             }
         }
         // 落放提示：整行淡高亮 = 嵌套为子任务；顶部细线 = 插到该任务前重排。
@@ -357,6 +362,7 @@ private struct OverviewSubtaskRow: View {
     @Environment(\.optionHeld) private var optionHeld
     @Environment(\.theme) private var theme
     @Bindable var sub: TaskItem
+    var isLast: Bool = true
     @State private var showPopover = false
     @State private var dropTargeted = false
 
@@ -365,7 +371,9 @@ private struct OverviewSubtaskRow: View {
     var body: some View {
         HStack(alignment: .top, spacing: OverviewTaskRow.gap) {
             if theme.subtask == .tree {
-                Text("└─").appFont(.callout, monospaced: true).foregroundStyle(.tertiary)
+                // 非末项用 ├（竖线贯穿整行），末项用 └，竖干才不断开
+                Text(isLast ? "└─" : "├─").appFont(.callout, monospaced: true)
+                    .foregroundStyle(.tertiary)
             }
             Button { toggle() } label: {
                 TaskCheckbox(isCompleted: sub.isCompleted, size: 16)
