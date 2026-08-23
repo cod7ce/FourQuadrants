@@ -272,7 +272,7 @@ private struct OverviewTaskRow: View {
             // 父任务下列出子任务（未完成的父任务才展开，保持已完成区紧凑）
             if !task.isCompleted {
                 // 子任务用更紧的行距，让树形竖干（├/└）连成一条线，不出现断点
-                VStack(alignment: .leading, spacing: 3) {
+                VStack(alignment: .leading, spacing: 0) {
                     ForEach(Array(subs.enumerated()), id: \.element.persistentModelID) { idx, sub in
                         OverviewSubtaskRow(sub: sub, isLast: idx == subs.count - 1)
                     }
@@ -366,30 +366,28 @@ private struct OverviewSubtaskRow: View {
     @State private var showPopover = false
     @State private var dropTargeted = false
 
+    // 树线列宽 = 与缩进模式一致（父 checkbox 宽 + 间距），子任务 checkbox 对齐到同一缩进
+    static var treeIndent: CGFloat { OverviewTaskRow.checkboxWidth + OverviewTaskRow.gap }
+
     private var linkActive: Bool { optionHeld && !sub.urls.isEmpty }
 
     var body: some View {
-        HStack(alignment: .top, spacing: OverviewTaskRow.gap) {
+        Group {
             if theme.subtask == .tree {
-                // 非末项用 ├（竖线贯穿整行），末项用 └，竖干才不断开
-                Text(isLast ? "└─" : "├─").appFont(.callout, monospaced: true)
-                    .foregroundStyle(.tertiary)
+                // 树线作为 overlay：尺寸恒等于行内容（不会贪婪撑高），行距 0 下竖干首尾相接
+                rowContent
+                    .padding(.vertical, 3)
+                    .padding(.leading, Self.treeIndent)
+                    .overlay(alignment: .topLeading) {
+                        SubtaskTreeConnector(isLast: isLast, color: Color.appLabel.opacity(0.09))
+                            .frame(width: Self.treeIndent)
+                    }
+            } else {
+                rowContent
+                    .padding(.vertical, 3)
+                    .padding(.leading, OverviewTaskRow.checkboxWidth + OverviewTaskRow.gap)
             }
-            Button { toggle() } label: {
-                TaskCheckbox(isCompleted: sub.isCompleted, size: 16)
-            }
-            .buttonStyle(.plain)
-            Text(sub.title.isEmpty ? L("task.default.title") : sub.title)
-                .appFont(.callout)
-                .fixedSize(horizontal: false, vertical: true)
-                .strikethrough(sub.isCompleted)
-                .underline(linkActive)
-                .foregroundStyle(linkActive ? Color.accentColor
-                                 : (sub.isCompleted ? .secondary : Color.appLabel))
-            Spacer(minLength: 6)
-            DueDateLabel(task: sub)
         }
-        .padding(.leading, theme.subtask == .tree ? 10 : OverviewTaskRow.checkboxWidth + OverviewTaskRow.gap)
         .contentShape(Rectangle())
         #if os(macOS)
         .highPriorityGesture(
@@ -415,9 +413,50 @@ private struct OverviewSubtaskRow: View {
         .sheet(isPresented: $showPopover) { TaskEditor(task: sub) }
     }
 
+    /// 行主体（勾选框 + 标题 + 截止日期），树线/缩进两种布局共用。
+    private var rowContent: some View {
+        HStack(alignment: .top, spacing: OverviewTaskRow.gap) {
+            Button { toggle() } label: {
+                TaskCheckbox(isCompleted: sub.isCompleted, size: 16)
+            }
+            .buttonStyle(.plain)
+            Text(sub.title.isEmpty ? L("task.default.title") : sub.title)
+                .appFont(.callout)
+                .fixedSize(horizontal: false, vertical: true)
+                .strikethrough(sub.isCompleted)
+                .underline(linkActive)
+                .foregroundStyle(linkActive ? Color.accentColor
+                                 : (sub.isCompleted ? .secondary : Color.appLabel))
+            Spacer(minLength: 6)
+            DueDateLabel(task: sub)
+        }
+    }
+
     private func toggle() {
         sub.toggleCompleted()
         try? context.save()
+    }
+}
+
+/// 子任务树形连接线（矢量）：一条竖干 + 一段拐入 checkbox 的横线。
+/// 作为行内容的 overlay 使用：高度恒等于行内容，行距 0 时竖干跨行首尾相接。
+private struct SubtaskTreeConnector: View {
+    let isLast: Bool
+    let color: Color
+    private let stem: CGFloat = 11       // 竖干水平位置
+    private let elbowY: CGFloat = 12     // 拐点高度（对齐首行 checkbox 中心）
+
+    var body: some View {
+        Canvas { ctx, size in
+            var trunk = Path()
+            trunk.move(to: CGPoint(x: stem, y: 0))
+            trunk.addLine(to: CGPoint(x: stem, y: isLast ? elbowY : size.height))
+            var arm = Path()
+            arm.move(to: CGPoint(x: stem, y: elbowY))
+            arm.addLine(to: CGPoint(x: size.width - 7, y: elbowY))   // 到 checkbox 前留出空隙
+            ctx.stroke(trunk, with: .color(color), lineWidth: 1.2)
+            ctx.stroke(arm, with: .color(color), lineWidth: 1.2)
+        }
     }
 }
 

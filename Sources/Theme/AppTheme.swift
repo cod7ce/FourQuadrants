@@ -101,7 +101,7 @@ extension AppTheme {
         q3: Color(hex: "#FFB454") ?? .orange,
         q4: Color(hex: "#8A90B8") ?? .gray,
         fontDesign: .monospaced, usesCustomFont: false,
-        checkbox: .bracket, tag: .hash, subtask: .indent, emptyState: .comment,
+        checkbox: .bracket, tag: .hash, subtask: .tree, emptyState: .comment,
         cardStyle: .panel, chrome: .solid, showBreadcrumb: true, showStatusBar: true
     )
 
