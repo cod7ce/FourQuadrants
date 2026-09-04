@@ -12,6 +12,7 @@ struct TaskEditor: View {
     @Query(sort: \Tag.name) private var allTags: [Tag]
     @State private var rich = RichContentStore()
     @State private var newSubtask = ""
+    @State private var editingSub: TaskItem?
     @State private var newLink = ""
     @State private var newNote = ""
     @State private var newTagName = ""
@@ -89,7 +90,7 @@ struct TaskEditor: View {
 
                 notesBlock
 
-                if !isSub { subtasksBlock }
+                if task.canHaveChildren { subtasksBlock }   // 顶层与第 2 层可加子；第 3 层封顶
                 linksBlock
             }
             .padding(20)
@@ -138,9 +139,22 @@ struct TaskEditor: View {
             ForEach(subs) { sub in
                 HStack(spacing: 10) {
                     CompletionToggle(isCompleted: sub.isCompleted) { sub.toggleCompleted() }
-                    Text(sub.title.isEmpty ? L("task.default.title") : sub.title)
-                        .strikethrough(sub.isCompleted)
-                        .foregroundStyle(sub.isCompleted ? .secondary : Color.appLabel)
+                    Button { editingSub = sub } label: {
+                        HStack(spacing: 6) {
+                            Text(sub.title.isEmpty ? L("task.default.title") : sub.title)
+                                .strikethrough(sub.isCompleted)
+                                .foregroundStyle(sub.isCompleted ? .secondary : Color.appLabel)
+                            // 有下一层子任务时给个计数提示
+                            if let n = sub.subtasks?.count, n > 0 {
+                                Text("\(sub.sortedSubtasks.filter(\.isCompleted).count)/\(n)")
+                                    .appFont(.caption2, monospacedDigit: true)
+                                    .foregroundStyle(.tertiary)
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
                     Spacer(minLength: 0)
                     Button { context.delete(sub) } label: {
                         Image(systemName: "xmark").appFont(.caption2).foregroundStyle(.tertiary)
@@ -163,6 +177,7 @@ struct TaskEditor: View {
             }
             .padding(.top, 2)
         }
+        .sheet(item: $editingSub) { TaskEditor(task: $0) }   // 递归编辑子任务（可再加下一层）
     }
 
     private var linksBlock: some View {

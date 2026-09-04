@@ -62,11 +62,13 @@ enum TaskMutations {
               let dragged = task(uuid: draggedUUID, in: context) else { return }
 
         if let newParent = target.parent {
-            // 目标是子任务 → 被拖任务归到 target 的父下
-            guard newParent.taskUUID != dragged.taskUUID else { return }   // 不能挂到自己名下
-            guard dragged.sortedSubtasks.isEmpty else { return }           // 保持单层：有子任务的不下沉
+            // 目标是子任务 → 被拖任务归到 target 的父下（同级插队）
+            guard newParent.taskUUID != dragged.taskUUID,                       // 不能挂到自己名下
+                  !newParent.isDescendant(of: dragged),                         // 防环：不能进自己的子树
+                  newParent.depth + dragged.subtreeHeight <= TaskItem.maxDepth  // 放进去不超 3 层
+            else { return }
             dragged.parent = newParent
-            dragged.weekStart = newParent.weekStart
+            dragged.setWeekStartDeep(newParent.weekStart)
         } else {
             // 目标是顶层任务 → 被拖任务成为/保持顶层，并归入目标象限与周
             dragged.parent = nil
@@ -131,7 +133,7 @@ enum TaskMutations {
                 context.insert(copy)
                 for sub in t.sortedSubtasks where !sub.isCompleted {
                     sub.parent = copy
-                    sub.weekStart = week
+                    sub.setWeekStartDeep(week)   // 连带其自身子树一起搬到目标周
                     sub.dueDate = nil
                     sub.remindAt = nil
                 }
@@ -152,16 +154,17 @@ enum TaskMutations {
     }
 
     /// 把任务挂到 `newParent` 下成为其子任务（用于拖到父任务主体上，含没有子任务的父）。
-    /// 保持单层：`newParent` 必须是顶层任务，且被拖任务自身不能带子任务。
+    /// 支持多级（最深 3 层）：放进去后的总深度不能超过 `maxDepth`，且不能形成环。
     @MainActor
     static func makeChild(uuid: String, of newParent: TaskItem, in context: ModelContext) {
         guard let dragged = task(uuid: uuid, in: context),
               dragged.taskUUID != newParent.taskUUID,
-              newParent.parent == nil,
-              dragged.sortedSubtasks.isEmpty else { return }
+              !newParent.isDescendant(of: dragged),                          // 防环：不能进自己的子树
+              newParent.depth + dragged.subtreeHeight <= TaskItem.maxDepth   // 放进去不超 3 层
+        else { return }
         guard dragged.parent?.taskUUID != newParent.taskUUID else { return }   // 已是它的子任务
         dragged.parent = newParent
-        dragged.weekStart = newParent.weekStart
+        dragged.setWeekStartDeep(newParent.weekStart)
         dragged.sortOrder = (newParent.sortedSubtasks.map(\.sortOrder).max() ?? -1) + 1
         try? context.save()
         Task { await NotificationManager.shared.reschedule(for: dragged) }

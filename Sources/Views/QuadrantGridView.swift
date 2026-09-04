@@ -274,7 +274,7 @@ private struct OverviewTaskRow: View {
                 // 子任务用更紧的行距，让树形竖干（├/└）连成一条线，不出现断点
                 VStack(alignment: .leading, spacing: 0) {
                     ForEach(Array(subs.enumerated()), id: \.element.persistentModelID) { idx, sub in
-                        OverviewSubtaskRow(sub: sub, isLast: idx == subs.count - 1)
+                        OverviewSubtaskTree(sub: sub, guides: [], isLast: idx == subs.count - 1)
                     }
                 }
             }
@@ -354,38 +354,54 @@ private struct OverviewTaskRow: View {
     }
 }
 
-/// 卡片里的子任务行：checkbox 错开一个父 checkbox，对齐到父任务内容列；
-/// 可勾选、双击编辑、⌥ 点链接、显示截止日期。
-private struct OverviewSubtaskRow: View {
+/// 卡片里的子任务子树（递归，最深 3 层）：渲染自身一行，再递归渲染其子任务，
+/// 每深一层多缩进一格；树线含各祖先列的延续竖线，保证多层下也连成完整树。
+private struct OverviewSubtaskTree: View {
     @Environment(\.modelContext) private var context
     @Environment(\.openURL) private var openURL
     @Environment(\.optionHeld) private var optionHeld
     @Environment(\.theme) private var theme
     @Bindable var sub: TaskItem
+    /// 各祖先列是否还要继续画竖线（该祖先在其同级中还有后续项）。长度 = 本节点在子树中的层级。
+    var guides: [Bool]
     var isLast: Bool = true
     @State private var showPopover = false
     @State private var dropTargeted = false
 
-    // 树线列宽 = 与缩进模式一致（父 checkbox 宽 + 间距），子任务 checkbox 对齐到同一缩进
-    static var treeIndent: CGFloat { OverviewTaskRow.checkboxWidth + OverviewTaskRow.gap }
-
+    // 每层缩进 = 一个父 checkbox 宽 + 间距，子任务 checkbox 对齐到上一层内容列
+    static var indentStep: CGFloat { OverviewTaskRow.checkboxWidth + OverviewTaskRow.gap }
+    private var leadingInset: CGFloat { CGFloat(guides.count + 1) * Self.indentStep }
+    private var childSubs: [TaskItem] { sub.sortedSubtasks }
     private var linkActive: Bool { optionHeld && !sub.urls.isEmpty }
 
     var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            rowView
+            ForEach(Array(childSubs.enumerated()), id: \.element.persistentModelID) { idx, child in
+                OverviewSubtaskTree(sub: child,
+                                    guides: guides + [!isLast],
+                                    isLast: idx == childSubs.count - 1)
+            }
+        }
+    }
+
+    private var rowView: some View {
         Group {
             if theme.subtask == .tree {
-                // 树线作为 overlay：尺寸恒等于行内容（不会贪婪撑高），行距 0 下竖干首尾相接
+                // 树线作为 overlay：尺寸恒等于行内容（不会贪婪撑高），行距 0 下竖干跨行相接
                 rowContent
                     .padding(.vertical, 3)
-                    .padding(.leading, Self.treeIndent)
+                    .padding(.leading, leadingInset)
                     .overlay(alignment: .topLeading) {
-                        SubtaskTreeConnector(isLast: isLast, color: Color.appLabel.opacity(0.09))
-                            .frame(width: Self.treeIndent)
+                        SubtaskTreeConnector(guides: guides, isLast: isLast,
+                                             step: Self.indentStep,
+                                             color: Color.appLabel.opacity(0.09))
+                            .frame(width: leadingInset)
                     }
             } else {
                 rowContent
                     .padding(.vertical, 3)
-                    .padding(.leading, OverviewTaskRow.checkboxWidth + OverviewTaskRow.gap)
+                    .padding(.leading, leadingInset)
             }
         }
         .contentShape(Rectangle())
@@ -403,10 +419,14 @@ private struct OverviewSubtaskRow: View {
             }
         }
         .draggable(TaskTransfer(taskUUID: sub.taskUUID))
-        .dropDestination(for: TaskTransfer.self) { items, _ in
+        .dropDestination(for: TaskTransfer.self) { items, location in
             for it in items {
-                TaskMutations.reorder(draggedUUID: it.taskUUID, before: sub,
-                                      ordered: sub.parent?.sortedSubtasks ?? [], in: context)
+                if location.y < 10 {   // 顶部细条 → 插到该子任务前重排
+                    TaskMutations.reorder(draggedUUID: it.taskUUID, before: sub,
+                                          ordered: sub.parent?.sortedSubtasks ?? [], in: context)
+                } else {               // 行主体 → 嵌套为该子任务的子任务（超深/成环由 makeChild 拦截）
+                    TaskMutations.makeChild(uuid: it.taskUUID, of: sub, in: context)
+                }
             }
             return !items.isEmpty
         } isTargeted: { dropTargeted = $0 }
@@ -438,21 +458,33 @@ private struct OverviewSubtaskRow: View {
     }
 }
 
-/// 子任务树形连接线（矢量）：一条竖干 + 一段拐入 checkbox 的横线。
-/// 作为行内容的 overlay 使用：高度恒等于行内容，行距 0 时竖干跨行首尾相接。
+/// 子任务树形连接线（矢量）：各祖先列的延续竖线 + 本节点的一条竖干 + 拐入 checkbox 的横线。
+/// 作为行内容的 overlay 使用：高度恒等于行内容，行距 0 时竖干跨行相接。
 private struct SubtaskTreeConnector: View {
+    let guides: [Bool]      // 各祖先列是否继续画竖线
     let isLast: Bool
+    let step: CGFloat
     let color: Color
-    private let stem: CGFloat = 11       // 竖干水平位置
+    private let stem: CGFloat = 11       // 竖干在本列内的水平位置
     private let elbowY: CGFloat = 12     // 拐点高度（对齐首行 checkbox 中心）
 
     var body: some View {
         Canvas { ctx, size in
+            // 祖先列：若该祖先还有后续同级，则本行内画一条贯通竖线
+            for (i, draw) in guides.enumerated() where draw {
+                let x = CGFloat(i) * step + stem
+                var line = Path()
+                line.move(to: CGPoint(x: x, y: 0))
+                line.addLine(to: CGPoint(x: x, y: size.height))
+                ctx.stroke(line, with: .color(color), lineWidth: 1.2)
+            }
+            // 本节点：竖干（末项到拐点即止，否则贯通）+ 拐入 checkbox 的横线
+            let ownX = CGFloat(guides.count) * step + stem
             var trunk = Path()
-            trunk.move(to: CGPoint(x: stem, y: 0))
-            trunk.addLine(to: CGPoint(x: stem, y: isLast ? elbowY : size.height))
+            trunk.move(to: CGPoint(x: ownX, y: 0))
+            trunk.addLine(to: CGPoint(x: ownX, y: isLast ? elbowY : size.height))
             var arm = Path()
-            arm.move(to: CGPoint(x: stem, y: elbowY))
+            arm.move(to: CGPoint(x: ownX, y: elbowY))
             arm.addLine(to: CGPoint(x: size.width - 7, y: elbowY))   // 到 checkbox 前留出空隙
             ctx.stroke(trunk, with: .color(color), lineWidth: 1.2)
             ctx.stroke(arm, with: .color(color), lineWidth: 1.2)

@@ -94,6 +94,44 @@ extension TaskItem {
         (subtasks ?? []).sorted { $0.sortOrder < $1.sortOrder }
     }
 
+    // MARK: - 层级（多级子任务，最深 3 层）
+
+    /// 子任务最大深度：顶层=1，其子=2，孙=3；第 3 层不能再加子。
+    static let maxDepth = 3
+
+    /// 层级：顶层=1，其子=2，孙=3。带环防御。
+    var depth: Int {
+        var d = 1, p = parent, hops = 0
+        while let cur = p, hops < 64 { d += 1; p = cur.parent; hops += 1 }
+        return d
+    }
+
+    /// 还能不能再加子任务（未到最大深度）。
+    var canHaveChildren: Bool { depth < Self.maxDepth }
+
+    /// 以自己为根的子树高度：叶=1。用于拖拽时判断放进去会不会超深。
+    var subtreeHeight: Int {
+        let kids = subtasks ?? []
+        if kids.isEmpty { return 1 }
+        return 1 + (kids.map(\.subtreeHeight).max() ?? 0)
+    }
+
+    /// self 是否是 node 的后代（沿 parent 向上能找到 node）。用于防止把节点拖进自己的子树成环。
+    func isDescendant(of node: TaskItem) -> Bool {
+        var p = parent, hops = 0
+        while let cur = p, hops < 64 {
+            if cur.taskUUID == node.taskUUID { return true }
+            p = cur.parent; hops += 1
+        }
+        return false
+    }
+
+    /// 递归设置整棵子树的所属周（跨周结转时保持一致）。
+    func setWeekStartDeep(_ week: Date) {
+        weekStart = week
+        for sub in subtasks ?? [] { sub.setWeekStartDeep(week) }
+    }
+
     var tagList: [Tag] {
         (tags ?? []).sorted { $0.name < $1.name }
     }
