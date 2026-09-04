@@ -74,6 +74,9 @@ struct TaskEditor: View {
             .buttonStyle(.plain)
         }
         .padding(20)
+        #if os(macOS)
+        .background(WindowDragArea())   // 拖头部空白处可移动编辑器窗口
+        #endif
     }
 
     // MARK: - Left column

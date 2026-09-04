@@ -20,6 +20,23 @@ struct VisualEffectView: NSViewRepresentable {
     }
 }
 
+/// 放在某区域背景上，使拖拽该区域可移动整个承载窗口（含 sheet 弹窗）：
+/// 既开启 isMovableByWindowBackground，又在 mouseDown 时主动发起窗口拖拽。
+struct WindowDragArea: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSView { DragView() }
+    func updateNSView(_ nsView: NSView, context: Context) {}
+
+    final class DragView: NSView {
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            window?.isMovableByWindowBackground = true
+        }
+        override func mouseDown(with event: NSEvent) {
+            window?.performDrag(with: event)
+        }
+    }
+}
+
 /// 让侧栏那一列的系统 vibrancy 材质失活（窗口底已清空为透明），
 /// 从而让窗口级背景（BackgroundLayer 的背景图）连续透过侧栏显示。
 struct SidebarVibrancyStripper: NSViewRepresentable {
