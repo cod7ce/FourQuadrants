@@ -59,6 +59,15 @@ struct AppTheme {
 
 // MARK: - 动态色 & 注册表
 
+/// 跨平台的「窗口/页面底色」语义色：macOS 用 windowBackground，iOS 用 systemBackground。
+private func platformWindowBackground() -> Color {
+    #if os(macOS)
+    return Color(nsColor: .windowBackgroundColor)
+    #else
+    return Color(uiColor: .systemBackground)
+    #endif
+}
+
 private func themeDynamic(_ light: Color, _ dark: Color) -> Color {
     #if os(macOS)
     return Color(nsColor: NSColor(name: nil) { ap in
@@ -76,8 +85,8 @@ extension AppTheme {
     static let system = AppTheme(
         id: .system,
         forcedDark: false,
-        background: Color(nsColor: .windowBackgroundColor),
-        surface: Color(nsColor: .windowBackgroundColor),
+        background: platformWindowBackground(),
+        surface: platformWindowBackground(),
         surfaceAlt: themeDynamic(Color(white: 0, opacity: 0.035), Color(white: 1, opacity: 0.05)),
         label: themeDynamic(Color(white: 0.20), Color(white: 0.92)),
         accent: Color.accentColor,

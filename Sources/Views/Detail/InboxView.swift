@@ -106,7 +106,7 @@ struct InboxBar: View {
         .frame(width: 190, height: 96, alignment: .topLeading)
         .background(RoundedRectangle(cornerRadius: 10).fill(Color.appSurface))
         .overlay(RoundedRectangle(cornerRadius: 10)
-            .strokeBorder(Color(nsColor: .separatorColor).opacity(0.4), lineWidth: 0.5))
+            .strokeBorder(Color.appSeparator.opacity(0.4), lineWidth: 0.5))
         .draggable(TaskTransfer(taskUUID: task.taskUUID))
     }
 

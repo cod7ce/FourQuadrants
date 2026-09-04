@@ -15,6 +15,15 @@ extension Color {
     /// 面板/容器表面色（取自当前主题；默认=窗口底色，终端=半透深板）。
     static var appSurface: Color { ThemeManager.current.surface }
 
+    /// 分隔线色（跨平台：macOS separatorColor / iOS separator）。
+    static var appSeparator: Color {
+        #if os(macOS)
+        Color(nsColor: .separatorColor)
+        #else
+        Color(uiColor: .separator)
+        #endif
+    }
+
     /// 从 "#RRGGBB" 解析颜色。
     init?(hex: String) {
         var s = hex.trimmingCharacters(in: .whitespacesAndNewlines)

@@ -24,8 +24,10 @@ enum ClipboardReader {
         let change = pb.changeCount
         guard change != lastChange else { return nil }
         // 先检测「是否像网址」——此调用不会触发系统的「粘贴」横幅。
-        let patterns = (try? await pb.detectedPatterns(for: [.probableWebURL])) ?? []
-        guard patterns.contains(.probableWebURL),
+        // iOS 用 keypath 形式的检测模式（\DetectedValues.probableWebURL）。
+        let webURL: PartialKeyPath<UIPasteboard.DetectedValues> = \.probableWebURL
+        let patterns = (try? await pb.detectedPatterns(for: [webURL])) ?? []
+        guard patterns.contains(webURL),
               let raw = pb.string, !raw.isEmpty else { return nil }
         return parsed(from: raw, change: change)
         #endif

@@ -2,6 +2,8 @@ import Foundation
 #if os(macOS)
 import AppKit
 import UniformTypeIdentifiers
+#else
+import UIKit
 #endif
 
 /// 把某一周的任务导出为 Markdown：按标签分组，子任务缩进跟随父任务。
@@ -41,15 +43,19 @@ enum MarkdownExporter {
         return s
     }
 
-    #if os(macOS)
-    /// 复制到剪贴板。
+    /// 复制到剪贴板（跨平台）。
     @MainActor
     static func copyToPasteboard(weekStart: Date, weekTasks: [TaskItem]) {
-        let pb = NSPasteboard.general
-        pb.clearContents()
-        pb.setString(markdown(weekStart: weekStart, weekTasks: weekTasks), forType: .string)
+        let text = markdown(weekStart: weekStart, weekTasks: weekTasks)
+        #if os(macOS)
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
+        #else
+        UIPasteboard.general.string = text
+        #endif
     }
 
+    #if os(macOS)
     /// 弹出保存面板，导出为 .md 文件。
     @MainActor
     static func exportToFile(weekStart: Date, weekTasks: [TaskItem]) {

@@ -183,7 +183,7 @@ private struct CalendarCell: View {
         .clipped()
         .background(dropTargeted ? Color.accentColor.opacity(0.15) : cellBackground)
         .overlay {
-            Rectangle().strokeBorder(Color(nsColor: .separatorColor).opacity(0.4), lineWidth: 0.5)
+            Rectangle().strokeBorder(Color.appSeparator.opacity(0.4), lineWidth: 0.5)
         }
         .overlay {
             if isSelected || dropTargeted {

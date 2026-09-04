@@ -26,9 +26,11 @@ struct MainToolbar: ViewModifier {
             }
             .sheet(isPresented: $showCarry) { CarryForwardSheet(week: week) }
             .confirmationDialog(L("menu.exportMd"), isPresented: $showExport, titleVisibility: .visible) {
+                #if os(macOS)
                 Button(L("menu.exportMd.file")) {
                     MarkdownExporter.exportToFile(weekStart: week, weekTasks: weekTasks)
                 }
+                #endif
                 Button(L("menu.exportMd.clipboard")) {
                     MarkdownExporter.copyToPasteboard(weekStart: week, weekTasks: weekTasks)
                 }
