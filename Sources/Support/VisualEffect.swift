@@ -20,6 +20,34 @@ struct VisualEffectView: NSViewRepresentable {
     }
 }
 
+/// 让侧栏那一列的系统 vibrancy 材质失活（窗口底已清空为透明），
+/// 从而让窗口级背景（BackgroundLayer 的背景图）连续透过侧栏显示。
+struct SidebarVibrancyStripper: NSViewRepresentable {
+    /// 是否启用；关闭时把材质恢复为激活，回到系统默认侧栏观感。
+    var active: Bool
+
+    func makeNSView(context: Context) -> NSView {
+        let v = NSView()
+        apply(from: v)
+        return v
+    }
+    func updateNSView(_ v: NSView, context: Context) { apply(from: v) }
+
+    private func apply(from view: NSView) {
+        let active = self.active
+        DispatchQueue.main.async {
+            var node: NSView? = view
+            while let cur = node {
+                if let eff = cur as? NSVisualEffectView {
+                    eff.state = active ? .inactive : .followsWindowActiveState
+                    break
+                }
+                node = cur.superview
+            }
+        }
+    }
+}
+
 /// 让承载窗口变为非不透明 + 清空背景色，behind-window 材质才能透出桌面。
 struct WindowTranslucency: NSViewRepresentable {
     func makeNSView(context: Context) -> NSView {

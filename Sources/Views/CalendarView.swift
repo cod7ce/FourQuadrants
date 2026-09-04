@@ -228,9 +228,11 @@ private struct CalDayPanel: View {
     let inboxCount: Int
     @Binding var selectedTask: TaskItem?
 
+    @AppStorage(CompletedVisibility.key) private var hideCompleted = false
     private var cal: Calendar { Week.calendar }
     private var active: [TaskItem] { tasks.filter { !$0.isCompleted } }
     private var done: [TaskItem] { tasks.filter(\.isCompleted) }
+    private var showsDone: Bool { !hideCompleted && !done.isEmpty }
     private var isToday: Bool { cal.isDateInToday(day) }
 
     var body: some View {
@@ -240,7 +242,7 @@ private struct CalDayPanel: View {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 12) {
                     ForEach(active) { row($0) }
-                    if !done.isEmpty {
+                    if showsDone {
                         Text(String(format: L("grid.completedCount"), done.count))
                             .appFont(.caption).foregroundStyle(.secondary)
                             .padding(.top, 4)

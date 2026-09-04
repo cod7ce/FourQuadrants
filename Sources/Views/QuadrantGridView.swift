@@ -10,6 +10,9 @@ struct QuadrantGridView: View {
 
     private var weekTasks: [TaskItem] { allTasks.inWeek(weekStart).topLevel }
 
+    /// 内容区窄于此宽度时，象限从 2×2 改为竖排单列。
+    private static let stackBreakpoint: CGFloat = 800
+
     var body: some View {
         VStack(spacing: 0) {
             WeekHeaderBar(weekStart: $weekStart, tasks: weekTasks)
@@ -17,14 +20,23 @@ struct QuadrantGridView: View {
                 .padding(.top, 18)
                 .padding(.bottom, 14)
 
-            ScrollView {
-                // 手动 2×2：每张卡片 maxWidth:.infinity，保证左右两列等宽并让长标题截断
-                VStack(spacing: 16) {
-                    gridRow(.urgentImportant, .important)
-                    gridRow(.urgent, .neither)
+            GeometryReader { geo in
+                ScrollView {
+                    // 宽 → 2×2；窄于阈值 → 竖排单列，按紧急度自上而下
+                    VStack(spacing: 16) {
+                        if geo.size.width < Self.stackBreakpoint {
+                            card(.urgentImportant)   // 紧急且重要
+                            card(.urgent)            // 紧急不重要
+                            card(.important)         // 重要不紧急
+                            card(.neither)           // 不紧急不重要
+                        } else {
+                            gridRow(.urgentImportant, .important)
+                            gridRow(.urgent, .neither)
+                        }
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 24)
                 }
-                .padding(.horizontal, 24)
-                .padding(.bottom, 24)
             }
         }
         .navigationTitle(L("overview.title"))
@@ -135,23 +147,26 @@ private struct QuadrantCard: View {
     let tasks: [TaskItem]          // 该象限全部任务（含已完成）
     let weekStart: Date
     @Binding var selectedTask: TaskItem?
+    @AppStorage(CompletedVisibility.key) private var hideCompleted = false
     @State private var isTargeted = false
 
     private var active: [TaskItem] { tasks.filter { !$0.isCompleted } }
     private var completed: [TaskItem] { tasks.filter(\.isCompleted) }
     private var ratio: Double { tasks.isEmpty ? 0 : Double(completed.count) / Double(tasks.count) }
+    /// 隐藏已完成时，已完成段整体不渲染。
+    private var showsCompleted: Bool { !hideCompleted && !completed.isEmpty }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             header
 
-            if tasks.isEmpty {
+            if active.isEmpty && !showsCompleted {
                 emptyState
             } else {
                 ThinProgressBar(ratio: ratio, color: quadrant.color)
                 VStack(alignment: .leading, spacing: 16) {
                     ForEach(active) { row($0, siblings: active) }
-                    if !completed.isEmpty {
+                    if showsCompleted {
                         Text(String(format: L("grid.completedCount"), completed.count))
                             .appFont(.caption).foregroundStyle(.secondary)
                             .padding(.top, 2)

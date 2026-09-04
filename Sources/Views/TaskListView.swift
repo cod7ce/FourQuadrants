@@ -8,11 +8,12 @@ struct TaskListView: View {
     let weekStart: Date
 
     @Query(sort: \TaskItem.sortOrder) private var allTasks: [TaskItem]
+    @AppStorage(CompletedVisibility.key) private var hideCompleted = false
     @State private var search = ""
     @State private var newTask: TaskItem?
 
     private var tasks: [TaskItem] {
-        let base = allTasks.inWeek(weekStart).inScope(scope, showCompleted: true)
+        let base = allTasks.inWeek(weekStart).inScope(scope, showCompleted: !hideCompleted)
         guard !search.isEmpty else { return base }
         return base.filter {
             $0.title.localizedCaseInsensitiveContains(search)

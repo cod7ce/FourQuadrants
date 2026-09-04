@@ -5,9 +5,12 @@ struct SidebarView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.theme) private var theme
     @Binding var selection: SidebarItem?
+    @AppStorage(BackgroundConfig.fileKey) private var bgFile = ""
     @Query(sort: \Tag.name) private var tags: [Tag]
     @Query private var allTasks: [TaskItem]
     @State private var editingTag: Tag?
+
+    private var hasBackground: Bool { !bgFile.isEmpty }
     #if os(iOS)
     var onSettings: () -> Void = {}
     #endif
@@ -75,12 +78,19 @@ struct SidebarView: View {
             .padding(.vertical, 10)
         }
         .background(sidebarBackground.ignoresSafeArea())
+        #if os(macOS)
+        // 有背景图时让侧栏那层系统材质失活，露出窗口级背景图（连续透过侧栏）。
+        .background(SidebarVibrancyStripper(active: hasBackground))
+        #endif
     }
 
     /// 侧栏底色：默认沿用系统 sidebar 材质（透明）；终端主题铺一层半透深色，
     /// 比主区略透（露出侧栏材质的一点明度），避免死黑。
+    /// 有背景图时只铺一层浅罩，让图透过侧栏又不至于让文字发飘。
     @ViewBuilder private var sidebarBackground: some View {
-        if theme.chrome == .solid {
+        if hasBackground {
+            Color.black.opacity(0.28)
+        } else if theme.chrome == .solid {
             Color(red: 0.02, green: 0.018, blue: 0.04, opacity: 0.55)
         } else {
             Color.clear

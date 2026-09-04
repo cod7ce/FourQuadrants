@@ -15,6 +15,7 @@ struct SettingsView: View {
     @AppStorage(AppFontSetting.key) private var appFontName = ""
     @AppStorage(ThemeManager.key) private var themeIDRaw = ThemeID.system.rawValue
     @AppStorage(InboxVisibility.key) private var showInbox = true
+    @AppStorage(CompletedVisibility.key) private var hideCompleted = false
     @AppStorage(ParseRuleStore.builtinTagKey) private var builtinTag = ""
     @State private var rules: [ParseRule] = ParseRuleStore.load()
     @State private var editingTag: Tag?
@@ -94,9 +95,11 @@ struct SettingsView: View {
             }
             Text(L("settings.theme.note")).appFont(.caption).foregroundStyle(.secondary)
             Toggle(L("settings.inbox.show"), isOn: $showInbox)
+            Toggle(L("settings.completed.hide"), isOn: $hideCompleted)
         } header: {
             Text(L("settings.theme.section"))
         }
+        BackgroundSettingsSection()
         Section {
             Picker(L("settings.font.section"), selection: $appFontName) {
                 Text(L("settings.font.system")).tag("")

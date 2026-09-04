@@ -9,7 +9,13 @@ enum ThemeID: String, CaseIterable, Identifiable {
     case system     // 默认（跟随系统明暗，现状观感）
     case terminal   // 终端（深色 · 等宽 · 括号勾选 · #标签 · 树形子任务 · 状态栏）
     var id: String { rawValue }
-    var titleKey: String.LocalizationValue { "theme.\(rawValue)" }
+    // 注意：不能用插值拼 key（"theme.\(rawValue)" 会被当成 "theme.%@" 查表失败），须用字面 key。
+    var titleKey: String.LocalizationValue {
+        switch self {
+        case .system:   return "theme.system"
+        case .terminal: return "theme.terminal"
+        }
+    }
 }
 
 // MARK: - 组件皮肤枚举
@@ -122,6 +128,11 @@ extension AppTheme {
 /// 收集箱底栏可见性开关（设置里可关）。
 enum InboxVisibility {
     static let key = "showInbox"
+}
+
+/// 是否隐藏已完成任务（设置里可开，默认关闭=显示）。
+enum CompletedVisibility {
+    static let key = "hideCompleted"
 }
 
 /// 全局取当前主题（供非 View 上下文的语义色访问；切主题时整树刷新以重新求值）。

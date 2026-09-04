@@ -90,18 +90,8 @@ struct ContentView: View {
             }
             #endif
         }
+        .background { BackgroundLayer() }                  // 背景图/材质/主题罩（无图=现状）
         #if os(macOS)
-        .background {
-            if theme.chrome == .solid {
-                VisualEffectView()                                       // 终端：模糊材质…
-                    .overlay(theme.background)                           // …叠半透近黑罩，桌面柔光透出
-                    .ignoresSafeArea()
-            } else {
-                VisualEffectView()                                       // 默认玻璃材质
-                    .overlay(Color(nsColor: .windowBackgroundColor).opacity(Self.glassTint))
-                    .ignoresSafeArea()
-            }
-        }
         .background(WindowTranslucency())                   // 窗口非不透明，透出桌面
         #endif
         .tint(theme.id == .system ? nil : theme.accent)                  // 主题强调色（默认沿用系统）

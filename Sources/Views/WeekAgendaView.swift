@@ -8,6 +8,7 @@ struct WeekAgendaView: View {
     @Binding var selectedTask: TaskItem?
     @Binding var weekStart: Date
     @Query(sort: \TaskItem.sortOrder) private var allTasks: [TaskItem]
+    @AppStorage(CompletedVisibility.key) private var hideCompleted = false
     @State private var newTask: TaskItem?
 
     // MARK: 计算
@@ -47,6 +48,7 @@ struct WeekAgendaView: View {
         let overdueIDs = Set(overdue.map(\.taskUUID))
         return weekTasks.filter { t in
             guard let d = agendaDate(t) else { return false }
+            if hideCompleted && t.isCompleted { return false }   // 设置里隐藏已完成
             return Week.calendar.isDate(d, inSameDayAs: day) && !overdueIDs.contains(t.taskUUID)
         }
     }
