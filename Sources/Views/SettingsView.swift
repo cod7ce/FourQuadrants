@@ -134,6 +134,21 @@ struct SettingsView: View {
         } header: {
             Text(L("settings.font.section"))
         }
+        #if os(macOS)
+        Section {
+            HStack {
+                Text(L("settings.update.current"))
+                Spacer()
+                Text("v\(Updater.shared.currentVersion)")
+                    .foregroundStyle(.secondary).monospacedDigit()
+            }
+            Button(L("menu.checkUpdates")) {
+                Task { await Updater.shared.checkForUpdates(silent: false) }
+            }
+        } header: {
+            Text(L("settings.update.section"))
+        }
+        #endif
     }
 
     var body: some View {

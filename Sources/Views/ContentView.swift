@@ -110,6 +110,9 @@ struct ContentView: View {
         .sheet(isPresented: $showSettings) { SettingsView() }
         #endif
         .task { await checkClipboard() }
+        #if os(macOS)
+        .onAppear { Updater.shared.start() }   // 启动后台自动更新检查
+        #endif
         // 把所选周共享给独立的笔记窗口
         .onChange(of: selectedWeek, initial: true) { _, w in
             notesWeekStamp = w.timeIntervalSinceReferenceDate

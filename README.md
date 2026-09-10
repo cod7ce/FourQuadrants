@@ -1,64 +1,39 @@
-# 四象限 (FourQuadrants)
+# 肆 · FourQuadrants
 
-按 **艾森豪威尔矩阵**（紧急 × 重要）组织任务的 iOS / macOS 原生应用，基础交互参照「提醒事项」。单一 SwiftUI 代码库，SwiftData + CloudKit 同步。
+一个原生 macOS / iOS 的**四象限（艾森豪威尔矩阵）任务管理**应用，SwiftUI + SwiftData。
+按「紧急 / 重要」把每周任务分到四个象限，配合标签、子任务、日历/议程视图与本地笔记，帮你分清轻重缓急。
 
-## 功能
-- 任务按 `紧急 / 重要` 两个标志推导到四个象限；可在象限间 **拖拽** 移动（自动翻转标志）。
-- **智能粘贴解析**：新建时粘贴整段工单文本，自动拆出 工单号（高亮 badge）/ 标题 / 链接。
-- 截止日期 + 本地通知、子任务、标签与搜索、完成状态与历史、每任务外部链接。
-- iCloud（CloudKit）跨设备同步。
+## 特性
 
-## 环境要求
-- macOS 26+ 与 **Xcode 26+**（本仓库代码面向 iOS 26 / macOS 26）。
-- [XcodeGen](https://github.com/yonyz/XcodeGen)（`brew install xcodegen`）—— 用于从 `project.yml` 生成工程。
-- CloudKit 同步需 **付费 Apple Developer 账号**。
+- **四象限总览**：紧急且重要 / 重要不紧急 / 紧急不重要 / 不紧急不重要，拖拽即可换象限、排序、嵌套。
+- **多级子任务**（最深 3 层）、标签分组、进度点评、富文本详情、链接与工单号识别。
+- **本周议程 / 日历**视图，跨周结转，收集箱。
+- **可扩展主题**：默认（跟随系统）与「终端」深色主题；可调背景图、界面透明度与模糊。
+- **本地优先**：数据存本地，若有 iCloud 则自动同步。
+- **自动更新**：匿名读取 GitHub Releases，发现新版可一键原地更新（见下）。
 
-## 生成并打开工程
+## 构建
+
+需要 Xcode 26（部署目标 macOS/iOS 26）。工程用 [XcodeGen](https://github.com/yonaskolb/XcodeGen) 管理：
+
 ```bash
-cd FourQuadrants
-xcodegen generate            # 由 project.yml 生成 FourQuadrants.xcodeproj
+brew install xcodegen
+xcodegen generate
 open FourQuadrants.xcodeproj
 ```
-> 新增/删除源文件后重新运行 `xcodegen generate` 即可，无需手动维护工程文件。
 
-## 构建 / 测试（装好 Xcode 后）
-```bash
-# macOS
-xcodebuild -scheme FourQuadrants -destination 'platform=macOS' build
-# iOS 模拟器
-xcodebuild -scheme FourQuadrants -destination 'platform=iOS Simulator,name=iPhone 16' build
-# 单元测试
-xcodebuild test -scheme FourQuadrants -destination 'platform=macOS'
-```
-解析逻辑的命令行快速校验（无需 Xcode）：
-```bash
-swiftc Sources/Services/TaskInputParser.swift <(一个含 main 的测试文件) -o check && ./check
-```
+`project.yml` 是工程配置的唯一来源；`FourQuadrants.xcodeproj` 由它生成、不纳入版本库。
 
-## 同步模式
+## 发布与自动更新
 
-默认是 **本地模式**：`Sources/FourQuadrants.entitlements` 不含 iCloud/Push，可在 **个人开发团队** 下直接编译运行（个人团队不支持这两项能力）。数据存本地，`FourQuadrantsApp.makeContainer()` 会自动以本地存储运行。
+- 打一个 `v*` 标签（如 `git tag v0.17.0 && git push origin v0.17.0`）会触发
+  [`.github/workflows/release.yml`](.github/workflows/release.yml)：CI 构建 Release 版
+  `.app`（ad-hoc 签名），打包为 `FourQuadrants-mac-arm64.zip` 并发布到对应 Release。
+- App 内 `Updater`（`Sources/Services/Updater.swift`）启动后台检查最新 Release，
+  发现更高版本时提示；确认后下载 zip、`ditto` 解压、去除隔离属性，写一段脚本在退出后
+  原地替换 `.app` 并重启。也可在「设置 → 关于与更新」或应用菜单里手动检查。
+- 未用 Sparkle：那需要 Developer ID 签名；此方案对 ad-hoc 签名的个人分发即可工作。
 
-### 切到 CloudKit 同步（需付费 Apple Developer 账号）
-1. 编辑 `project.yml`，把 target 的 `CODE_SIGN_ENTITLEMENTS` 改为
-   `Sources/FourQuadrants-CloudKit.entitlements`。
-2. `xcodegen generate` 重新生成工程。
-3. Xcode 中选中 **FourQuadrants** target → Signing & Capabilities，设置你的付费 **Team**；
-   确认容器为 `iCloud.com.cod7ce.FourQuadrants`（如改 bundle id 前缀，需同步更新两个 entitlements 文件）。
+## 许可
 
-## 代码结构
-```
-Sources/
-  FourQuadrantsApp.swift     # @main，ModelContainer（CloudKit，带本地回退）
-  Models/                    # TaskItem / Tag / Quadrant
-  Views/                     # NavigationSplitView 外壳、象限网格、列表、详情
-  Services/                  # 通知、智能解析、示例数据
-  Support/                   # 颜色、绑定、拖拽 Transferable、预览容器
-  Filters.swift              # 范围过滤辅助
-Tests/                       # TaskInputParser 单元测试
-project.yml                  # XcodeGen 工程定义
-```
-
-## SwiftData + CloudKit 约束（改模型时务必遵守）
-- 每个存储属性 **可选或带默认值**；**禁止** 唯一约束 `@Attribute(.unique)`。
-- 关系 **可选** 且带 `inverse`。
+个人项目，按原样提供。

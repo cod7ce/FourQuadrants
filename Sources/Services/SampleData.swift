@@ -10,17 +10,17 @@ enum SampleData {
         context.insert(work)
         context.insert(home)
 
-        let t1 = TaskItem(title: "客户购买了知识库管理，私有部署环境一点发布就会卡住，已取HAR",
+        let t1 = TaskItem(title: "准备季度评审材料",
                           isUrgent: true, isImportant: true,
                           dueDate: .now.addingTimeInterval(3600),
-                          links: ["https://our.ones.pro/project/#/team/RDjYMhKq/issue/ONES2-2296709"],
-                          issueKey: "ONES2-2296709",
+                          links: ["https://example.com/docs/quarterly-review"],
+                          issueKey: "DEMO-1024",
                           sortOrder: 0)
         t1.tags = [work]
-        let sub = TaskItem(title: "复现卡死现象", isUrgent: true, isImportant: true, sortOrder: 0)
+        let sub = TaskItem(title: "整理关键数据图表", isUrgent: true, isImportant: true, sortOrder: 0)
         sub.parent = t1
         t1.richContent = RichText.data(NSAttributedString(
-            string: "客户在私有部署环境点击「发布」后界面卡死，已抓取 HAR。下一步：对照日志定位接口超时点。"))
+            string: "汇总上季度的关键指标，做成一页概览。下一步：先把数据源对齐，再画图。"))
         context.insert(t1)
         context.insert(sub)
 
@@ -48,7 +48,7 @@ enum SampleData {
             return first
         }
         let t = TaskItem(title: "示例任务", isUrgent: true, isImportant: true,
-                         issueKey: "ONES2-2296709")
+                         issueKey: "DEMO-1024")
         context.insert(t)
         return t
     }

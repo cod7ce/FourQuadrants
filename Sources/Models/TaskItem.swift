@@ -26,7 +26,7 @@ final class TaskItem {
 
     /// 外部链接（URL 字符串）。
     var links: [String] = []
-    /// 工单号，如 ONES2-2296709。
+    /// 工单号，如 ABC-123。
     var issueKey: String?
 
     /// 稳定标识，用于本地通知的调度/取消（不要用 hashValue —— 跨启动不稳定）。

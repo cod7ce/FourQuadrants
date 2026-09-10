@@ -12,7 +12,7 @@ struct ParsedTaskInput: Equatable {
 
 /// 将一段（可能多行）输入解析为 工单号 / 标题 / 链接。纯函数，可单元测试。
 enum TaskInputParser {
-    /// 形如 ONES2-2296709、ABC-123 的工单号。
+    /// 形如 ABC-123 的工单号。
     static let issueKeyPattern = #"\b[A-Z][A-Z0-9]*-\d+\b"#
 
     static func parse(_ raw: String) -> ParsedTaskInput {

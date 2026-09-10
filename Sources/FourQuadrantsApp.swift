@@ -22,6 +22,11 @@ struct FourQuadrantsApp: App {
         .modelContainer(container)
         #if os(macOS)
         .commands {
+            CommandGroup(after: .appInfo) {
+                Button(L("menu.checkUpdates")) {
+                    Task { await Updater.shared.checkForUpdates(silent: false) }
+                }
+            }
             SidebarCommands()
             RichTextCommand.FormatMenu()   // 备忘编辑器的 ⌘B/⌘I/⌘U 等格式菜单与快捷键
             CommandGroup(after: .sidebar) {

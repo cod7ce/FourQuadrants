@@ -122,6 +122,9 @@
 "settings.theme.terminal" = "终端";
 "settings.theme.note" = "终端主题为独立深色（等宽字、方括号勾选、状态栏），不受系统明暗影响。";
 "settings.inbox.show" = "显示「收集箱」";
+"menu.checkUpdates" = "检查更新…";
+"settings.update.section" = "关于与更新";
+"settings.update.current" = "当前版本";
 "settings.completed.hide" = "隐藏已完成任务";
 "settings.ui.opacity" = "界面不透明度";
 "settings.ui.blur" = "界面模糊";
@@ -143,7 +146,7 @@
 "settings.font.system" = "系统默认";
 "settings.font.note" = "选择已安装的字体，全局生效；独立笔记窗口也会应用。";
 "settings.parse.section" = "粘贴解析规则";
-"settings.parse.builtin" = "智能识别 ONES 工单（默认）";
+"settings.parse.builtin" = "智能识别工单号（默认）";
 "settings.parse.builtin.desc" = "自动识别工单号、链接与标题";
 "settings.parse.hint" = "自定义正则规则优先；都不匹配时回退到默认";
 "settings.parse.addRule" = "添加正则规则";

@@ -1,0 +1,58 @@
+name: 构建并发布
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  macos:
+    name: macOS (arm64)
+    # 需要 macOS 26 SDK（部署目标 26.0）；如该镜像不可用可改成 macos-15 + 选 Xcode 26
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 选择 Xcode 26
+        run: sudo xcode-select -s /Applications/Xcode_26.app || true
+
+      - name: 安装 XcodeGen
+        run: brew install xcodegen
+
+      - name: 生成工程
+        run: xcodegen generate
+
+      - name: 构建（Release，ad-hoc 签名）
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project FourQuadrants.xcodeproj \
+            -scheme FourQuadrants \
+            -configuration Release \
+            -destination 'generic/platform=macOS' \
+            -derivedDataPath build \
+            CODE_SIGN_IDENTITY="-" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=YES \
+            build
+
+      - name: 打包为 zip
+        run: |
+          APP="build/Build/Products/Release/FourQuadrants.app"
+          test -d "$APP" || { echo "找不到构建产物 $APP"; exit 1; }
+          ditto -c -k --sequesterRsrc --keepParent "$APP" "FourQuadrants-mac-arm64.zip"
+          ls -lh FourQuadrants-mac-arm64.zip
+
+      # 先确保 Release 存在，再上传资产（避免同 tag 出现多个 Release）
+      - name: 建好 Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 || \
+            gh release create "$GITHUB_REF_NAME" --verify-tag --title "$GITHUB_REF_NAME" --generate-notes
+
+      - name: 上传安装包
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "$GITHUB_REF_NAME" FourQuadrants-mac-arm64.zip --clobber

@@ -122,6 +122,9 @@
 "settings.theme.terminal" = "Terminal";
 "settings.theme.note" = "Terminal is a standalone dark theme (mono font, bracket checkboxes, status bar), independent of system appearance.";
 "settings.inbox.show" = "Show Inbox";
+"menu.checkUpdates" = "Check for Updates…";
+"settings.update.section" = "About & Updates";
+"settings.update.current" = "Current version";
 "settings.completed.hide" = "Hide completed tasks";
 "settings.ui.opacity" = "UI Opacity";
 "settings.ui.blur" = "UI Blur";
@@ -143,7 +146,7 @@
 "settings.font.system" = "System default";
 "settings.font.note" = "Pick an installed font; applies app-wide, including the notes window.";
 "settings.parse.section" = "Clipboard parsing rules";
-"settings.parse.builtin" = "Detect ONES tickets (default)";
+"settings.parse.builtin" = "Detect issue keys (default)";
 "settings.parse.builtin.desc" = "Auto-detect ticket, link and title";
 "settings.parse.hint" = "Custom regex rules take priority; falls back to default";
 "settings.parse.addRule" = "Add regex rule";
