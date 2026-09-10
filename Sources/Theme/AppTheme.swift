@@ -61,6 +61,19 @@ struct AppTheme {
         case .neither:         return q4
         }
     }
+
+    /// 窗口染色层的「不透明基色」：叠在模糊材质之上，配合全局不透明度 uiOpacity 使用。
+    /// 终端=近黑，默认玻璃=窗口底色。
+    var chromeBaseTint: Color {
+        #if os(macOS)
+        switch id {
+        case .terminal: return Color(red: 0.013, green: 0.011, blue: 0.026)
+        case .system:   return platformWindowBackground()
+        }
+        #else
+        return background
+        #endif
+    }
 }
 
 // MARK: - 动态色 & 注册表
@@ -133,6 +146,14 @@ enum InboxVisibility {
 /// 是否隐藏已完成任务（设置里可开，默认关闭=显示）。
 enum CompletedVisibility {
     static let key = "hideCompleted"
+}
+
+/// 整窗玻璃观感的全局可调项（仅 macOS 生效）：染色层不透明度 + 模糊材质档位。
+enum UIChromeConfig {
+    static let opacityKey = "uiOpacity"   // 窗口染色层不透明度 0…1（越低越透）
+    static let blurKey    = "uiBlur"      // 磨砂档位 0…1（越高越厚）
+    static let defaultOpacity = 0.85
+    static let defaultBlur    = 0.5
 }
 
 /// 全局取当前主题（供非 View 上下文的语义色访问；切主题时整树刷新以重新求值）。

@@ -16,6 +16,10 @@ struct SettingsView: View {
     @AppStorage(ThemeManager.key) private var themeIDRaw = ThemeID.system.rawValue
     @AppStorage(InboxVisibility.key) private var showInbox = true
     @AppStorage(CompletedVisibility.key) private var hideCompleted = false
+    #if os(macOS)
+    @AppStorage(UIChromeConfig.opacityKey) private var uiOpacity = UIChromeConfig.defaultOpacity
+    @AppStorage(UIChromeConfig.blurKey) private var uiBlur = UIChromeConfig.defaultBlur
+    #endif
     @AppStorage(ParseRuleStore.builtinTagKey) private var builtinTag = ""
     @State private var rules: [ParseRule] = ParseRuleStore.load()
     @State private var editingTag: Tag?
@@ -80,6 +84,21 @@ struct SettingsView: View {
         #endif
     }
 
+    #if os(macOS)
+    /// 界面透明/模糊滑杆：带右侧百分比读数。
+    private func chromeSlider(_ title: String, value: Binding<Double>) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack {
+                Text(title).appFont(.caption)
+                Spacer()
+                Text("\(Int((value.wrappedValue * 100).rounded()))%")
+                    .appFont(.caption, monospaced: true).foregroundStyle(.secondary)
+            }
+            Slider(value: value, in: 0...1)
+        }
+    }
+    #endif
+
     @ViewBuilder private var appearanceSections: some View {
         Section(L("settings.language.section")) {
             Picker(L("settings.language.section"), selection: $language) {
@@ -96,6 +115,10 @@ struct SettingsView: View {
             Text(L("settings.theme.note")).appFont(.caption).foregroundStyle(.secondary)
             Toggle(L("settings.inbox.show"), isOn: $showInbox)
             Toggle(L("settings.completed.hide"), isOn: $hideCompleted)
+            #if os(macOS)
+            chromeSlider(L("settings.ui.opacity"), value: $uiOpacity)
+            chromeSlider(L("settings.ui.blur"), value: $uiBlur)
+            #endif
         } header: {
             Text(L("settings.theme.section"))
         }

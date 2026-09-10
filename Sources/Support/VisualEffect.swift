@@ -37,6 +37,19 @@ struct WindowDragArea: NSViewRepresentable {
     }
 }
 
+/// 「界面模糊」档位（0…1）→ NSVisualEffectView 材质（从清透到厚磨砂）。
+/// 材质之间以磨砂/明度差异为主；默认档（0.5）对应 underWindowBackground，即现状观感。
+enum ChromeMaterial {
+    static let ordered: [NSVisualEffectView.Material] =
+        [.hudWindow, .popover, .menu, .underWindowBackground, .headerView, .sidebar, .windowBackground]
+
+    static func material(_ level: Double) -> NSVisualEffectView.Material {
+        let clamped = min(max(level, 0), 1)
+        let idx = Int((clamped * Double(ordered.count - 1)).rounded())
+        return ordered[min(max(idx, 0), ordered.count - 1)]
+    }
+}
+
 /// 让侧栏那一列的系统 vibrancy 材质失活（窗口底已清空为透明），
 /// 从而让窗口级背景（BackgroundLayer 的背景图）连续透过侧栏显示。
 struct SidebarVibrancyStripper: NSViewRepresentable {

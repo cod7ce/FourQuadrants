@@ -123,6 +123,8 @@
 "settings.theme.note" = "Terminal is a standalone dark theme (mono font, bracket checkboxes, status bar), independent of system appearance.";
 "settings.inbox.show" = "Show Inbox";
 "settings.completed.hide" = "Hide completed tasks";
+"settings.ui.opacity" = "UI Opacity";
+"settings.ui.blur" = "UI Blur";
 "settings.bg.section" = "Background";
 "settings.bg.note" = "Pick one global background image, layered beneath the theme; use the dim to keep cards and text legible. Remove it to return to the default background.";
 "settings.bg.choose" = "Choose Image";

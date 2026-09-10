@@ -10,6 +10,8 @@ struct BackgroundLayer: View {
     @AppStorage(BackgroundConfig.blurKey)    private var blur = BackgroundConfig.defaultBlur
     @AppStorage(BackgroundConfig.fillKey)    private var fillRaw = BackgroundConfig.defaultFill
     @AppStorage(BackgroundConfig.opacityKey) private var opacity = BackgroundConfig.defaultOpacity
+    @AppStorage(UIChromeConfig.opacityKey)   private var uiOpacity = UIChromeConfig.defaultOpacity
+    @AppStorage(UIChromeConfig.blurKey)      private var uiBlur = UIChromeConfig.defaultBlur
 
     @State private var image: Image?
 
@@ -33,13 +35,11 @@ struct BackgroundLayer: View {
     @ViewBuilder private var base: some View {
         #if os(macOS)
         if file.isEmpty {
-            if theme.chrome == .solid {
-                VisualEffectView().overlay(theme.background)
-            } else {
-                VisualEffectView().overlay(Color(nsColor: .windowBackgroundColor).opacity(ContentView.glassTint))
-            }
+            // 模糊材质档位由 uiBlur 决定；染色层用主题基色 + 全局 uiOpacity（越低越透）
+            VisualEffectView(material: ChromeMaterial.material(uiBlur))
+                .overlay(theme.chromeBaseTint.opacity(uiOpacity))
         } else {
-            VisualEffectView()
+            VisualEffectView(material: ChromeMaterial.material(uiBlur))
         }
         #else
         if file.isEmpty {

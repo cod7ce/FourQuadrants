@@ -123,6 +123,8 @@
 "settings.theme.note" = "终端主题为独立深色（等宽字、方括号勾选、状态栏），不受系统明暗影响。";
 "settings.inbox.show" = "显示「收集箱」";
 "settings.completed.hide" = "隐藏已完成任务";
+"settings.ui.opacity" = "界面不透明度";
+"settings.ui.blur" = "界面模糊";
 "settings.bg.section" = "背景图";
 "settings.bg.note" = "选一张全局背景图，叠在主题之下；用暗化保证卡片与文字可读。移除后回到默认背景。";
 "settings.bg.choose" = "选择图片";
