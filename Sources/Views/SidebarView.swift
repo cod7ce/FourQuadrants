@@ -91,7 +91,8 @@ struct SidebarView: View {
         if hasBackground {
             Color.black.opacity(0.28)
         } else if theme.chrome == .solid {
-            Color(red: 0.02, green: 0.018, blue: 0.04, opacity: 0.55)
+            Color(red: 0.031, green: 0.037, blue: 0.049, opacity: 0.6)   // 冷调近黑，比主区略深
+
         } else {
             Color.clear
         }

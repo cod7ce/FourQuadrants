@@ -67,7 +67,7 @@ struct AppTheme {
     var chromeBaseTint: Color {
         #if os(macOS)
         switch id {
-        case .terminal: return Color(red: 0.013, green: 0.011, blue: 0.026)
+        case .terminal: return Color(red: 0.031, green: 0.035, blue: 0.051)   // 页面底 #08090D
         case .system:   return platformWindowBackground()
         }
         #else
@@ -119,11 +119,11 @@ extension AppTheme {
     static let terminal = AppTheme(
         id: .terminal,
         forcedDark: true,
-        background: Color(red: 0.013, green: 0.011, blue: 0.026, opacity: 0.84), // 近黑·半透，桌面透出
-        surface: Color(white: 1, opacity: 0.035),        // 面板：极淡白覆盖，衬出层次
-        surfaceAlt: Color(white: 1, opacity: 0.065),      // 填充/收集箱盒
-        label: Color(hex: "#E7E9F3") ?? .white,
-        accent: Color(hex: "#3AD07D") ?? .green,
+        background: Color(red: 0.031, green: 0.035, blue: 0.051, opacity: 0.9),   // 页面底 #08090D
+        surface: Color(red: 0.039, green: 0.055, blue: 0.067),      // 框体内容 #0A0E11（不透明，精确取色）
+        surfaceAlt: Color(red: 0.063, green: 0.082, blue: 0.106),   // 填充/收集箱盒（比框体略亮一档）
+        label: Color(hex: "#E8EAED") ?? .white,
+        accent: Color(hex: "#3DDC84") ?? .green,
         q1: Color(hex: "#FF5C7A") ?? .red,
         q2: Color(hex: "#5B8CFF") ?? .blue,
         q3: Color(hex: "#FFB454") ?? .orange,

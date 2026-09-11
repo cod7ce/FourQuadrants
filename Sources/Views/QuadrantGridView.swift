@@ -189,13 +189,8 @@ private struct QuadrantCard: View {
 
     @ViewBuilder private var cardBackground: some View {
         if theme.cardStyle == .panel {
-            ZStack(alignment: .leading) {
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(isTargeted ? quadrant.color.opacity(0.12) : theme.surface)
-                RoundedRectangle(cornerRadius: 2)
-                    .fill(quadrant.color).frame(width: 3)
-                    .padding(.vertical, 10)
-            }
+            RoundedRectangle(cornerRadius: 10)
+                .fill(isTargeted ? quadrant.color.opacity(0.12) : theme.surface)
         } else {
             RoundedRectangle(cornerRadius: 16)
                 .fill(quadrant.color.opacity(isTargeted ? 0.18 : 0.08))
@@ -206,7 +201,7 @@ private struct QuadrantCard: View {
         if theme.cardStyle == .panel {
             RoundedRectangle(cornerRadius: 10)
                 .strokeBorder(isTargeted ? quadrant.color.opacity(0.7)
-                              : theme.label.opacity(0.08), lineWidth: 1)
+                              : theme.label.opacity(0.10), lineWidth: 1)
         } else {
             RoundedRectangle(cornerRadius: 16)
                 .strokeBorder(quadrant.color.opacity(isTargeted ? 0.7 : 0), lineWidth: 1.5)
