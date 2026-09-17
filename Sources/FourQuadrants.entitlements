@@ -3,23 +3,18 @@
 <!--
   本地模式 entitlements —— 不含 iCloud / Push，可在「个人开发团队」下直接编译运行。
   数据存本地（app 会自动回退到本地存储）。
+
+  刻意「不」开 App Sandbox：沙盒禁止 App 改写自己在 /Applications 的程序包，
+  从而无法实现「下载新版原地替换」的一键自动更新（见 Sources/Services/Updater.swift）。
+  这是个人自建、ad-hoc 签名、GitHub Releases 分发的取舍——与 scratch 应用一致。
+  代价：App 获得普通程序级别的完整用户文件访问权（无沙盒隔离）。
   需要跨设备 iCloud 同步时：用付费账号，把 project.yml 的 CODE_SIGN_ENTITLEMENTS
-  指向 FourQuadrants-CloudKit.entitlements。
+  指向 FourQuadrants-CloudKit.entitlements（那份仍开沙盒）。
 -->
 <plist version="1.0">
 <dict>
-	<key>com.apple.security.app-sandbox</key>
-	<true/>
-	<key>com.apple.security.network.client</key>
-	<true/>
+	<!-- 向「备忘录 / 系统事件」发送 Apple 事件（导出到备忘录用；TCC 仍会弹窗授权）。 -->
 	<key>com.apple.security.automation.apple-events</key>
-	<true/>
-	<key>com.apple.security.temporary-exception.apple-events</key>
-	<array>
-		<string>com.apple.Notes</string>
-		<string>com.apple.systemevents</string>
-	</array>
-	<key>com.apple.security.files.user-selected.read-write</key>
 	<true/>
 </dict>
 </plist>
