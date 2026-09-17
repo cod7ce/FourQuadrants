@@ -7,6 +7,8 @@ struct QuadrantGridView: View {
     @Binding var weekStart: Date
     @Query(sort: \TaskItem.sortOrder) private var allTasks: [TaskItem]
     @State private var newTask: TaskItem?
+    @State private var drag = OverviewDrag()
+    @State private var scrollPos = ScrollPosition()
 
     private var weekTasks: [TaskItem] { allTasks.inWeek(weekStart).topLevel }
 
@@ -36,7 +38,30 @@ struct QuadrantGridView: View {
                     }
                     .padding(.horizontal, 24)
                     .padding(.bottom, 24)
+                    .coordinateSpace(.named("ov"))
+                    .environment(drag)
+                    .overlay { OverviewDragLayer(drag: drag) }
+                    // 拖拽期间冻结几何收集，避免「让位→布局变→回写→重渲染」的抖动回路
+                    .onPreferenceChange(OVSlotKey.self) { if !drag.isDragging { drag.slots = $0 } }
+                    .onPreferenceChange(OVCardKey.self) { if !drag.isDragging { drag.cards = $0 } }
                 }
+                .scrollPosition($scrollPos)
+                .onScrollGeometryChange(for: ScrollGeom.self) {
+                    ScrollGeom(offsetY: $0.contentOffset.y,
+                               contentH: $0.contentSize.height,
+                               viewportH: $0.containerSize.height)
+                } action: { _, g in
+                    drag.contentOffsetY = g.offsetY
+                    drag.contentHeight = g.contentH
+                    drag.viewportHeight = g.viewportH
+                }
+                .onAppear {
+                    let bind = $scrollPos
+                    drag.scrollTo = { y in bind.wrappedValue.scrollTo(y: y) }
+                }
+                #if os(iOS)
+                .scrollDisabled(drag.isDragging)   // iOS：拖拽期间禁滚，避免与滚动手势冲突
+                #endif
             }
         }
         .navigationTitle(L("overview.title"))
@@ -143,6 +168,7 @@ struct ThinProgressBar: View {
 private struct QuadrantCard: View {
     @Environment(\.modelContext) private var context
     @Environment(\.theme) private var theme
+    @Environment(OverviewDrag.self) private var drag
     let quadrant: Quadrant
     let tasks: [TaskItem]          // 该象限全部任务（含已完成）
     let weekStart: Date
@@ -155,6 +181,8 @@ private struct QuadrantCard: View {
     private var ratio: Double { tasks.isEmpty ? 0 : Double(completed.count) / Double(tasks.count) }
     /// 隐藏已完成时，已完成段整体不渲染。
     private var showsCompleted: Bool { !hideCompleted && !completed.isEmpty }
+    /// 拖拽期间冻结的卡高（固定外框，避免格子跳动）。
+    private var dragCardHeight: CGFloat? { drag.isDragging ? drag.frozenHeight(quadrant) : nil }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -165,7 +193,12 @@ private struct QuadrantCard: View {
             } else {
                 ThinProgressBar(ratio: ratio, color: quadrant.color)
                 VStack(alignment: .leading, spacing: 16) {
-                    ForEach(active) { row($0, siblings: active) }
+                    ForEach(active, id: \.persistentModelID) { task in
+                        OverviewTaskRow(task: task, quadrant: quadrant, weekStart: weekStart,
+                                        isSelected: selectedTask?.persistentModelID == task.persistentModelID,
+                                        siblings: active,
+                                        onSelect: { selectedTask = task })
+                    }
                     if showsCompleted {
                         Text(String(format: L("grid.completedCount"), completed.count))
                             .appFont(.caption).foregroundStyle(.secondary)
@@ -176,9 +209,19 @@ private struct QuadrantCard: View {
             }
         }
         .padding(16)
-        .frame(maxWidth: .infinity, minHeight: 200, maxHeight: .infinity, alignment: .topLeading)
+        .frame(maxWidth: .infinity,
+               minHeight: dragCardHeight ?? 200,
+               maxHeight: dragCardHeight ?? .infinity,
+               alignment: .topLeading)
+        .clipped()   // 拖拽期间卡高冻结，行的收拢/让位在框内发生、溢出裁掉
         .background(cardBackground)
         .overlay(cardBorder)
+        .background(   // 登记象限卡矩形，供自定义拖拽命中判断
+            GeometryReader { g in
+                Color.clear.preference(key: OVCardKey.self,
+                                       value: [OVCard(quadrant: quadrant, rect: g.frame(in: .named("ov")))])
+            }
+        )
         .dropDestination(for: TaskTransfer.self) { items, _ in
             for item in items {
                 TaskMutations.schedule(uuid: item.taskUUID, to: quadrant, week: weekStart, in: context)
@@ -248,27 +291,28 @@ private struct QuadrantCard: View {
 
     @ViewBuilder
     private func row(_ task: TaskItem, siblings: [TaskItem]) -> some View {
-        OverviewTaskRow(task: task,
+        OverviewTaskRow(task: task, quadrant: quadrant, weekStart: weekStart, draggable: false,
                         isSelected: selectedTask?.persistentModelID == task.persistentModelID,
                         siblings: siblings,
                         onSelect: { selectedTask = task })
-            .draggable(TaskTransfer(taskUUID: task.taskUUID))
     }
 }
 
 // MARK: - 任务行（总览卡片内）
 
-private struct OverviewTaskRow: View {
+struct OverviewTaskRow: View {
     @Environment(\.modelContext) private var context
     @Environment(\.openURL) private var openURL
     @Environment(\.optionHeld) private var optionHeld
     @Environment(\.fontScale) private var fontScale
     @Bindable var task: TaskItem
+    var quadrant: Quadrant = .urgentImportant
+    var weekStart: Date = Week.currentStart
+    var draggable: Bool = true
     var isSelected: Bool = false
     var siblings: [TaskItem] = []
     var onSelect: () -> Void = {}
     @State private var showPopover = false
-    @State private var dropTargeted = false
 
     static let checkboxWidth: CGFloat = 22
     static let gap: CGFloat = 9
@@ -278,39 +322,22 @@ private struct OverviewTaskRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 9) {
-            parentRow
+            // 手势只贴父行，避免包住子任务把它们的手势抢掉
+            parentRow.modifierIf(draggable) {
+                $0.overviewRowGesture(task: task, quadrant: quadrant, week: weekStart)
+            }
             // 父任务下列出子任务（未完成的父任务才展开，保持已完成区紧凑）
             if !task.isCompleted {
                 // 子任务用更紧的行距，让树形竖干（├/└）连成一条线，不出现断点
                 VStack(alignment: .leading, spacing: 0) {
                     ForEach(Array(subs.enumerated()), id: \.element.persistentModelID) { idx, sub in
-                        OverviewSubtaskTree(sub: sub, guides: [], isLast: idx == subs.count - 1)
+                        OverviewSubtaskTree(sub: sub, quadrant: quadrant, weekStart: weekStart,
+                                            guides: [], isLast: idx == subs.count - 1)
                     }
                 }
             }
         }
-        // 落放提示：整行淡高亮 = 嵌套为子任务；顶部细线 = 插到该任务前重排。
-        .background {
-            if dropTargeted {
-                RoundedRectangle(cornerRadius: 8).fill(Color.accentColor.opacity(0.10))
-                    .padding(.horizontal, -6).padding(.vertical, -3)
-            }
-        }
-        .overlay(alignment: .top) {
-            if dropTargeted {
-                Capsule().fill(Color.accentColor).frame(height: 2).padding(.horizontal, -4).offset(y: -5)
-            }
-        }
-        .dropDestination(for: TaskTransfer.self) { items, location in
-            for it in items {
-                if location.y < 12 {   // 顶部细条 → 重排到该任务前（可跨层级）
-                    TaskMutations.reorder(draggedUUID: it.taskUUID, before: task, ordered: siblings, in: context)
-                } else {               // 行主体 → 嵌套为该任务的子任务（含无子任务的父）
-                    TaskMutations.makeChild(uuid: it.taskUUID, of: task, in: context)
-                }
-            }
-            return !items.isEmpty
-        } isTargeted: { dropTargeted = $0 }
+        .modifierIf(draggable) { $0.overviewRowLayout(task: task) }   // 收拢/让位贴在整块
     }
 
     private var parentRow: some View {
@@ -372,11 +399,12 @@ private struct OverviewSubtaskTree: View {
     @Environment(\.optionHeld) private var optionHeld
     @Environment(\.theme) private var theme
     @Bindable var sub: TaskItem
+    var quadrant: Quadrant = .urgentImportant
+    var weekStart: Date = Week.currentStart
     /// 各祖先列是否还要继续画竖线（该祖先在其同级中还有后续项）。长度 = 本节点在子树中的层级。
     var guides: [Bool]
     var isLast: Bool = true
     @State private var showPopover = false
-    @State private var dropTargeted = false
 
     // 每层缩进 = 一个父 checkbox 宽 + 间距，子任务 checkbox 对齐到上一层内容列
     static var indentStep: CGFloat { OverviewTaskRow.checkboxWidth + OverviewTaskRow.gap }
@@ -388,11 +416,12 @@ private struct OverviewSubtaskTree: View {
         VStack(alignment: .leading, spacing: 0) {
             rowView
             ForEach(Array(childSubs.enumerated()), id: \.element.persistentModelID) { idx, child in
-                OverviewSubtaskTree(sub: child,
+                OverviewSubtaskTree(sub: child, quadrant: quadrant, weekStart: weekStart,
                                     guides: guides + [!isLast],
                                     isLast: idx == childSubs.count - 1)
             }
         }
+        .overviewRowLayout(task: sub)   // 子任务块的收拢/让位
     }
 
     private var rowView: some View {
@@ -423,23 +452,7 @@ private struct OverviewSubtaskTree: View {
         )
         #endif
         .onTapGesture(count: 2) { showPopover = true }
-        .overlay(alignment: .top) {
-            if dropTargeted {
-                Capsule().fill(Color.accentColor).frame(height: 2).offset(y: -4)
-            }
-        }
-        .draggable(TaskTransfer(taskUUID: sub.taskUUID))
-        .dropDestination(for: TaskTransfer.self) { items, location in
-            for it in items {
-                if location.y < 10 {   // 顶部细条 → 插到该子任务前重排
-                    TaskMutations.reorder(draggedUUID: it.taskUUID, before: sub,
-                                          ordered: sub.parent?.sortedSubtasks ?? [], in: context)
-                } else {               // 行主体 → 嵌套为该子任务的子任务（超深/成环由 makeChild 拦截）
-                    TaskMutations.makeChild(uuid: it.taskUUID, of: sub, in: context)
-                }
-            }
-            return !items.isEmpty
-        } isTargeted: { dropTargeted = $0 }
+        .overviewRowGesture(task: sub, quadrant: quadrant, week: weekStart)   // 子任务行手势
         .sheet(isPresented: $showPopover) { TaskEditor(task: sub) }
     }
 

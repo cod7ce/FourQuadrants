@@ -169,4 +169,29 @@ enum TaskMutations {
         try? context.save()
         Task { await NotificationManager.shared.reschedule(for: dragged) }
     }
+
+    /// 把任务作为顶层任务放入指定象限/周，插到 `before` 之前（`before` 为 nil = 末尾），并重排同级序号。
+    /// 供总览自定义拖拽落位使用（跨象限移动 + 同象限重排统一走这里）。
+    @MainActor
+    static func place(uuid: String, into quadrant: Quadrant, before: TaskItem?,
+                      week: Date, in context: ModelContext) {
+        guard let dragged = task(uuid: uuid, in: context) else { return }
+        let flags = quadrant.flags
+        let weekStart = Week.start(of: week)
+        dragged.parent = nil
+        dragged.move(to: quadrant)
+        dragged.weekStart = weekStart
+
+        let all = (try? context.fetch(FetchDescriptor<TaskItem>(sortBy: [SortDescriptor(\.sortOrder)]))) ?? []
+        var ordered = all.filter {
+            $0.parent == nil && $0.taskUUID != uuid && !$0.isCompleted &&
+            $0.isUrgent == flags.isUrgent && $0.isImportant == flags.isImportant &&
+            Week.start(of: $0.weekStart) == weekStart
+        }
+        let at = before.flatMap { b in ordered.firstIndex { $0.taskUUID == b.taskUUID } } ?? ordered.count
+        ordered.insert(dragged, at: min(at, ordered.count))
+        for (i, t) in ordered.enumerated() { t.sortOrder = Double(i) }
+        try? context.save()
+        Task { await NotificationManager.shared.reschedule(for: dragged) }
+    }
 }
