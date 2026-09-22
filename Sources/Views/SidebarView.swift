@@ -57,7 +57,7 @@ struct SidebarView: View {
                 .padding(.horizontal, 8).padding(.top, 4)
             }
             .frame(maxHeight: .infinity)
-            .sheet(item: $editingTag) { tag in
+            .centeredWindow(item: $editingTag) { tag in
                 TagEditorSheet(tag: tag, isNew: true)
             }
 

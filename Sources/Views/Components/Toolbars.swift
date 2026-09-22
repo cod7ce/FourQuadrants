@@ -8,7 +8,9 @@ struct MainToolbar: ViewModifier {
     let onAdd: () -> Void
     @Environment(\.openWindow) private var openWindow
     @State private var showCarry = false
+    #if os(iOS)
     @State private var showExport = false
+    #endif
 
     func body(content: Content) -> some View {
         content
@@ -16,7 +18,7 @@ struct MainToolbar: ViewModifier {
                 ToolbarItem(placement: .primaryAction) {
                     HStack(spacing: 10) {
                         ToolIconButton(icon: .carry, help: L("carry.help")) { showCarry = true }
-                        ToolIconButton(icon: .share, help: L("menu.exportMd")) { showExport = true }
+                        ToolIconButton(icon: .share, help: L("menu.exportMd")) { promptExport() }
                         ToolIconButton(icon: .notes, help: L("notes.title")) { openWindow(id: "notes") }
                         ToolbarDivider().padding(.horizontal, -1)
                         NewTaskButton(action: onAdd)
@@ -24,18 +26,31 @@ struct MainToolbar: ViewModifier {
                     .padding(.horizontal, 8)
                 }
             }
-            .sheet(isPresented: $showCarry) { CarryForwardSheet(week: week) }
+            .centeredWindow(isPresented: $showCarry) { CarryForwardSheet(week: week) }
+            #if os(iOS)
             .confirmationDialog(L("menu.exportMd"), isPresented: $showExport, titleVisibility: .visible) {
-                #if os(macOS)
-                Button(L("menu.exportMd.file")) {
-                    MarkdownExporter.exportToFile(weekStart: week, weekTasks: weekTasks)
-                }
-                #endif
                 Button(L("menu.exportMd.clipboard")) {
                     MarkdownExporter.copyToPasteboard(weekStart: week, weekTasks: weekTasks)
                 }
                 Button(L("action.cancel"), role: .cancel) {}
             }
+            #endif
+    }
+
+    /// 导出方式选择：macOS 用屏幕居中的 NSAlert，iOS 仍走 confirmationDialog。
+    private func promptExport() {
+        #if os(macOS)
+        switch ScreenAlert.choose(title: L("menu.exportMd"),
+                                  buttons: [L("menu.exportMd.file"),
+                                            L("menu.exportMd.clipboard"),
+                                            L("action.cancel")]) {
+        case 0: MarkdownExporter.exportToFile(weekStart: week, weekTasks: weekTasks)
+        case 1: MarkdownExporter.copyToPasteboard(weekStart: week, weekTasks: weekTasks)
+        default: break
+        }
+        #else
+        showExport = true
+        #endif
     }
 }
 
@@ -122,10 +137,17 @@ struct NewTaskButton: View {
 private struct CarryForwardSheet: View {
     let week: Date
     @Environment(\.modelContext) private var context
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.dismiss) private var dismissSheet
+    /// 放进独立窗口时由外部注入（见 CenteredWindow.swift）；sheet 里则为 nil。
+    @Environment(\.closeHostWindow) private var closeHostWindow
     @Query(sort: \TaskItem.sortOrder) private var allTasks: [TaskItem]
     @State private var selected: Set<String> = []
     @State private var didInit = false
+
+    /// 关闭弹窗：独立窗口走关窗，sheet 走 dismiss。
+    private func dismiss() {
+        if let closeHostWindow { closeHostWindow() } else { dismissSheet() }
+    }
 
     // MARK: 数据
 

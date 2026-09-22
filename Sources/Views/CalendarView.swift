@@ -54,7 +54,7 @@ struct CalendarView: View {
         }
         .navigationTitle(L("sidebar.calendar"))
         .notesToolbar { newTask = makeTask() }
-        .sheet(item: $newTask) { TaskEditor(task: $0, isNew: true) }
+        .taskEditorWindow(item: $newTask, isNew: true)
     }
 
     private var calendarMain: some View {
@@ -323,7 +323,7 @@ private struct CalDayRow: View {
         .contentShape(Rectangle())
         .onTapGesture(count: 2) { showPopover = true }
         .onTapGesture { selectedTask = task }
-        .sheet(isPresented: $showPopover) { TaskEditor(task: task) }
+        .taskEditorWindow(isPresented: $showPopover, task: task)
     }
 
     private func toggle() {

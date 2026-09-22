@@ -4,7 +4,9 @@ import SwiftData
 /// 新建 / 编辑任务的统一大弹窗。左列：描述/子任务/链接；右列：象限点选/截止/提醒/标签。
 struct TaskEditor: View {
     @Environment(\.modelContext) private var context
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.dismiss) private var dismissSheet
+    /// 放进独立窗口时由外部注入（见 EditorWindow.swift）；sheet 里则为 nil。
+    @Environment(\.closeHostWindow) private var closeHostWindow
     @Bindable var task: TaskItem
     /// 新建任务：关闭时若仍为空则丢弃。
     var isNew: Bool = false
@@ -16,10 +18,17 @@ struct TaskEditor: View {
     @State private var newLink = ""
     @State private var newNote = ""
     @State private var newTagName = ""
+    #if os(iOS)
     @State private var showNewTag = false
+    #endif
     @State private var showReminderPicker = false
 
     private var isSub: Bool { task.parent != nil }
+
+    /// 关闭编辑器：独立窗口走关窗，sheet 走 dismiss。
+    private func dismiss() {
+        if let closeHostWindow { closeHostWindow() } else { dismissSheet() }
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -180,7 +189,7 @@ struct TaskEditor: View {
             }
             .padding(.top, 2)
         }
-        .sheet(item: $editingSub) { TaskEditor(task: $0) }   // 递归编辑子任务（可再加下一层）
+        .taskEditorWindow(item: $editingSub)   // 递归编辑子任务（可再加下一层）
     }
 
     private var linksBlock: some View {
@@ -340,16 +349,32 @@ struct TaskEditor: View {
                 }
                 .buttonStyle(.plain)
             }
-            Button { showNewTag = true } label: {
+            Button(action: promptNewTag) {
                 dashedPill(icon: "plus", text: L("editor.tag.new"))
             }
             .buttonStyle(.plain)
         }
+        #if os(iOS)
         .alert(L("editor.tag.new"), isPresented: $showNewTag) {
             TextField(L("detail.tag.new"), text: $newTagName)
             Button(L("action.add"), action: addTag)
             Button(L("action.cancel"), role: .cancel) { newTagName = "" }
         }
+        #endif
+    }
+
+    /// 新建标签：macOS 用屏幕居中的 NSAlert，iOS 仍走 SwiftUI alert。
+    private func promptNewTag() {
+        #if os(macOS)
+        guard let name = ScreenAlert.input(title: L("editor.tag.new"),
+                                           placeholder: L("detail.tag.new"),
+                                           ok: L("action.add"),
+                                           cancel: L("action.cancel")) else { return }
+        newTagName = name
+        addTag()
+        #else
+        showNewTag = true
+        #endif
     }
 
     // MARK: - Footer

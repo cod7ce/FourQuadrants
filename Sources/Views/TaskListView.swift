@@ -67,7 +67,7 @@ struct TaskListView: View {
             ToolbarItem(placement: .topBarTrailing) { EditButton() }
         }
         #endif
-        .sheet(item: $newTask) { TaskEditor(task: $0, isNew: true) }
+        .taskEditorWindow(item: $newTask, isNew: true)
         .dropDestination(for: TaskTransfer.self) { items, _ in
             guard case .quadrant(let q) = scope else { return false }
             for item in items { TaskMutations.move(uuid: item.taskUUID, to: q, in: context) }

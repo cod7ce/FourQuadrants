@@ -234,7 +234,7 @@ struct SettingsView: View {
             .formStyle(.grouped)
             .navigationTitle(L("settings.title"))
             .onChange(of: rules) { _, new in ParseRuleStore.save(new) }
-            .sheet(item: $editingTag) { tag in
+            .centeredWindow(item: $editingTag) { tag in
                 TagEditorSheet(tag: tag, isNew: editingIsNew)
             }
             #if os(iOS)
@@ -276,10 +276,17 @@ private struct TagListRow: View {
 /// 标签编辑弹窗：名称 + 常用颜色网格 + 预览 + 删除/完成。
 struct TagEditorSheet: View {
     @Environment(\.modelContext) private var context
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.dismiss) private var dismissSheet
+    /// 放进独立窗口时由外部注入（见 CenteredWindow.swift）；sheet 里则为 nil。
+    @Environment(\.closeHostWindow) private var closeHostWindow
     @Bindable var tag: Tag
     let isNew: Bool
     @State private var removed = false
+
+    /// 关闭弹窗：独立窗口走关窗，sheet 走 dismiss。
+    private func dismiss() {
+        if let closeHostWindow { closeHostWindow() } else { dismissSheet() }
+    }
 
     private var displayName: String {
         tag.name.isEmpty ? L("detail.title.untitled") : tag.name

@@ -66,7 +66,7 @@ struct QuadrantGridView: View {
         }
         .navigationTitle(L("overview.title"))
         .mainToolbar(week: weekStart, weekTasks: weekTasks) { newTask = makeTask() }
-        .sheet(item: $newTask) { TaskEditor(task: $0, isNew: true) }
+        .taskEditorWindow(item: $newTask, isNew: true)
     }
 
     private func makeTask() -> TaskItem {
@@ -373,7 +373,7 @@ struct OverviewTaskRow: View {
         #endif
         .onTapGesture(count: 2) { showPopover = true }
         .onTapGesture { onSelect() }
-        .sheet(isPresented: $showPopover) { TaskEditor(task: task) }
+        .taskEditorWindow(isPresented: $showPopover, task: task)
     }
 
     private var completionToggle: some View {
@@ -453,7 +453,7 @@ private struct OverviewSubtaskTree: View {
         #endif
         .onTapGesture(count: 2) { showPopover = true }
         .overviewRowGesture(task: sub, quadrant: quadrant, week: weekStart)   // 子任务行手势
-        .sheet(isPresented: $showPopover) { TaskEditor(task: sub) }
+        .taskEditorWindow(isPresented: $showPopover, task: sub)
     }
 
     /// 行主体（勾选框 + 标题 + 截止日期），树线/缩进两种布局共用。

@@ -94,17 +94,8 @@ struct ContentView: View {
         #if os(macOS)
         .background(WindowTranslucency())                   // 窗口非不透明，透出桌面
         #endif
-        .tint(theme.id == .system ? nil : theme.accent)                  // 主题强调色（默认沿用系统）
-        .preferredColorScheme(theme.forcedDark ? .dark : nil)            // 终端强制深色，与系统解耦
-        .environment(\.theme, theme)
-        .foregroundStyle(Color.appLabel)                                 // 主文本色（跟随主题）
-        .environment(\.locale, .app)
+        .appChrome()                                                     // 主题/强调色/语言/字号，与独立弹窗共用
         .environment(\.optionHeld, optionHeld)                           // 按住 ⌥ 提示可点链接
-        .environment(\.fontScale, FontScale.scale(fontIndex))            // ⌘+ / ⌘- 调整字号
-        .environment(\.appFontName, appFontName)                         // 全局字体（设置里选）
-        .environment(\.font, AppFont.font(.body, scale: FontScale.scale(fontIndex),
-                                          name: theme.usesCustomFont ? appFontName : "",
-                                          design: theme.fontDesign))
         .id("\(language)-\(themeIDRaw)")   // 切换语言/主题时整体重建，立即生效
         #if os(iOS)
         .sheet(isPresented: $showSettings) { SettingsView() }
@@ -134,6 +125,7 @@ struct ContentView: View {
             Task { await checkClipboard() }
         }
         #endif
+        #if os(iOS)
         .confirmationDialog(
             L("clipboard.prompt.title"),
             isPresented: $showClipboardPrompt,
@@ -147,13 +139,23 @@ struct ContentView: View {
         } message: { parsed in
             Text(previewText(parsed))
         }
+        #endif
     }
 
     private func checkClipboard() async {
         guard let (parsed, change) = await ClipboardReader.candidate(since: lastClipboardChange) else { return }
         lastClipboardChange = change
+        #if os(macOS)
+        // 屏幕居中的 NSAlert：直接选象限，选完即建任务
+        let quadrants = Quadrant.allCases
+        let picked = ScreenAlert.choose(title: L("clipboard.prompt.title"),
+                                        message: previewText(parsed),
+                                        buttons: quadrants.map(\.title) + [L("action.cancel")])
+        if quadrants.indices.contains(picked) { add(parsed, to: quadrants[picked]) }
+        #else
         clipboardCandidate = parsed
         showClipboardPrompt = true
+        #endif
     }
 
     private func add(_ parsed: ParsedTaskInput, to quadrant: Quadrant) {

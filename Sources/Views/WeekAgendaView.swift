@@ -76,7 +76,7 @@ struct WeekAgendaView: View {
         }
         .navigationTitle(L("sidebar.thisWeek"))
         .mainToolbar(week: weekStart, weekTasks: weekTasks) { newTask = makeTask() }
-        .sheet(item: $newTask) { TaskEditor(task: $0, isNew: true) }
+        .taskEditorWindow(item: $newTask, isNew: true)
     }
 
     private var overdueSection: some View {
@@ -249,7 +249,7 @@ private struct AgendaRow: View {
         .onTapGesture(count: 2) { showPopover = true }
         .onTapGesture { onSelect() }
         .draggable(TaskTransfer(taskUUID: task.taskUUID))
-        .sheet(isPresented: $showPopover) { TaskEditor(task: task) }
+        .taskEditorWindow(isPresented: $showPopover, task: task)
     }
 
     private func toggle() {
