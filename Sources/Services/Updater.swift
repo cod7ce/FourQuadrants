@@ -210,9 +210,19 @@ final class Updater {
         try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: script.path)
 
         // 分离启动 swap 脚本：新会话，脱离本进程，退出后由它换包并重启。
+        // macOS 没有 setsid 命令，借系统自带 perl 的 POSIX::setsid 开新会话再 exec。
+        // 日志写到 work 目录之外，脚本失败时可查（~/Library/Logs/FourQuadrants-update.log）。
+        let log = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Library/Logs/FourQuadrants-update.log")
+        FileManager.default.createFile(atPath: log.path, contents: nil)
         let task = Process()
-        task.executableURL = URL(fileURLWithPath: "/bin/bash")
-        task.arguments = ["-c", "setsid bash \(shq(script.path)) >/dev/null 2>&1 &"]
+        task.executableURL = URL(fileURLWithPath: "/usr/bin/perl")
+        task.arguments = ["-MPOSIX", "-e", "POSIX::setsid(); exec @ARGV or die $!",
+                          "/bin/bash", script.path]
+        task.standardInput = FileHandle.nullDevice
+        let logHandle = try? FileHandle(forWritingTo: log)
+        task.standardOutput = logHandle ?? FileHandle.nullDevice
+        task.standardError = logHandle ?? FileHandle.nullDevice
         try task.run()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { NSApp.terminate(nil) }
     }
